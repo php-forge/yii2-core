@@ -788,7 +788,7 @@ describe('yii.gridView', function () {
 
             assert.throws(function () {
                 $gridView1.yiiGridView('applyFilter');
-            }, "Cannot read properties of undefined (reading \'settings\')");
+            }, "Cannot read property 'settings' of undefined");
             $gridView1.yiiGridView(settings); // Reinitialize without "beforeFilter" and "afterFilter" event handlers
 
             $gridView1.yiiGridView('applyFilter');
