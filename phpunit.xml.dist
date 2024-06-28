@@ -23,15 +23,15 @@
 
   <coverage>
     <include>
-      <directory suffix=".php">framework/</directory>
+      <directory suffix=".php">src/</directory>
     </include>
 	<exclude>
-      <file>framework/.phpstorm.meta.php</file>
-	  <file>framework/i18n/GettextFile.php</file>
-	  <file>framework/web/ResponseFormatterInterface.php</file>
-	  <directory suffix=".php">framework/bootstrap</directory>
-	  <directory suffix="Exception.php">framework/base</directory>
-      <directory suffix=".php">framework/requirements</directory>
+      <file>src/.phpstorm.meta.php</file>
+	  <file>src/i18n/GettextFile.php</file>
+	  <file>src/web/ResponseFormatterInterface.php</file>
+	  <directory suffix=".php">src/bootstrap</directory>
+	  <directory suffix="Exception.php">src/base</directory>
+      <directory suffix=".php">src/requirements</directory>
 	</exclude>
   </coverage>
 </phpunit>
