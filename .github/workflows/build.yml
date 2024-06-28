@@ -33,6 +33,8 @@ jobs:
         db,wincache,xcache,zenddata
       extensions:
         apcu, curl, dom, imagick, intl, mbstring, mcrypt, memcached
+      ini-values:
+        apc.enabled=1,apc.shm_size=32M,apc.enable_cli=1, date.timezone='UTC', session.save_path="tests/runtime/sessions"
       os: >-
         ['ubuntu-latest', 'windows-latest']
       php: >-
