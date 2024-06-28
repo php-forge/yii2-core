@@ -23,7 +23,7 @@
     "require-dev": {
         "dms/phpunit-arraysubset-asserts": "^0.5",
         "maglnet/composer-require-checker": "^4.7",
-        "phpunit/phpunit": "^10.5",
+        "phpunit/phpunit": "^9.5",
         "roave/infection-static-analysis-plugin": "^1.34",
         "symplify/easy-coding-standard": "^12.1",
         "vimeo/psalm": "^5.19"
