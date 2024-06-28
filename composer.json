@@ -1,5 +1,5 @@
 {
-    "name": "phpforge/yii2-core",
+    "name": "php-forge/yii2-core",
     "type": "library",
     "description": "Yii Core PHP Framework Version 2",
     "keywords": [
@@ -68,8 +68,6 @@
     },
     "scripts": {
         "check-dependencies": "composer-require-checker",
-        "easy-coding-standard": "ecs check",
-        "psalm": "psalm",
         "test": "phpunit"
     }
 }
