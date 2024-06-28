@@ -18,7 +18,7 @@ var StringUtils = {
 };
 
 var jsdom = require('mocha-jsdom');
-var punycode = require('../../../vendor/bower-asset/punycode/punycode');
+var punycode = require('../../../node_modules/punycode/punycode');
 
 var fs = require('fs');
 var vm = require('vm');
