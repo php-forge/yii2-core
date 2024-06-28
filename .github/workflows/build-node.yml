@@ -28,6 +28,4 @@ jobs:
           node-version: 6
 
       - name: Tests.
-        run: |
-          npm install
-          npm test
+        run: npm test
