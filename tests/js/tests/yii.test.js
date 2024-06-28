@@ -21,7 +21,7 @@ var StringUtils = {
 describe('yii', function () {
     var yiiPath = 'src/assets/yii.js';
     var jQueryPath = 'node_modules/jquery/dist/jquery.js';
-    var pjaxPath = 'vendor/bower-asset/yii2-pjax/jquery.pjax.js';
+    var pjaxPath = 'node_modules/yii2-pjax/jquery.pjax.js';
     var sandbox;
     var $;
     var yii;
