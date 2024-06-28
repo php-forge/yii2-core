@@ -63,8 +63,8 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "infection/extension-installer": true,
-            "yiisoft/yii2-composer": true
+            "yiisoft/yii2-composer": true,
+            "php-forge/foxy": true
         }
     },
     "scripts": {
