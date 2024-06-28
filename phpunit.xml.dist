@@ -1,24 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <phpunit
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.2/phpunit.xsd"
+  backupGlobals="true"
   bootstrap="./tests/bootstrap.php"
-  cacheDirectory=".phpunit.cache"
   colors="true"
-  executionOrder="depends,defects"
+  convertErrorsToExceptions="true"
+  convertNoticesToExceptions="true"
+  convertWarningsToExceptions="true"
+  executionOrder="default"
   failOnRisky="true"
   failOnWarning="true"
+  printerClass="yiiunit\ResultPrinter"
   stopOnFailure="false"
 >
   <testsuites>
-    <testsuite name="Template">
-      <directory>tests</directory>
+    <testsuite name="Yii2-Core">
+      <directory>./tests</directory>
     </testsuite>
   </testsuites>
 
-  <source>
+  <coverage>
     <include>
-      <directory suffix=".php">./src</directory>
+      <directory suffix=".php">framework/</directory>
     </include>
-  </source>
+	<exclude>
+      <file>framework/.phpstorm.meta.php</file>
+	  <file>framework/i18n/GettextFile.php</file>
+	  <file>framework/web/ResponseFormatterInterface.php</file>
+	  <directory suffix=".php">framework/bootstrap</directory>
+	  <directory suffix="Exception.php">framework/base</directory>
+      <directory suffix=".php">framework/requirements</directory>
+	</exclude>
+  </coverage>
 </phpunit>
