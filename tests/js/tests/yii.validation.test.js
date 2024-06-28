@@ -57,7 +57,7 @@ describe('yii.validation', function () {
             };
         }
 
-        var path = 'framework/assets/yii.validation.js';
+        var path = 'src/assets/yii.validation.js';
 
         if (code === undefined) {
             code = fs.readFileSync(path);
@@ -76,7 +76,7 @@ describe('yii.validation', function () {
     }
 
     jsdom({
-        src: fs.readFileSync('vendor/bower-asset/jquery/dist/jquery.js', 'utf-8'),
+        src: fs.readFileSync('node_modules/jquery/dist/jquery.js', 'utf-8'),
         url: "http://foo.bar"
     });
 

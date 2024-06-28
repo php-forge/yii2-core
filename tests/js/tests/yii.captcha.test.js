@@ -7,8 +7,8 @@ var fs = require('fs');
 var vm = require('vm');
 
 describe('yii.captcha', function () {
-    var yiiCaptchaPath = 'framework/assets/yii.captcha.js';
-    var jQueryPath = 'vendor/bower-asset/jquery/dist/jquery.js';
+    var yiiCaptchaPath = 'src/assets/yii.captcha.js';
+    var jQueryPath = 'node_modules/jquery/dist/jquery.js';
     var $;
     var $captcha;
     var settings = {
