@@ -21,6 +21,7 @@
         "yiisoft/yii2-composer": "^2.0.10"
     },
     "require-dev": {
+        "dms/phpunit-arraysubset-asserts": "^0.5",
         "maglnet/composer-require-checker": "^4.7",
         "phpunit/phpunit": "^10.5",
         "roave/infection-static-analysis-plugin": "^1.34",
