@@ -5,7 +5,7 @@
  * @license https://www.yiiframework.com/license/
  */
 
-require_once __DIR__ . '/../../../framework/requirements/YiiRequirementChecker.php';
+require_once __DIR__ . '/../../../src/requirements/YiiRequirementChecker.php';
 
 use yiiunit\TestCase;
 
