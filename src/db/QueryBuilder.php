@@ -571,37 +571,51 @@ class QueryBuilder extends \yii\base\BaseObject
     private function getTableUniqueColumnNames($name, $columns, &$constraints = [])
     {
         $schema = $this->db->getSchema();
+
         if (!$schema instanceof ConstraintFinderInterface) {
             return [];
         }
 
         $constraints = [];
         $primaryKey = $schema->getTablePrimaryKey($name);
+
         if ($primaryKey !== null) {
             $constraints[] = $primaryKey;
         }
+
         foreach ($schema->getTableIndexes($name) as $constraint) {
             if ($constraint->isUnique) {
                 $constraints[] = $constraint;
             }
         }
+
         $constraints = array_merge($constraints, $schema->getTableUniques($name));
+
         // Remove duplicates
         $constraints = array_combine(array_map(function (Constraint $constraint) {
             $columns = $constraint->columnNames;
             sort($columns, SORT_STRING);
             return json_encode($columns);
         }, $constraints), $constraints);
+
         $columnNames = [];
+
         // Remove all constraints which do not cover the specified column list
         $constraints = array_values(array_filter($constraints, function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
+            if ($constraint->columnNames === null) {
+                return false;
+            }
+
             $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames);
             $result = !array_diff($constraintColumnNames, $columns);
+
             if ($result) {
                 $columnNames = array_merge($columnNames, $constraintColumnNames);
             }
+
             return $result;
         }));
+
         return array_unique($columnNames);
     }
 
