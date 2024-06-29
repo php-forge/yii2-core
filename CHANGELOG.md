@@ -10,6 +10,7 @@ Yii Core version 2 Change Log
 - Bug #20175: Fix bad result for pagination when used with GridView (@lav45)
 - Enh #3: Remove assets from `composer.json` (@terabytesoftw)
 - Enh #5: Move `CHANGELOG.md` and `UPGRADE.md` to `root` directory (@terabytesoftw)
+- Bug #8: Remove `PHP` deprecated `strpos()` passing `null` to parameter #1 in `Oracle` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

@@ -16,6 +16,10 @@ use yii\caching\Cache;
 use yii\caching\CacheInterface;
 use yii\caching\TagDependency;
 
+use function str_contains;
+use function strpos;
+use function substr;
+
 /**
  * Schema is the base class for concrete DBMS-specific schema classes.
  *
@@ -507,25 +511,30 @@ abstract class Schema extends BaseObject
 
     /**
      * Quotes a column name for use in a query.
+     *
      * If the column name contains prefix, the prefix will also be properly quoted.
-     * If the column name is already quoted or contains '(', '[[' or '{{',
-     * then this method will do nothing.
+     * If the column name is already quoted or contains '(', '[[' or '{{', then this method will do nothing.
+     *
      * @param string $name column name
+     *
      * @return string the properly quoted column name
+     *
      * @see quoteSimpleColumnName()
      */
-    public function quoteColumnName($name)
+    public function quoteColumnName(string $name): string
     {
-        if (strpos($name, '(') !== false || strpos($name, '[[') !== false) {
+        if (str_contains($name, '(') || str_contains($name, '[[')) {
             return $name;
         }
+
         if (($pos = strrpos($name, '.')) !== false) {
             $prefix = $this->quoteTableName(substr($name, 0, $pos)) . '.';
             $name = substr($name, $pos + 1);
         } else {
             $prefix = '';
         }
-        if (strpos($name, '{{') !== false) {
+
+        if (str_contains($name, '{{')) {
             return $name;
         }
 

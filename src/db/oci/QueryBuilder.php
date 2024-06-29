@@ -228,8 +228,10 @@ EOD;
         foreach ($constraints as $constraint) {
             $constraintCondition = ['and'];
             foreach ($constraint->columnNames as $name) {
-                $quotedName = $this->db->quoteColumnName($name);
-                $constraintCondition[] = "$quotedTableName.$quotedName=\"EXCLUDED\".$quotedName";
+                if ($name !== null) {
+                    $quotedName = $this->db->quoteColumnName($name);
+                    $constraintCondition[] = "$quotedTableName.$quotedName=\"EXCLUDED\".$quotedName";
+                }
             }
             $onCondition[] = $constraintCondition;
         }
