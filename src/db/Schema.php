@@ -514,17 +514,19 @@ abstract class Schema extends BaseObject
      * @return string the properly quoted column name
      * @see quoteSimpleColumnName()
      */
-    public function quoteColumnName($name)
+    public function quoteColumnName(string $name)
     {
         if (strpos($name, '(') !== false || strpos($name, '[[') !== false) {
             return $name;
         }
+
         if (($pos = strrpos($name, '.')) !== false) {
             $prefix = $this->quoteTableName(substr($name, 0, $pos)) . '.';
             $name = substr($name, $pos + 1);
         } else {
             $prefix = '';
         }
+
         if (strpos($name, '{{') !== false) {
             return $name;
         }
