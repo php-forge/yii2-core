@@ -33,8 +33,8 @@ jobs:
         run: |
           sudo apt-get update
           wget http://ftp.cubrid.org/CUBRID_Engine/9.3.6/CUBRID-9.3.6.0002-linux.x86_64.tar.gz
-          tar xzf CUBRID-9.3.6.0002-linux.x86_64.tar.gz && cd CUBRID-9.3.6.0002-linux.x86_64
-          sudo ./install_cubrid.sh
+          tar xzf CUBRID-9.3.6.0002-linux.x86_64.tar.gz
+          sudo ./CUBRID-9.3.6.0002-linux.x86_64/install_cubrid.sh
           source ~/.cubrid.sh
 
       - name: Initialize and start CUBRID service
