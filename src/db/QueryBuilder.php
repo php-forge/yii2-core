@@ -602,11 +602,7 @@ class QueryBuilder extends \yii\base\BaseObject
 
         // Remove all constraints which do not cover the specified column list
         $constraints = array_values(array_filter($constraints, function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
-            if ($constraint->columnNames === null) {
-                return false;
-            }
-
-            $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames);
+            $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames ?? []);
             $result = !array_diff($constraintColumnNames, $columns);
 
             if ($result) {
