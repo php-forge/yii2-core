@@ -601,16 +601,29 @@ class QueryBuilder extends \yii\base\BaseObject
         $columnNames = [];
 
         // Remove all constraints which do not cover the specified column list
-        $constraints = array_values(array_filter($constraints, function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
-            $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames ?? []);
-            $result = !array_diff($constraintColumnNames, $columns);
+        $constraints = array_values(
+            array_filter(
+                $constraints,
+                static function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
+                    $getColumnNames = $constraint->columnNames ?? [];
+                    $constraintColumnNames = [];
 
-            if ($result) {
-                $columnNames = array_merge($columnNames, $constraintColumnNames);
-            }
+                    if (is_array($getColumnNames)) {
+                        foreach ($getColumnNames as $columnName) {
+                            $constraintColumnNames[] = $schema->quoteColumnName($columnName);
+                        }
+                    }
 
-            return $result;
-        }));
+                    $result = !array_diff($constraintColumnNames, $columns);
+
+                    if ($result) {
+                        $columnNames = array_merge((array) $columnNames, $constraintColumnNames);
+                    }
+
+                    return $result;
+                }
+            )
+        );
 
         return array_unique($columnNames);
     }
