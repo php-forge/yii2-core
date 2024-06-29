@@ -610,7 +610,9 @@ class QueryBuilder extends \yii\base\BaseObject
 
                     if (is_array($getColumnNames)) {
                         foreach ($getColumnNames as $columnName) {
-                            $constraintColumnNames[] = $schema->quoteColumnName($columnName);
+                            if ($columnName !== null) {
+                                $constraintColumnNames[] = $schema->quoteColumnName($columnName);
+                            }
                         }
                     }
 
