@@ -774,7 +774,7 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function quoteColumnName($name)
+    public function quoteColumnName(string $name): string
     {
         if (preg_match('/^\[.*\]$/', $name)) {
             return $name;
