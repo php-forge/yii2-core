@@ -17,7 +17,7 @@ jobs:
 
     - name: Install SQL Server 2012 Native Client
       run: |
-        choco install sqlserver2008nativeclient -y
+        choco install sqlserver2012commandlineutilities -y
 
     - name: Install SQL Server 2012 Command Line Utilities
       run: |
