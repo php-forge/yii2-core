@@ -27,7 +27,6 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      concurrency-group: linux-${{ github.workflow }}-${{ github.ref }}
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
       exclude-group-phpunit:
@@ -40,13 +39,15 @@ jobs:
         ['ubuntu-latest']
       php: >-
         ['8.1', '8.2', '8.3', '8.4']
+    concurrency:
+      group: linux-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
   windows:
     uses: php-forge/actions/.github/workflows/phpunit.yml@fix-concurrency
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      concurrency-group: windows-${{ github.workflow }}-${{ github.ref }}
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
       exclude-group-phpunit:
@@ -59,4 +60,6 @@ jobs:
         ['windows-latest']
       php: >-
         ['8.1', '8.2', '8.3', '8.4']
-
+    concurrency:
+      group: linux-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
