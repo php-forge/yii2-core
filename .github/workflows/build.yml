@@ -21,6 +21,10 @@ on:
 
 name: build
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   linux:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
@@ -39,6 +43,7 @@ jobs:
         ['ubuntu-latest']
       php: >-
         ['8.1', '8.2', '8.3', '8.4']
+
   windows:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     secrets:
