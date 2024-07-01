@@ -23,7 +23,7 @@ jobs:
         run: composer update $DEFAULT_COMPOSER_FLAGS
 
       - name: Install node.js.
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 6
 
