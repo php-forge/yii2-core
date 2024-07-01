@@ -61,5 +61,5 @@ jobs:
       php: >-
         ['8.1', '8.2', '8.3', '8.4']
     concurrency:
-      group: linux-${{ github.workflow }}-${{ github.ref }}
+      group: windows-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
