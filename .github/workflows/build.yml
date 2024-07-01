@@ -53,7 +53,7 @@ jobs:
       exclude-group-phpunit:
         db,xcache,zenddata
       extensions:
-        apcu, curl, dom, fileinfo, imagick, intl, mbstring, mcrypt, memcached, pdo, pdo_sqlite, wincache-2.0
+        apcu, curl, dom, fileinfo, imagick, intl, mbstring, mcrypt, memcached, pdo, pdo_sqlite, wincache-2.0-beta
       ini-values:
         apc.enabled=1,apc.shm_size=32M,apc.enable_cli=1, date.timezone='UTC', session.save_path="./tests/runtime"
       os: >-
