@@ -23,13 +23,11 @@ name: build
 
 jobs:
   linux:
-    concurrency:
-      group: linux-${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     uses: php-forge/actions/.github/workflows/phpunit.yml@fix-concurrency
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
+      concurrency-group: linux-${{ github.workflow }}-${{ github.ref }}
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
       exclude-group-phpunit:
@@ -44,13 +42,11 @@ jobs:
         ['8.1', '8.2', '8.3', '8.4']
 
   windows:
-    concurrency:
-      group: ubuntu-${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-    uses: php-forge/actions/.github/workflows/phpunit.yml@main
+    uses: php-forge/actions/.github/workflows/phpunit.yml@fix-concurrency
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
+      concurrency-group: windows-${{ github.workflow }}-${{ github.ref }}
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
       exclude-group-phpunit:
