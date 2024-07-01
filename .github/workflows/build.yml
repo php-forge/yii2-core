@@ -23,6 +23,9 @@ name: build
 
 jobs:
   linux:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     uses: php-forge/actions/.github/workflows/phpunit.yml@fix-concurrency
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -41,7 +44,10 @@ jobs:
         ['8.1', '8.2', '8.3', '8.4']
 
   windows:
-    uses: php-forge/actions/.github/workflows/phpunit.yml@fix-concurrency
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    uses: php-forge/actions/.github/workflows/phpunit.yml@main
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
