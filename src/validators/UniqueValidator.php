@@ -99,11 +99,8 @@ class UniqueValidator extends Validator
             return;
         }
         if (is_array($this->targetAttribute) && count($this->targetAttribute) > 1) {
-            // fallback for deprecated `comboNotUnique` property - use it as message if is set
-            if ($this->comboNotUnique === null) {
+            if ($this->message === null) {
                 $this->message = Yii::t('yii', 'The combination {values} of {attributes} has already been taken.');
-            } else {
-                $this->message = $this->comboNotUnique;
             }
         } else {
             $this->message = Yii::t('yii', '{attribute} "{value}" has already been taken.');
