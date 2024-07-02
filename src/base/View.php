@@ -94,6 +94,12 @@ class View extends Component implements DynamicContentAwareInterface
      */
     private $cacheStack = [];
     /**
+     * @var array a list of placeholders for embedding dynamic contents. This property
+     * is used internally to implement the content caching feature. Do not modify it directly.
+     * Use methods [[getDynamicPlaceholders()]], [[setDynamicPlaceholders()]], [[addDynamicPlaceholder()]] instead.
+     */
+    private $dynamicPlaceholders = [];
+    /**
      * @var array the view files currently being rendered. There may be multiple view files being
      * rendered at a moment because one view may be rendered within another.
      */
