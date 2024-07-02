@@ -47,9 +47,6 @@ class ColumnSchema extends \yii\db\ColumnSchema
                 ? (string) $value
                 : new ArrayExpression($value, $this->dbType, $this->dimension);
         }
-        if (!$this->disableJsonSupport && in_array($this->dbType, [Schema::TYPE_JSON, Schema::TYPE_JSONB], true)) {
-            return new JsonExpression($value, $this->dbType);
-        }
 
         return $this->typecast($value);
     }
@@ -106,7 +103,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
                 }
                 return (bool) $value;
             case Schema::TYPE_JSON:
-                return $this->disableJsonSupport ? $value : json_decode($value, true);
+                return json_decode($value, true);
         }
 
         return parent::phpTypecast($value);
