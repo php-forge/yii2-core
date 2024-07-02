@@ -78,13 +78,6 @@ class UniqueValidator extends Validator
      */
     public $message;
     /**
-     * @var string
-     * @since 2.0.9
-     * @deprecated since version 2.0.10, to be removed in 2.1. Use [[message]] property
-     * to setup custom message for multiple target attributes.
-     */
-    public $comboNotUnique;
-    /**
      * @var string and|or define how target attributes are related
      * @since 2.0.11
      */
