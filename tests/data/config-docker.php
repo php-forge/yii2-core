@@ -21,12 +21,6 @@
  */
 $config = [
     'databases' => [
-        'cubrid' => [
-            'dsn' => 'cubrid:dbname=demodb;host=cubrid;port=33000',
-            'username' => 'dba',
-            'password' => '',
-            'fixture' => __DIR__ . '/cubrid.sql',
-        ],
         'mysql' => [
             'dsn' => 'mysql:host=mysql;dbname=yiitest',
             'username' => 'root',
