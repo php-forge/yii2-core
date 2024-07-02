@@ -742,21 +742,25 @@ class Connection extends Component
 
     /**
      * Creates a command for execution.
-     * @param string|null $sql the SQL statement to be executed
-     * @param array $params the parameters to be bound to the SQL statement
-     * @return Command the DB command
+     *
+     * @param string|null $sql the SQL statement to be executed.
+     * @param array $params the parameters to be bound to the SQL statement.
+     *
+     * @return Command the DB command.
      */
     public function createCommand($sql = null, $params = [])
     {
         $driver = $this->getDriverName();
         $config = ['class' => 'yii\db\Command'];
-        if ($this->commandClass !== $config['class']) {
-            $config['class'] = $this->commandClass;
-        } elseif (isset($this->commandMap[$driver])) {
-            $config = !is_array($this->commandMap[$driver]) ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
+
+        if (isset($this->commandMap[$driver])) {
+            $config = !is_array($this->commandMap[$driver])
+                ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
         }
+
         $config['db'] = $this;
         $config['sql'] = $sql;
+
         /** @var Command $command */
         $command = Yii::createObject($config);
         return $command->bindValues($params);
