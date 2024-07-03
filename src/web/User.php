@@ -796,6 +796,6 @@ class User extends Component
      */
     protected function getAccessChecker()
     {
-        return $this->accessChecker !== null ? $this->accessChecker : Yii::$app->getAuthManager()
+        return $this->accessChecker !== null ? $this->accessChecker : Yii::$app->getAuthManager();
     }
 }
