@@ -73,16 +73,6 @@ class Security extends Component
      */
     public $derivationIterations = 100000;
     /**
-     * @var string strategy, which should be used to generate password hash.
-     * Available strategies:
-     * - 'password_hash' - use of PHP `password_hash()` function with PASSWORD_DEFAULT algorithm.
-     *   This option is recommended, but it requires PHP version >= 5.5.0
-     * - 'crypt' - use PHP `crypt()` function.
-     * @deprecated since version 2.0.7, [[generatePasswordHash()]] ignores [[passwordHashStrategy]] and
-     * uses `password_hash()` when available or `crypt()` when not.
-     */
-    public $passwordHashStrategy;
-    /**
      * @var int Default cost used for password hashing.
      * Allowed value is between 4 and 31.
      * @see generatePasswordHash()
@@ -534,10 +524,11 @@ class Security extends Component
      * therefore slows down a brute-force attack. For best protection against brute-force attacks,
      * set it to the highest value that is tolerable on production servers. The time taken to
      * compute the hash doubles for every increment by one of $cost.
-     * @return string The password hash string. When [[passwordHashStrategy]] is set to 'crypt',
-     * the output is always 60 ASCII characters, when set to 'password_hash' the output length
-     * might increase in future versions of PHP (https://www.php.net/manual/en/function.password-hash.php)
+     *
+     * @return string The password hash string.
+     *
      * @throws Exception on bad password parameter or cost parameter.
+     *
      * @see validatePassword()
      */
     public function generatePasswordHash($password, $cost = null)
