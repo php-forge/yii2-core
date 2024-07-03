@@ -144,7 +144,7 @@ class PhpManagerTest extends ManagerTestCase
         $permission = $this->auth->getPermission($name);
         $permission->name = 'createPost';
 
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
 
         $this->auth->update($name, $permission);
     }

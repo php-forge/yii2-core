@@ -48,7 +48,7 @@ abstract class DbManagerTestCase extends ManagerTestCase
         $this->assertEquals(['123', 'reader A'], $this->auth->getUserIdsByRole('reader'), '', 0.0, 10, true);
         $this->assertEquals(['author B'], $this->auth->getUserIdsByRole('author'));
         $this->assertEquals(['admin C'], $this->auth->getUserIdsByRole('admin'));
-    }    
+    }
 
     protected static function runConsoleAction($route, $params = [])
     {
@@ -121,7 +121,7 @@ abstract class DbManagerTestCase extends ManagerTestCase
     }
 
     /**
-     * @throws \yii\base\InvalidParamException
+     * @throws \yii\base\InvalidArgumentException
      * @throws \yii\db\Exception
      * @throws \yii\base\InvalidConfigException
      * @return \yii\db\Connection
