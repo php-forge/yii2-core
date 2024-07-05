@@ -633,7 +633,7 @@ SQL;
         $this->expectException(\yii\base\InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected select query object with enumerated (named) parameters');
 
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
         $this->expectExceptionMessage('Expected select query object with enumerated (named) parameters');
         $command->insert('{{customer}}', $query)->execute();
     }
@@ -647,7 +647,6 @@ SQL;
             case 'pgsql':
                 $expression = "EXTRACT(YEAR FROM TIMESTAMP 'now')";
                 break;
-            case 'cubrid':
             case 'mysql':
                 $expression = 'YEAR(NOW())';
                 break;

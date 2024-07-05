@@ -183,22 +183,31 @@ class ActiveRecordTest extends \yiiunit\framework\db\ActiveRecordTest
     public function testArrayValues($attributes)
     {
         $type = new ArrayAndJsonTypes();
+
         foreach ($attributes as $attribute => $expected) {
             $type->$attribute = $expected[0];
         }
+
         $type->save();
 
         $type = ArrayAndJsonTypes::find()->one();
+
         foreach ($attributes as $attribute => $expected) {
             $expected = isset($expected[1]) ? $expected[1] : $expected[0];
             $value = $type->$attribute;
+
+            if ($expected instanceof ArrayExpression) {
+                $expected = $expected->getValue();
+            }
 
             $this->assertEquals($expected, $value, 'In column ' . $attribute);
 
             if ($value instanceof ArrayExpression) {
                 $this->assertInstanceOf('\ArrayAccess', $value);
                 $this->assertInstanceOf('\Traversable', $value);
-                foreach ($type->$attribute as $key => $v) { // testing arrayaccess
+
+                foreach ($type->$attribute as $key => $v) {
+                    // testing arrayaccess
                     $this->assertSame($expected[$key], $value[$key]);
                 }
             }
@@ -208,6 +217,7 @@ class ActiveRecordTest extends \yiiunit\framework\db\ActiveRecordTest
         foreach ($attributes as $attribute => $expected) {
             $type->markAttributeDirty($attribute);
         }
+
         $this->assertSame(1, $type->update(), 'The record got updated');
     }
 

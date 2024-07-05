@@ -348,16 +348,16 @@ class ArrayHelperTest extends TestCase
         ], $changelog);
     }
 
-    public function testMultisortInvalidParamExceptionDirection()
+    public function testMultisortInvalidArgumentExceptionDirection()
     {
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
         $data = ['foo' => 'bar'];
         ArrayHelper::multisort($data, ['foo'], []);
     }
 
-    public function testMultisortInvalidParamExceptionSortFlag()
+    public function testMultisortInvalidArgumentExceptionSortFlag()
     {
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
         $data = ['foo' => 'bar'];
         ArrayHelper::multisort($data, ['foo'], ['foo'], []);
     }
@@ -759,7 +759,7 @@ class ArrayHelperTest extends TestCase
         if (version_compare(PHP_VERSION, '8.1.0', '>=')) {
             $this->markTestSkipped('Using floats as array key is deprecated.');
         }
-        
+
         $array = [
             1 => 3,
             2.2 => 4, // Note: Floats are cast to ints, which means that the fractional part will be truncated.
@@ -1295,7 +1295,7 @@ class ArrayHelperTest extends TestCase
 
     public function testInException()
     {
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
         $this->expectExceptionMessage('Argument $haystack must be an array or implement Traversable');
         ArrayHelper::isIn('value', null);
     }
@@ -1314,7 +1314,7 @@ class ArrayHelperTest extends TestCase
 
     public function testIsSubsetException()
     {
-        $this->expectException('yii\base\InvalidParamException');
+        $this->expectException('yii\base\InvalidArgumentException');
         $this->expectExceptionMessage('Argument $needles must be an array or implement Traversable');
         ArrayHelper::isSubset('a', new \ArrayObject(['a', 'b']));
     }

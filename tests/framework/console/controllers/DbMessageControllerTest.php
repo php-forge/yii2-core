@@ -44,7 +44,7 @@ class DbMessageControllerTest extends BaseMessageControllerTest
         ob_start();
         $result = Yii::$app->runAction($route, $params);
         echo 'Result is ' . $result;
-        if ($result !== \yii\console\Controller::EXIT_CODE_NORMAL) {
+        if ($result !== \yii\console\ExitCode::OK) {
             ob_end_flush();
         } else {
             ob_end_clean();
@@ -82,7 +82,7 @@ class DbMessageControllerTest extends BaseMessageControllerTest
     }
 
     /**
-     * @throws \yii\base\InvalidParamException
+     * @throws \yii\base\InvalidArgumentException
      * @throws \yii\db\Exception
      * @throws \yii\base\InvalidConfigException
      * @return \yii\db\Connection

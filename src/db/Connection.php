@@ -238,7 +238,7 @@ class Connection extends Component
     public $queryCache = 'cache';
     /**
      * @var string|null the charset used for database connection. The property is only used
-     * for MySQL, PostgreSQL and CUBRID databases. Defaults to null, meaning using default charset
+     * for MySQL, PostgreSQL databases. Defaults to null, meaning using default charset
      * as configured by the database.
      *
      * For Oracle Database, the charset must be specified in the [[dsn]], for example for UTF-8 by appending `;charset=UTF-8`
@@ -282,22 +282,12 @@ class Connection extends Component
         'oci' => 'yii\db\oci\Schema', // Oracle driver
         'mssql' => 'yii\db\mssql\Schema', // older MSSQL driver on MS Windows hosts
         'dblib' => 'yii\db\mssql\Schema', // dblib drivers on GNU/Linux (and maybe other OSes) hosts
-        'cubrid' => 'yii\db\cubrid\Schema', // CUBRID
     ];
     /**
      * @var string|null Custom PDO wrapper class. If not set, it will use [[PDO]] or [[\yii\db\mssql\PDO]] when MSSQL is used.
      * @see pdo
      */
     public $pdoClass;
-    /**
-     * @var string the class used to create new database [[Command]] objects. If you want to extend the [[Command]] class,
-     * you may configure this property to use your extended version of the class.
-     * Since version 2.0.14 [[$commandMap]] is used if this property is set to its default value.
-     * @see createCommand
-     * @since 2.0.7
-     * @deprecated since 2.0.14. Use [[$commandMap]] for precise configuration.
-     */
-    public $commandClass = 'yii\db\Command';
     /**
      * @var array mapping between PDO driver names and [[Command]] classes.
      * The keys of the array are PDO driver names while the values are either the corresponding
@@ -319,7 +309,6 @@ class Connection extends Component
         'oci' => 'yii\db\oci\Command', // Oracle driver
         'mssql' => 'yii\db\Command', // older MSSQL driver on MS Windows hosts
         'dblib' => 'yii\db\Command', // dblib drivers on GNU/Linux (and maybe other OSes) hosts
-        'cubrid' => 'yii\db\Command', // CUBRID
     ];
     /**
      * @var bool whether to enable [savepoint](https://en.wikipedia.org/wiki/Savepoint).
@@ -745,7 +734,7 @@ class Connection extends Component
         if (!$this->isSybase && in_array($this->getDriverName(), ['mssql', 'dblib'], true)) {
             $this->pdo->exec('SET ANSI_NULL_DFLT_ON ON');
         }
-        if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
+        if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli'], true)) {
             $this->pdo->exec('SET NAMES ' . $this->pdo->quote($this->charset));
         }
         $this->trigger(self::EVENT_AFTER_OPEN);
@@ -753,23 +742,28 @@ class Connection extends Component
 
     /**
      * Creates a command for execution.
-     * @param string|null $sql the SQL statement to be executed
-     * @param array $params the parameters to be bound to the SQL statement
-     * @return Command the DB command
+     *
+     * @param string|null $sql the SQL statement to be executed.
+     * @param array $params the parameters to be bound to the SQL statement.
+     *
+     * @return Command the DB command.
      */
     public function createCommand($sql = null, $params = [])
     {
         $driver = $this->getDriverName();
         $config = ['class' => 'yii\db\Command'];
-        if ($this->commandClass !== $config['class']) {
-            $config['class'] = $this->commandClass;
-        } elseif (isset($this->commandMap[$driver])) {
-            $config = !is_array($this->commandMap[$driver]) ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
+
+        if (isset($this->commandMap[$driver])) {
+            $config = !is_array($this->commandMap[$driver])
+                ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
         }
+
         $config['db'] = $this;
         $config['sql'] = $sql;
+
         /** @var Command $command */
         $command = Yii::createObject($config);
+        
         return $command->bindValues($params);
     }
 
