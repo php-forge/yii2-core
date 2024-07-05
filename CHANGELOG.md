@@ -11,6 +11,7 @@ Yii Core version 2 Change Log
 - Enh #3: Remove assets from `composer.json` (@terabytesoftw)
 - Enh #5: Move `CHANGELOG.md` and `UPGRADE.md` to `root` directory (@terabytesoftw)
 - Bug #8: Remove `PHP` deprecated `strpos()` passing `null` to parameter #1 in `Oracle` (@terabytesoftw)
+- Bug #40: Fix `wincache` tests in PHP `8.1`, `8.2`, `8.3` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
