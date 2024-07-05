@@ -29,7 +29,6 @@ jobs:
     with:
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
-      concurrency-group: linux-${{ github.workflow }}-${{ github.ref }}
       exclude-group-phpunit:
         db,wincache,xcache,zenddata
       extensions:
@@ -48,7 +47,6 @@ jobs:
     with:
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
-      concurrency-group: windows-${{ github.workflow }}-${{ github.ref }}
       exclude-group-phpunit:
         db,xcache,zenddata
       extensions:
