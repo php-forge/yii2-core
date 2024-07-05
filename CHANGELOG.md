@@ -13,6 +13,7 @@ Yii Core version 2 Change Log
 - Bug #8: Remove `PHP` deprecated `strpos()` passing `null` to parameter #1 in `Oracle` (@terabytesoftw)
 - Bug #10: Remove deprecate `methods` and `extensions` `PHP` in `8.1` (@terabytesoftw)
 - Bug #39: Remove unused `classes.php` file and update in `Yii.php`, load classes via autoload `composer.json` (@terabytesoftw)
+- Bug #40: Fix `wincache` tests in PHP `8.1`, `8.2`, `8.3` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
