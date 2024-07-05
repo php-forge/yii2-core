@@ -98,6 +98,10 @@ class WinCache extends Cache
      */
     protected function addValue($key, $value, $duration)
     {
+        if ($this->exists($key)) {
+            return false;
+        }
+
         return wincache_ucache_add($key, $value, $duration);
     }
 
