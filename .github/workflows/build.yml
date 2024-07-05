@@ -29,7 +29,7 @@ jobs:
     with:
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
-      enable-concurrency: false
+      concurrency-group: linux-${{ github.workflow }}-${{ github.ref }}
       exclude-group-phpunit:
         db,wincache,xcache,zenddata
       extensions:
@@ -40,9 +40,6 @@ jobs:
         ['ubuntu-latest']
       php: >-
         ['8.1', '8.2', '8.3', '8.4']
-    concurrency:
-      group: linux-${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
 
   windows:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
@@ -51,7 +48,7 @@ jobs:
     with:
       composer-command:
         composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi --ignore-platform-reqs
-      enable-concurrency: false
+      concurrency-group: windows-${{ github.workflow }}-${{ github.ref }}
       exclude-group-phpunit:
         db,xcache,zenddata
       extensions:
