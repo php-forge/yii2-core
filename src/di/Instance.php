@@ -123,7 +123,7 @@ class Instance
                 $container = Yii::$container;
             }
             unset($reference['class']);
-            $component = $container->get($class, [], $reference);
+            $component = $container->create($class, [], $reference);
             if ($type === null || $component instanceof $type) {
                 return $component;
             }
