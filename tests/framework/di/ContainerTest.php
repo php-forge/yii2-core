@@ -6,17 +6,15 @@ namespace yiiunit\framework\di;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\di\{Container, Instance, NotInstantiableException};
+use yii\di\{Container, Instance, NotFoundException, NotInstantiableException};
 use yii\validators\NumberValidator;
 use yiiunit\data\ar\{Cat, Order, Type};
+use yiiunit\data\base\TraversableObject;
 use yiiunit\framework\di\stubs\{
-    A,
     Alpha,
-    B,
     Bar,
     BarSetter,
     Beta,
-    Car,
     Corge,
     EngineCar,
     EngineMarkOne,
@@ -34,7 +32,6 @@ use yiiunit\framework\di\stubs\{
     Zeta,
 };
 use yiiunit\framework\di\stubs\EngineInterface;
-use yiiunit\framework\di\stubs\NullableConcreteDependency;
 use yiiunit\framework\di\stubs\OptionalConcreteDependency;
 use yiiunit\TestCase;
 
@@ -54,11 +51,11 @@ final class ContainerTest extends TestCase
         $this->mockApplication([
             'components' => [
                 'qux' => [
-                    'class' => 'yiiunit\framework\di\stubs\Qux',
+                    'class' => Qux::class,
                     'a' => 'belongApp',
                 ],
                 'qux2' => [
-                    'class' => 'yiiunit\framework\di\stubs\Qux',
+                    'class' => Qux::class,
                     'a' => 'belongAppQux2',
                 ],
             ],
@@ -72,6 +69,29 @@ final class ContainerTest extends TestCase
         $this->assertTrue(Yii::$container->invoke($closure, ['b' => 1, 'a' => 5]));
     }
 
+    public function testClear(): void
+    {
+        $container = new Container();
+        $container->setSingletons(
+            [
+                'model.order' => Order::class,
+                'test\TraversableInterface' => [
+                    ['class' => '\yiiunit\data\base\TraversableObject'],
+                    [['item1', 'item2']],
+                ],
+                'qux.using.closure' => static function () {
+                    return new Qux();
+                },
+            ]
+        );
+        $container->clear();
+
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('Failed to instantiate component or class "model.order".');
+
+        $container->get('model.order');
+    }
+
     public function testContainerSingletons(): void
     {
         $container = new Container();
@@ -79,7 +99,7 @@ final class ContainerTest extends TestCase
             [
                 'model.order' => Order::class,
                 'test\TraversableInterface' => [
-                    ['class' => 'yiiunit\data\base\TraversableObject'],
+                    ['class' => TraversableObject::class],
                     [['item1', 'item2']],
                 ],
                 'qux.using.closure' => static function () {
@@ -102,104 +122,55 @@ final class ContainerTest extends TestCase
         $this->assertSame($foo, $sameFoo);
     }
 
-    public function testDefault(): void
+    public function testCreate(): void
     {
-        $namespace = __NAMESPACE__ . '\stubs';
-        $QuxInterface = "$namespace\\QuxInterface";
-        $Foo = Foo::class;
-        $Bar = Bar::class;
         $Qux = Qux::class;
 
-        // automatic wiring
-        $container = new Container();
-        $container->set($QuxInterface, $Qux);
-        $foo = $container->get($Foo);
-        $this->assertInstanceOf($Foo, $foo);
-        $this->assertInstanceOf($Bar, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-        $foo2 = $container->get($Foo);
-        $this->assertNotSame($foo, $foo2);
-
-        // full wiring
-        $container = new Container();
-        $container->set($QuxInterface, $Qux);
-        $container->set($Bar);
-        $container->set($Qux);
-        $container->set($Foo);
-        $foo = $container->get($Foo);
-        $this->assertInstanceOf($Foo, $foo);
-        $this->assertInstanceOf($Bar, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-
-        // wiring by closure
-        $container = new Container();
-        $container->set(
-            'foo',
-            static function () {
-                $qux = new Qux();
-                $bar = new Bar($qux);
-
-                return new Foo($bar);
-            }
-        );
-        $foo = $container->get('foo');
-        $this->assertInstanceOf($Foo, $foo);
-        $this->assertInstanceOf($Bar, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-
-        // wiring by closure which uses container
-        $container = new Container();
-        $container->set($QuxInterface, $Qux);
-        $container->set(
-            'foo',
-            static function (Container $c, $params, $config) {
-                return $c->get(Foo::class);
-            }
-        );
-        $foo = $container->get('foo');
-        $this->assertInstanceOf($Foo, $foo);
-        $this->assertInstanceOf($Bar, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-
-        // predefined constructor parameters
-        $container = new Container();
-        $container->set('foo', $Foo, [Instance::of('bar')]);
-        $container->set('bar', $Bar, [Instance::of('qux')]);
-        $container->set('qux', $Qux);
-        $foo = $container->get('foo');
-        $this->assertInstanceOf($Foo, $foo);
-        $this->assertInstanceOf($Bar, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-
-        // predefined property parameters
-        $fooSetter = FooProperty::class;
-        $barSetter = BarSetter::class;
-
-        $container = new Container();
-        $container->set('foo', ['class' => $fooSetter, 'bar' => Instance::of('bar')]);
-        $container->set('bar', ['class' => $barSetter, 'qux' => Instance::of('qux')]);
-        $container->set('qux', $Qux);
-        $foo = $container->get('foo');
-        $this->assertInstanceOf($fooSetter, $foo);
-        $this->assertInstanceOf($barSetter, $foo->bar);
-        $this->assertInstanceOf($Qux, $foo->bar->qux);
-
-        // wiring by closure
-        $container = new Container();
-        $container->set('qux', new Qux());
-        $qux1 = $container->get('qux');
-        $qux2 = $container->get('qux');
-        $this->assertSame($qux1, $qux2);
-
-        // config
         $container = new Container();
         $container->set('qux', $Qux);
-        $qux = $container->get('qux', [], ['a' => 2]);
-        $this->assertEquals(2, $qux->a);
-        $qux = $container->get('qux', [3]);
-        $this->assertEquals(3, $qux->a);
-        $qux = $container->get('qux', [3, ['a' => 4]]);
-        $this->assertEquals(4, $qux->a);
+
+        $qux = $container->create('qux', [], ['a' => 2]);
+        $this->assertSame(2, $qux->a);
+
+        $qux = $container->create('qux', [3]);
+        $this->assertSame(3, $qux->a);
+
+        $qux = $container->create('qux', [3, ['a' => 4]]);
+        $this->assertSame(4, $qux->a);
+    }
+
+    public function testCreateWithUnionTypeClassConstructorParameters(): void
+    {
+        $unionType = (new Container())->create(UnionTypeWithClass::class, ['value' => new Beta()]);
+        $this->assertInstanceOf(UnionTypeWithClass::class, $unionType);
+        $this->assertInstanceOf(Beta::class, $unionType->value);
+
+        $this->expectException('TypeError');
+        (new Container())->create(UnionTypeNotNull::class);
+    }
+
+    public function testCreateWithUnionTypeNullConstructorParameters(): void
+    {
+        $unionType = (new Container())->create(UnionTypeNull::class);
+        $this->assertInstanceOf(UnionTypeNull::class, $unionType);
+    }
+
+    public function testCreateUnionTypeWithoutNullConstructorParameters(): void
+    {
+        $unionType = (new Container())->create(UnionTypeNotNull::class, ['value' => 'a']);
+        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
+
+        $unionType = (new Container())->create(UnionTypeNotNull::class, ['value' => 1]);
+        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
+
+        $unionType = (new Container())->create(UnionTypeNotNull::class, ['value' => 2.3]);
+        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
+
+        $unionType = (new Container())->create(UnionTypeNotNull::class, ['value' => true]);
+        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
+
+        $this->expectException('TypeError');
+        (new Container())->create(UnionTypeNotNull::class);
     }
 
     /**
@@ -242,7 +213,7 @@ final class ContainerTest extends TestCase
         $container->setDefinitions(
             [
                 'test\TraversableInterface' => [
-                    '__class' => 'yiiunit\data\base\TraversableObject',
+                    '__class' => TraversableObject::class,
                     '__construct()' => [['item1', 'item2']],
                 ],
                 'qux' => [
@@ -257,8 +228,98 @@ final class ContainerTest extends TestCase
         $this->assertSame(42, $qux->a);
 
         $traversable = $container->get('test\TraversableInterface');
-        $this->assertInstanceOf('yiiunit\data\base\TraversableObject', $traversable);
+        $this->assertInstanceOf(TraversableObject::class, $traversable);
         $this->assertEquals('item1', $traversable->current());
+    }
+
+    public function testGet(): void
+    {
+        $Foo = Foo::class;
+        $Bar = Bar::class;
+        $Qux = Qux::class;
+
+        $container = new Container();
+
+        // automatic wiring
+        $container->set(QuxInterface::class, $Qux);
+        $foo = $container->get($Foo);
+        $this->assertInstanceOf($Foo, $foo);
+        $this->assertInstanceOf($Bar, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        $foo2 = $container->get($Foo);
+        $this->assertNotSame($foo, $foo2);
+
+        // full wiring
+        $container->clear();
+        $container->set(QuxInterface::class, $Qux);
+        $container->set($Bar);
+        $container->set($Qux);
+        $container->set($Foo);
+        $foo = $container->get($Foo);
+        $this->assertInstanceOf($Foo, $foo);
+        $this->assertInstanceOf($Bar, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        // wiring by closure
+        $container->clear();
+        $container->set(
+            'foo',
+            static function (): Foo {
+                $qux = new Qux();
+                $bar = new Bar($qux);
+
+                return new Foo($bar);
+            }
+        );
+        $foo = $container->get('foo');
+        $this->assertInstanceOf($Foo, $foo);
+        $this->assertInstanceOf($Bar, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        // wiring by closure which uses container
+        $container->clear();
+        $container->set(QuxInterface::class, $Qux);
+        $container->set(
+            'foo',
+            static function (Container $c, $params, $config): Foo {
+                return $c->get(Foo::class);
+            }
+        );
+        $foo = $container->get('foo');
+        $this->assertInstanceOf($Foo, $foo);
+        $this->assertInstanceOf($Bar, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        // predefined constructor parameters
+        $container->clear();
+        $container->set('foo', $Foo, [Instance::of('bar')]);
+        $container->set('bar', $Bar, [Instance::of('qux')]);
+        $container->set('qux', $Qux);
+        $foo = $container->get('foo');
+        $this->assertInstanceOf($Foo, $foo);
+        $this->assertInstanceOf($Bar, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        // predefined property parameters
+        $fooSetter = FooProperty::class;
+        $barSetter = BarSetter::class;
+
+        $container->clear();
+        $container->set('foo', ['class' => $fooSetter, 'bar' => Instance::of('bar')]);
+        $container->set('bar', ['class' => $barSetter, 'qux' => Instance::of('qux')]);
+        $container->set('qux', $Qux);
+        $foo = $container->get('foo');
+        $this->assertInstanceOf($fooSetter, $foo);
+        $this->assertInstanceOf($barSetter, $foo->bar);
+        $this->assertInstanceOf($Qux, $foo->bar->qux);
+
+        // wiring by closure
+        $container->clear();
+        $container->set('qux', new Qux());
+        $qux1 = $container->get('qux');
+        $qux2 = $container->get('qux');
+        $this->assertSame($qux1, $qux2);
     }
 
     public function testGetByClassIndirectly(): void
@@ -278,16 +339,122 @@ final class ContainerTest extends TestCase
         $this->assertSame(42, $qux->a);
     }
 
-    public function testGetByInstance(): void
+    public function testGetDefinitions(): void
     {
         $container = new Container();
-        $container->setSingletons(['one' => Qux::class, 'two' => Instance::of('one')]);
-        $one = $container->get(Instance::of('one'));
-        $two = $container->get(Instance::of('two'));
-        $this->assertInstanceOf(Qux::class, $one);
-        $this->assertSame($one, $two);
-        $this->assertSame($one, $container->get('one'));
-        $this->assertSame($one, $container->get('two'));
+        $container->setDefinitions(
+            [
+                'test' => [
+                    'class' => Qux::class,
+                    'a' => 42,
+                ],
+            ]
+        );
+
+        $this->assertSame(
+            [
+                'test' => [
+                    'class' => Qux::class,
+                    'a' => 42,
+                ],
+            ],
+            $container->getDefinitions()
+        );
+    }
+
+    public function testGetInvalidDefinitionWithArray(): void
+    {
+        $container = new Container();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('A class definition requires a "class" member.');
+
+        $container->setDefinitions(
+            [
+                'test' => [
+                    'a' => 42, // Invalid definition
+                ],
+            ],
+        );
+        $container->get('test');
+    }
+
+    public function testGetDefinitionWithCallable(): void
+    {
+        $container = new Container();
+        $container->setDefinitions(
+            [
+                'test' => static function () {
+                    return 42;
+                },
+            ],
+        );
+        $this->assertSame(42, $container->get('test'));
+    }
+
+    public function testGetInvalidDefinitionWithInteger(): void
+    {
+        $container = new Container();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('A class definition requires a "class" member.');
+
+        $container->setDefinitions(
+            [
+                'test' => [
+                    42 // Invalid definition
+                ],
+            ],
+        );
+
+        $container->get('test');
+    }
+
+    public function testGetInvalidDefinitionWithInteger1(): void
+    {
+        $container = new Container();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Unsupported definition type for "test": integer');
+
+        $container->set('test', 42); // Invalid definition
+        $container->get('test');
+    }
+
+    public function testGetInvalidDefinitionClassWithString(): void
+    {
+        $container = new Container();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Failed to instantiate component or class "42".');
+
+        $container->setDefinitions(
+            [
+                'test' => [
+                    'class' => '42', // Invalid definition
+                ],
+            ],
+        );
+
+        $container->get('test');
+    }
+
+    public function testGetInvalidDefinitionWithString(): void
+    {
+        $container = new Container();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('A class definition requires a "class" member.');
+
+        $container->setDefinitions(
+            [
+                'test' => [
+                    '42' // Invalid definition
+                ],
+            ],
+        );
+
+        $container->get('test');
     }
 
     /**
@@ -307,6 +474,50 @@ final class ContainerTest extends TestCase
         );
 
         $this->assertSame($expected, $container->has($id));
+    }
+
+    public function testHasSingleton(): void
+    {
+        $container = new Container();
+        $container->setSingletons(['qux' => Qux::class]);
+
+        $this->assertTrue($container->hasSingleton('qux'));
+    }
+
+    public function testHasSingletonByClass(): void
+    {
+        $container = new Container();
+        $container->setSingletons(['qux' => Qux::class, Qux::class => Qux::class]);
+
+        $this->assertTrue($container->hasSingleton('qux'));
+        $this->assertTrue($container->hasSingleton(Qux::class));
+    }
+
+    public function testHasSingletonByInstance(): void
+    {
+        $container = new Container();
+        $container->setSingletons(['qux' => Qux::class, 'qux2' => Instance::of('qux')]);
+
+        $this->assertTrue($container->hasSingleton('qux'));
+        $this->assertTrue($container->hasSingleton('qux2'));
+    }
+
+    public function testHasSingletonByInstanceWithClass(): void
+    {
+        $container = new Container();
+        $container->setSingletons(['qux' => Qux::class, 'qux2' => Instance::of(Qux::class)]);
+
+        $this->assertTrue($container->hasSingleton('qux'));
+        $this->assertTrue($container->hasSingleton('qux2'));
+    }
+
+    public function testHasSingletonWithCheckInstance(): void
+    {
+        $container = new Container();
+        $container->setSingletons(['qux' => Qux::class, 'qux2' => Instance::of(Qux::class)]);
+
+        $this->assertInstanceOf(Qux::class, $container->get('qux'));
+        $this->assertTrue($container->hasSingleton('qux', true));
     }
 
     public function testIntegerKeys(): void
@@ -346,23 +557,6 @@ final class ContainerTest extends TestCase
         $qux = $bar->qux;
         $this->assertInstanceOf(Qux::class, $qux);
         $this->assertSame(42, $qux->a);
-    }
-
-    /**
-     * @see https://github.com/yiisoft/yii2/issues/18284
-     */
-    public function testInvalidConstructorParameters(): void
-    {
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Dependencies indexed by name and by position in the same array are not allowed.');
-
-        (new Container())->get(
-            Car::class,
-            [
-                'color' => 'red',
-                'Hello',
-            ]
-        );
     }
 
     public function testInvoke(): void
@@ -430,31 +624,15 @@ final class ContainerTest extends TestCase
     }
 
     /**
-     * @see https://github.com/yiisoft/yii2/issues/18284
-     */
-    public function testNamedConstructorParameters(): void
-    {
-        $test = (new Container())->get(
-            Car::class,
-            [
-                'name' => 'Hello',
-                'color' => 'red',
-            ]
-        );
-        $this->assertSame('Hello', $test->name);
-        $this->assertSame('red', $test->color);
-    }
-
-    /**
      * @dataProvider \yiiunit\framework\di\providers\ContainerProvider::dataNotInstantiableException
      *
      * @see https://github.com/yiisoft/yii2/pull/18379
      *
      * @param string $class
      */
-    public function testNotInstantiableException(string $class): void
+    public function testNotFoundException(string $class): void
     {
-        $this->expectException(NotInstantiableException::class);
+        $this->expectException(NotFoundException::class);
 
         (new Container())->get($class);
     }
@@ -522,6 +700,7 @@ final class ContainerTest extends TestCase
         $container->setDefinitions([EngineInterface::class => EngineMarkOne::class]);
 
         $service = $container->get(OptionalConcreteDependency::class);
+
         $this->assertInstanceOf(EngineCar::class, $service->getCar());
     }
 
@@ -537,7 +716,7 @@ final class ContainerTest extends TestCase
     {
         $quxInterface = 'yiiunit\framework\di\stubs\QuxInterface';
         $container = new Container();
-        $container->resolveArrays = true;
+        $container->setResolveArrays(true);
         $container->setSingletons(
             [
                 $quxInterface => [
@@ -701,7 +880,7 @@ final class ContainerTest extends TestCase
             $container->get('rollbar');
             $this->fail('InvalidConfigException was not thrown');
         } catch (\Exception $e) {
-            $this->assertInstanceOf('yii\base\InvalidConfigException', $e);
+            $this->assertInstanceOf(NotFoundException::class, $e);
         }
     }
 
@@ -716,53 +895,21 @@ final class ContainerTest extends TestCase
         $container->get('scalar');
     }
 
-    public function testThrowingNotFoundException(): void
-    {
-        $this->expectException(NotInstantiableException::class);
-
-        $container = new Container();
-        $container->get('non_existing');
-    }
-
-    public function testUnionTypeWithClassConstructorParameters(): void
-    {
-        $unionType = (new Container())->get(UnionTypeWithClass::class, ['value' => new Beta()]);
-        $this->assertInstanceOf(UnionTypeWithClass::class, $unionType);
-        $this->assertInstanceOf(Beta::class, $unionType->value);
-
-        $this->expectException('TypeError');
-        (new Container())->get(UnionTypeNotNull::class);
-    }
-
-    public function testUnionTypeWithNullConstructorParameters(): void
-    {
-        $unionType = (new Container())->get(UnionTypeNull::class);
-        $this->assertInstanceOf(UnionTypeNull::class, $unionType);
-    }
-
-    public function testUnionTypeWithoutNullConstructorParameters(): void
-    {
-        $unionType = (new Container())->get(UnionTypeNotNull::class, ['value' => 'a']);
-        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
-
-        $unionType = (new Container())->get(UnionTypeNotNull::class, ['value' => 1]);
-        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
-
-        $unionType = (new Container())->get(UnionTypeNotNull::class, ['value' => 2.3]);
-        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
-
-        $unionType = (new Container())->get(UnionTypeNotNull::class, ['value' => true]);
-        $this->assertInstanceOf(UnionTypeNotNull::class, $unionType);
-
-        $this->expectException('TypeError');
-        (new Container())->get(UnionTypeNotNull::class);
-    }
-
     public function testVariadicCallable(): void
     {
-        require __DIR__ . '/testContainerWithVariadicCallable.php';
+        $container = new Container();
+        $container->setSingletons(
+            [
+                'qux' => Qux::class,
+                'qux2' => Qux::class,
+            ]
+        );
 
-        $this->assertTrue(true);
+        $func = static function (QuxInterface ...$quxes) {
+            return 'That\'s a whole lot of quxes!';
+        };
+        $result = $container->invoke($func);
+        $this->assertEquals('That\'s a whole lot of quxes!', $result);
     }
 
     public function testVariadicConstructor(): void
@@ -776,10 +923,13 @@ final class ContainerTest extends TestCase
     public function testWithoutDefinition(): void
     {
         $container = new Container();
+
         $one = $container->get(Qux::class);
-        $two = $container->get(Qux::class);
         $this->assertInstanceOf(Qux::class, $one);
+
+        $two = $container->get(Qux::class);
         $this->assertInstanceOf(Qux::class, $two);
+
         $this->assertSame(1, $one->a);
         $this->assertSame(1, $two->a);
         $this->assertNotSame($one, $two);

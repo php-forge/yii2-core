@@ -12,6 +12,7 @@ use yii\base\Component;
 use yii\db\Connection;
 use yii\di\Container;
 use yii\di\Instance;
+use yii\di\NotFoundException;
 use yiiunit\TestCase;
 
 /**
@@ -55,22 +56,26 @@ class InstanceTest extends TestCase
     /**
      * ensure an InvalidConfigException is thrown when a component does not exist.
      */
-    public function testEnsure_NonExistingComponentException()
+    public function testEnsureWithNonExistingComponentException(): void
     {
         $container = new Container();
-        $this->expectException('yii\base\InvalidConfigException');
-        $this->expectExceptionMessageMatches('/^Failed to instantiate component or class/i');
+
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('Failed to instantiate component or class "cache".');
+
         Instance::ensure('cache', 'yii\cache\Cache', $container);
     }
 
     /**
      * ensure an InvalidConfigException is thrown when a class does not exist.
      */
-    public function testEnsure_NonExistingClassException()
+    public function testEnsureWithNonExistingClassException(): void
     {
         $container = new Container();
-        $this->expectException('yii\base\InvalidConfigException');
-        $this->expectExceptionMessageMatches('/^Failed to instantiate component or class/i');
+
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('Failed to instantiate component or class "yii\cache\DoesNotExist".');
+
         Instance::ensure('yii\cache\DoesNotExist', 'yii\cache\Cache', $container);
     }
 

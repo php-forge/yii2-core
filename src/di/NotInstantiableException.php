@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii\di;
 
-use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
 use yii\base\InvalidConfigException;
 
@@ -12,21 +11,13 @@ use yii\base\InvalidConfigException;
  * NotInstantiableException represents an exception caused by incorrect dependency injection container configuration or
  * usage.
  */
-class NotInstantiableException extends InvalidConfigException implements NotFoundExceptionInterface
+class NotInstantiableException extends InvalidConfigException
 {
     /**
      * {@inheritdoc}
      */
-    public function __construct(
-        string $class,
-        string|null $message = null,
-        int $code = 0,
-        Throwable|null $previous = null
-    ) {
-        if ($message === null) {
-            $message = "Can not instantiate $class.";
-        }
-
+    public function __construct(string|null $message = null, int $code = 0, Throwable|null $previous = null)
+    {
         parent::__construct($message, $code, $previous);
     }
 

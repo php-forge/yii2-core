@@ -89,23 +89,28 @@ class ServiceLocatorTest extends TestCase
     }
 
 
-    public function testShared()
+    public function testShared(): void
     {
         // with configuration: shared
-        $container = new ServiceLocator();
-        $className = TestClass::className();
-        $container->set($className, [
-            'class' => $className,
-            'prop1' => 10,
-            'prop2' => 20,
-        ]);
-        $object = $container->get($className);
+        $serviceLocator = new ServiceLocator();
+        $class = TestClass::class;
+        $serviceLocator->set(
+            $class,
+            [
+                '__class' => $class,
+                'prop1' => 10,
+                'prop2' => 20,
+            ],
+        );
+
+        $object = $serviceLocator->get($class);
         $this->assertEquals(10, $object->prop1);
         $this->assertEquals(20, $object->prop2);
-        $this->assertInstanceOf($className, $object);
+        $this->assertInstanceOf($class, $object);
+
         // check shared
-        $object2 = $container->get($className);
-        $this->assertInstanceOf($className, $object2);
+        $object2 = $serviceLocator->get($class);
+        $this->assertInstanceOf($class, $object2);
         $this->assertSame($object, $object2);
     }
 
