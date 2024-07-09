@@ -343,7 +343,7 @@ class BaseYii
     public static function createObject($type, array $params = [])
     {
         if (is_string($type)) {
-            return static::$container->get($type);
+            return static::$container->create($type, $params);
         }
 
         if (is_callable($type, true)) {
