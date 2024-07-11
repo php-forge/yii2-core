@@ -93,12 +93,16 @@ class ReflectionFactory
 
         $object = $reflection->newInstanceArgs($dependencies);
 
-        if ($object === null) {
-            throw new InvalidConfigException('Failed to instantiate component or class "' . $class . '".');
-        }
-
         foreach ($config as $name => $value) {
-            $object->$name = $value;
+            if (\str_ends_with($name, '()')) {
+                $setter = \call_user_func_array([$object, \substr($name, 0, -2)], $value);
+
+                if ($setter instanceof $object) {
+                    $object = $setter;
+                }
+            } else {
+                $object->$name = $value;
+            }
         }
 
         return $object;
