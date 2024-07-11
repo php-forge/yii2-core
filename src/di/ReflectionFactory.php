@@ -13,8 +13,7 @@ use ReflectionParameter;
 use ReflectionUnionType;
 use Throwable;
 use Yii;
-use yii\base\InvalidConfigException;
-use yii\base\Configurable;
+use yii\base\{Configurable, InvalidConfigException};
 use yii\helpers\ArrayHelper;
 
 class ReflectionFactory

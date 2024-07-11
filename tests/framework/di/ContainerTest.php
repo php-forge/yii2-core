@@ -6,7 +6,7 @@ namespace yiiunit\framework\di;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\di\{Container, Instance, NotFoundException, NotInstantiableException};
+use yii\di\{Container, Instance, NotFoundException};
 use yii\validators\NumberValidator;
 use yiiunit\data\ar\{Cat, Order, Type};
 use yiiunit\data\base\TraversableObject;
@@ -19,8 +19,10 @@ use yiiunit\framework\di\stubs\{
     EngineCar,
     EngineMarkOne,
     EngineMarkTwo,
+    EngineInterface,
     Foo,
     FooProperty,
+    OptionalConcreteDependency,
     Qux,
     QuxAnother,
     QuxFactory,
@@ -31,8 +33,6 @@ use yiiunit\framework\di\stubs\{
     Variadic,
     Zeta,
 };
-use yiiunit\framework\di\stubs\EngineInterface;
-use yiiunit\framework\di\stubs\OptionalConcreteDependency;
 use yiiunit\TestCase;
 
 /**
@@ -129,11 +129,18 @@ final class ContainerTest extends TestCase
         $container = new Container();
         $container->set('qux', $Qux);
 
+        // with paramateters
+        $qux = $container->create('qux', [42]);
+        $this->assertInstanceOf($Qux, $qux);
+        $this->assertSame(42, $qux->a);
+
+        // with config
         $qux = $container->create('qux', [], ['a' => 2]);
         $this->assertSame(2, $qux->a);
 
-        $qux = $container->create('qux', [3]);
-        $this->assertSame(3, $qux->a);
+        // with both
+        $qux = $container->create('qux', [42], ['a' => 2]);
+        $this->assertSame(2, $qux->a);
 
         $qux = $container->create('qux', [3, ['a' => 4]]);
         $this->assertSame(4, $qux->a);
@@ -844,6 +851,34 @@ final class ContainerTest extends TestCase
         $container = new Container();
         $container->setDefinitions(['qux' => [QuxFactory::class, 'create']]);
         $qux = $container->get('qux');
+        $this->assertInstanceOf(Qux::class, $qux);
+        $this->assertSame(42, $qux->a);
+    }
+
+    public function testSetInvalidStringDefinition(): void
+    {
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Invalid definition for "test": invalid');
+
+        $container = new Container();
+        $container->set('test', 'invalid');
+    }
+
+    public function testSetWithOverrideParametes(): void
+    {
+        $container = new Container();
+
+        $container->set(
+            'qux',
+            [
+                'class' => Qux::class,
+            ],
+            [
+                'a' => 24
+            ]
+        );
+
+        $qux = $container->create('qux', ['a' => 42], []);
         $this->assertInstanceOf(Qux::class, $qux);
         $this->assertSame(42, $qux->a);
     }

@@ -7,8 +7,7 @@ namespace yii\di;
 use Psr\Container\ContainerInterface;
 use ReflectionException;
 use Throwable;
-use yii\base\Component;
-use yii\base\InvalidConfigException;
+use yii\base\{Component, InvalidConfigException};
 
 use function array_key_exists;
 use function array_merge;
@@ -493,7 +492,7 @@ class Container extends Component implements ContainerInterface
             if ($concrete === $id) {
                 $entry = $this->reflectionFactory()->create($id, $params, $config);
             } else {
-                $entry = $this->getInternal($concrete, $params, $config);
+                $entry = $this->create($concrete, $params, $config);
             }
         } elseif (\is_object($definition)) {
             return $this->_singletons[$id] = $definition;
@@ -525,6 +524,7 @@ class Container extends Component implements ContainerInterface
         }
 
         $ps = $this->_params[$class];
+
         foreach ($params as $index => $value) {
             $ps[$index] = $value;
         }
