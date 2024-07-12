@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace yiiunit\framework\di;
 
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\di\{Container, ReflectionFactory};
-use yiiunit\framework\di\stubs\{A, B, Beta, Car, CarTunning, EngineCar, EngineInterface, EngineMarkOne, EngineMarkOneInmutable, Qux, QuxInterface};
+use yiiunit\framework\di\stubs\{Beta, CarTunning, EngineInterface, EngineMarkOne, EngineMarkOneInmutable, Qux};
 use yiiunit\TestCase;
 
 /**
@@ -111,4 +112,76 @@ final class ReflectionFactoryTest extends TestCase
 
         $factory->create($class);
     }
+
+    public function testResolveCallableDependenciesWithAssociativeParams(): void
+    {
+        $container = new Container();
+        $factory = new ReflectionFactory($container);
+
+        $callable = function (Beta $param) {
+            return $param;
+        };
+
+        $testInstance = new Beta();
+        $params = ['param' => $testInstance];
+        $result = $factory->resolveCallableDependencies($callable, $params);
+
+        $this->assertCount(1, $result);
+        $this->assertSame($testInstance, $result[0]);
+    }
+
+    public function testResolveCallableDependenciesWithNonAssociativeParams(): void
+    {
+        $container = new Container();
+        $factory = new ReflectionFactory($container);
+
+        $callable = function (Beta $param, $optionalParam = null) {
+            return [$param, $optionalParam];
+        };
+
+        $testInstance = new Beta();
+        $params = [$testInstance];
+        $result = $factory->resolveCallableDependencies($callable, $params);
+
+        $this->assertCount(2, $result);
+        $this->assertSame($testInstance, $result[0]);
+        $this->assertNull($result[1]);
+    }
+
+    public function testResolveCallableDependenciesThrowsExceptionForMissingRequiredParameter(): void
+    {
+        $container = new Container();
+        $factory = new ReflectionFactory($container);
+
+        $callable = function (string $requiredParam) {
+            return $requiredParam;
+        };
+
+        $params = [];
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            'Missing required parameter "requiredParam" when calling "yiiunit\framework\di\{closure}".'
+        );
+
+        $factory->resolveCallableDependencies($callable, $params);
+    }
+
+    public function testResolveCallableDependenciesHandlesAdditionalParams(): void
+    {
+        $container = new Container();
+        $factory = new ReflectionFactory($container);
+
+        $callable = function (string $param1, ...$additionalParams) {
+            return [$param1, $additionalParams];
+        };
+        $params = ['First', 'Second', 'Third'];
+        $result = $factory->resolveCallableDependencies($callable, $params);
+
+        $this->assertCount(3, $result);
+        $this->assertEquals('First', $result[0]);
+        $this->assertEquals('Second', $result[1]);
+        $this->assertEquals('Third', $result[2]);
+    }
+
 }

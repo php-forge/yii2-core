@@ -133,15 +133,20 @@ class ReflectionFactory
     {
         foreach ($dependencies as $index => $dependency) {
             if ($dependency instanceof Instance) {
-                if ($dependency->id !== null) {
+                try {
                     $dependencies[$index] = $dependency->get($this->container);
-                } elseif ($reflection !== null) {
-                    $name = $reflection->getConstructor()?->getParameters()[$index]->getName();
-                    $class = $reflection->getName();
+                } catch (\Exception|\Throwable $e) {
+                    if ($reflection !== null) {
+                        $name = $reflection->getConstructor()?->getParameters()[$index]->getName();
+                        $class = $reflection->getName();
 
-                    throw new InvalidConfigException(
-                        "Missing required parameter \"$name\" when instantiating \"$class\"."
-                    );
+                        throw new NotInstantiableException(
+                            "Missing required parameter \"$name\" when instantiating \"$class\".",
+                            0,
+                            $e
+                        );
+                    }
+                    throw $e;
                 }
             } elseif ($this->_resolveArrays && \is_array($dependency)) {
                 $dependencies[$index] = $this->resolveDependencies($dependency, $reflection);
