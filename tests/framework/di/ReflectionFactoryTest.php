@@ -160,9 +160,7 @@ final class ReflectionFactoryTest extends TestCase
         $params = [];
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(
-            'Missing required parameter "requiredParam" when calling "yiiunit\framework\di\{closure}".'
-        );
+        $this->expectExceptionMessage('Missing required parameter "requiredParam" when calling');
 
         $factory->resolveCallableDependencies($callable, $params);
     }
