@@ -18,6 +18,8 @@ class NotInstantiableException extends InvalidConfigException
      */
     public function __construct(string|null $message = null, int $code = 0, Throwable|null $previous = null)
     {
+        $message ??= $this->getName();
+
         parent::__construct($message, $code, $previous);
     }
 
@@ -26,6 +28,6 @@ class NotInstantiableException extends InvalidConfigException
      */
     public function getName(): string
     {
-        return 'Not instantiable';
+        return 'Not Instantiable';
     }
 }

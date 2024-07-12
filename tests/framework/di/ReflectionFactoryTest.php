@@ -7,7 +7,7 @@ namespace yiiunit\framework\di;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\{Container, ReflectionFactory};
-use yiiunit\framework\di\stubs\{Beta, CarTunning, EngineInterface, EngineMarkOne, EngineMarkOneInmutable, Qux};
+use yiiunit\framework\di\stubs\{Bar, Beta, CarTunning, EngineInterface, EngineMarkOne, EngineMarkOneInmutable, Qux};
 use yiiunit\TestCase;
 
 /**
@@ -182,4 +182,20 @@ final class ReflectionFactoryTest extends TestCase
         $this->assertEquals('Third', $result[2]);
     }
 
+    public function testValidateDependenciesThrowsExceptionForMixedIndexing(): void
+    {
+        $container = new Container();
+        $factory = new ReflectionFactory($container);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            'Dependencies indexed by name and by position in the same array are not allowed.'
+        );
+
+        $factory->create(
+            Bar::class,
+            [],
+            ['__construct()' => ['qux' => new Qux(), '1' => ['a' => 1]]],
+        );
+    }
 }
