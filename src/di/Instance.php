@@ -122,13 +122,12 @@ class Instance
         string|null $type = null,
         ServiceLocator|Container|null $container = null
     ) {
-        $container ??= Yii::$container;
-
         if (is_array($reference)) {
             $class = isset($reference['class']) ? $reference['class'] : $type;
 
             unset($reference['class']);
 
+            $container ??= Yii::$container;
             $component = $container->create($class, [], $reference);
 
             if ($type === null || $component instanceof $type) {
