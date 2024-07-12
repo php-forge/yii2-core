@@ -101,7 +101,7 @@ class ServiceLocatorTest extends TestCase
 
         $this->assertNull($container->get('test', false));
     }
-    
+
     /**
      * @see https://github.com/yiisoft/yii2/issues/11771
      */
@@ -134,6 +134,13 @@ class ServiceLocatorTest extends TestCase
         $container = new ServiceLocator();
         $container->set($className, $object);
         $this->assertSame($container->get($className), $object);
+    }
+
+    public function testSetDefinitionWithNull(): void
+    {
+        $container = new ServiceLocator();
+
+        $this->assertNull($container->set('test', null));
     }
 
     public function testSetExceptionTypeDefinition(): void
