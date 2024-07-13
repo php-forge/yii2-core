@@ -6,9 +6,10 @@ namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-final class QuxAnother extends BaseObject implements QuxInterface
+final class InvokeableClass extends BaseObject
 {
-    public function quxMethod()
+    public function __invoke()
     {
+        return 'invoked';
     }
 }

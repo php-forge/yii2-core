@@ -6,10 +6,8 @@ namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-final class FooProperty extends BaseObject
+class TestClass extends BaseObject
 {
-    /**
-     * @var BarSetter
-     */
-    public $bar;
+    public $prop1 = 1;
+    public $prop2;
 }

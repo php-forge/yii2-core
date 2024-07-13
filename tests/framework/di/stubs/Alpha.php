@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-class Alpha extends BaseObject
+final class Alpha extends BaseObject
 {
     public $beta;
     public $omega;

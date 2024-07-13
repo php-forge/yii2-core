@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\di;
 
@@ -15,10 +12,11 @@ use yii\base\InvalidConfigException;
 /**
  * ServiceLocator implements a [service locator](https://en.wikipedia.org/wiki/Service_locator_pattern).
  *
- * To use ServiceLocator, you first need to register component IDs with the corresponding component
- * definitions with the locator by calling [[set()]] or [[setComponents()]].
- * You can then call [[get()]] to retrieve a component with the specified ID. The locator will automatically
- * instantiate and configure the component according to the definition.
+ * To use ServiceLocator, you first need to register component IDs with the corresponding component definitions with the
+ * locator by calling [[set()]] or [[setComponents()]].
+ *
+ * You can then call [[get()]] to retrieve a component with the specified ID. The locator will automatically instantiate
+ * and configure the component according to the definition.
  *
  * For example,
  *
@@ -46,29 +44,28 @@ use yii\base\InvalidConfigException;
  *
  * @property array $components The list of the component definitions or the loaded component instances (ID =>
  * definition or instance).
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class ServiceLocator extends Component
 {
     /**
      * @var array shared component instances indexed by their IDs
      */
-    private $_components = [];
+    private array $_components = [];
     /**
      * @var array component definitions indexed by their IDs
      */
-    private $_definitions = [];
-
+    private array $_definitions = [];
 
     /**
      * Getter magic method.
+     *
      * This method is overridden to support accessing components like reading properties.
-     * @param string $name component or property name
-     * @return mixed the named property value
+     *
+     * @param string $name component or property name.
+     *
+     * @return mixed the named property value.
      */
-    public function __get($name)
+    public function __get($name): mixed
     {
         if ($this->has($name)) {
             return $this->get($name);
@@ -79,11 +76,14 @@ class ServiceLocator extends Component
 
     /**
      * Checks if a property value is null.
+     *
      * This method overrides the parent implementation by checking if the named component is loaded.
-     * @param string $name the property name or the event name
-     * @return bool whether the property value is null
+     *
+     * @param string $name the property name or the event name.
+     *
+     * @return bool whether the property value is null.
      */
-    public function __isset($name)
+    public function __isset($name): bool
     {
         if ($this->has($name)) {
             return true;
@@ -93,17 +93,21 @@ class ServiceLocator extends Component
     }
 
     /**
-     * Returns a value indicating whether the locator has the specified component definition or has instantiated the component.
+     * Returns a value indicating whether the locator has the specified component definition or has instantiated the
+     * component.
+     *
      * This method may return different results depending on the value of `$checkInstance`.
      *
-     * - If `$checkInstance` is false (default), the method will return a value indicating whether the locator has the specified
-     *   component definition.
+     * - If `$checkInstance` is false (default), the method will return a value indicating whether the locator has the
+     *   specified component definition.
      * - If `$checkInstance` is true, the method will return a value indicating whether the locator has
      *   instantiated the specified component.
      *
      * @param string $id component ID (e.g. `db`).
      * @param bool $checkInstance whether the method should check if the component is shared and instantiated.
+     *
      * @return bool whether the locator has the specified component definition or has instantiated the component.
+     *
      * @see set()
      */
     public function has($id, $checkInstance = false)
@@ -116,9 +120,12 @@ class ServiceLocator extends Component
      *
      * @param string $id component ID (e.g. `db`).
      * @param bool $throwException whether to throw an exception if `$id` is not registered with the locator before.
-     * @return object|null the component of the specified ID. If `$throwException` is false and `$id`
-     * is not registered before, null will be returned.
-     * @throws InvalidConfigException if `$id` refers to a nonexistent component ID
+     *
+     * @return object|null the component of the specified ID. If `$throwException` is false and `$id` is not registered
+     * before, null will be returned.
+     *
+     * @throws InvalidConfigException if `$id` refers to a nonexistent component ID.
+     *
      * @see has()
      * @see set()
      */
@@ -130,6 +137,7 @@ class ServiceLocator extends Component
 
         if (isset($this->_definitions[$id])) {
             $definition = $this->_definitions[$id];
+
             if (is_object($definition) && !$definition instanceof Closure) {
                 return $this->_components[$id] = $definition;
             }
@@ -152,18 +160,24 @@ class ServiceLocator extends Component
      * $locator->set('cache', 'yii\caching\FileCache');
      *
      * // a configuration array
-     * $locator->set('db', [
-     *     'class' => 'yii\db\Connection',
-     *     'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
-     *     'username' => 'root',
-     *     'password' => '',
-     *     'charset' => 'utf8',
-     * ]);
+     * $locator->set(
+     *     'db',
+     *     [
+     *         'class' => 'yii\db\Connection',
+     *         'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
+     *         'username' => 'root',
+     *         'password' => '',
+     *         'charset' => 'utf8',
+     *     ]
+     * );
      *
      * // an anonymous function
-     * $locator->set('cache', function ($params) {
-     *     return new \yii\caching\FileCache;
-     * });
+     * $locator->set(
+     *    'cache',
+     *     static function ($params): \yii\caching\FileCache {
+     *         return new \yii\caching\FileCache;
+     *     }
+     * );
      *
      * // an instance
      * $locator->set('cache', new \yii\caching\FileCache);
@@ -175,17 +189,17 @@ class ServiceLocator extends Component
      * @param mixed $definition the component definition to be registered with this locator.
      * It can be one of the following:
      *
-     * - a class name
-     * - a configuration array: the array contains name-value pairs that will be used to
-     *   initialize the property values of the newly created object when [[get()]] is called.
+     * - a class name.
+     * - a configuration array: the array contains name-value pairs that will be used to initialize the property values
+     *   of the newly created object when [[get()]] is called.
      *   The `class` element is required and stands for the the class of the object to be created.
      * - a PHP callable: either an anonymous function or an array representing a class method (e.g. `['Foo', 'bar']`).
      *   The callable will be called by [[get()]] to return an object associated with the specified component ID.
      * - an object: When [[get()]] is called, this object will be returned.
      *
-     * @throws InvalidConfigException if the definition is an invalid configuration array
+     * @throws InvalidConfigException if the definition is an invalid configuration array.
      */
-    public function set($id, $definition)
+    public function set(string $id, mixed $definition): void
     {
         unset($this->_components[$id]);
 
@@ -206,28 +220,36 @@ class ServiceLocator extends Component
             } elseif (isset($definition['class'])) {
                 $this->_definitions[$id] = $definition;
             } else {
-                throw new InvalidConfigException("The configuration for the \"$id\" component must contain a \"class\" element.");
+                throw new InvalidConfigException(
+                    "The configuration for the \"$id\" component must contain a \"class\" element."
+                );
             }
         } else {
-            throw new InvalidConfigException("Unexpected configuration type for the \"$id\" component: " . gettype($definition));
+            throw new InvalidConfigException(
+                "Unexpected configuration type for the \"$id\" component: " . gettype($definition)
+            );
         }
     }
 
     /**
      * Removes the component from the locator.
+     *
      * @param string $id the component ID
      */
-    public function clear($id)
+    public function clear(string $id): void
     {
         unset($this->_definitions[$id], $this->_components[$id]);
     }
 
     /**
      * Returns the list of the component definitions or the loaded component instances.
+     *
      * @param bool $returnDefinitions whether to return component definitions instead of the loaded component instances.
-     * @return array the list of the component definitions or the loaded component instances (ID => definition or instance).
+     *
+     * @return array the list of the component definitions or the loaded component instances
+     * (ID => definition or instance).
      */
-    public function getComponents($returnDefinitions = true)
+    public function getComponents(bool $returnDefinitions = true): array
     {
         return $returnDefinitions ? $this->_definitions : $this->_components;
     }
@@ -257,12 +279,12 @@ class ServiceLocator extends Component
      * ]
      * ```
      *
-     * @param array $components component definitions or instances
+     * @param array $components component definitions or instances.
      */
-    public function setComponents($components)
+    public function setComponents(array $components): void
     {
         foreach ($components as $id => $component) {
-            $this->set($id, $component);
+            $this->set((string) $id, $component);
         }
     }
 }

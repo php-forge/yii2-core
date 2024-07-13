@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-class Zeta extends BaseObject
+final class Zeta extends BaseObject
 {
     public $beta = false;
     public $betaNull = false;

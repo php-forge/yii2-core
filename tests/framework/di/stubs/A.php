@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\di\stubs;
 
-final class Variadic
+final class A
 {
-    public function __construct(QuxInterface ...$quxes)
+    public function __construct(public B|null $b = null)
     {
     }
 }

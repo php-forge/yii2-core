@@ -1,17 +1,10 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\di\stubs;
 
-/**
- * @author Yusup Hambali <supalpuket@gmail.com>
- * @since 2.0.31
- */
-class FooBaz extends \yii\base\BaseObject
+final class FooBaz extends \yii\base\BaseObject
 {
     public $fooDependent = [];
 
