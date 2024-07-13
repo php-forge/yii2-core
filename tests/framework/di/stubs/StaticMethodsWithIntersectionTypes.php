@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace yiiunit\framework\di\stubs;
 
-// Syntax valid only for PHP 8.1+
-class StaticMethodsWithIntersectionTypes
+final class StaticMethodsWithIntersectionTypes
 {
     public static function withQuxInterfaceAndQuxAnotherIntersection(QuxInterface & QuxAnother $Qux)
     {

@@ -12,10 +12,11 @@ use yii\base\InvalidConfigException;
 /**
  * ServiceLocator implements a [service locator](https://en.wikipedia.org/wiki/Service_locator_pattern).
  *
- * To use ServiceLocator, you first need to register component IDs with the corresponding component
- * definitions with the locator by calling [[set()]] or [[setComponents()]].
- * You can then call [[get()]] to retrieve a component with the specified ID. The locator will automatically
- * instantiate and configure the component according to the definition.
+ * To use ServiceLocator, you first need to register component IDs with the corresponding component definitions with the
+ * locator by calling [[set()]] or [[setComponents()]].
+ *
+ * You can then call [[get()]] to retrieve a component with the specified ID. The locator will automatically instantiate
+ * and configure the component according to the definition.
  *
  * For example,
  *
@@ -159,18 +160,24 @@ class ServiceLocator extends Component
      * $locator->set('cache', 'yii\caching\FileCache');
      *
      * // a configuration array
-     * $locator->set('db', [
-     *     'class' => 'yii\db\Connection',
-     *     'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
-     *     'username' => 'root',
-     *     'password' => '',
-     *     'charset' => 'utf8',
-     * ]);
+     * $locator->set(
+     *     'db',
+     *     [
+     *         'class' => 'yii\db\Connection',
+     *         'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
+     *         'username' => 'root',
+     *         'password' => '',
+     *         'charset' => 'utf8',
+     *     ]
+     * );
      *
      * // an anonymous function
-     * $locator->set('cache', function ($params) {
-     *     return new \yii\caching\FileCache;
-     * });
+     * $locator->set(
+     *    'cache',
+     *     static function ($params): \yii\caching\FileCache {
+     *         return new \yii\caching\FileCache;
+     *     }
+     * );
      *
      * // an instance
      * $locator->set('cache', new \yii\caching\FileCache);

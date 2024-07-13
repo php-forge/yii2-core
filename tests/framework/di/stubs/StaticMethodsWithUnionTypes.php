@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace yiiunit\framework\di\stubs;
 
-// Syntax valid only for PHP 8.0+
-class StaticMethodsWithUnionTypes
+final class StaticMethodsWithUnionTypes
 {
     public static function withBetaUnion(string | Beta $beta)
     {

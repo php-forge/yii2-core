@@ -1,15 +1,12 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-class QuxAnother extends BaseObject implements QuxInterface
+final class QuxAnother extends BaseObject implements QuxInterface
 {
     public function quxMethod()
     {

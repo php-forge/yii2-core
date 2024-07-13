@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\di\stubs;
 
-class Creator
+final class Creator
 {
     public static function create(): TestClass
     {

@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\di;
 
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidConfigException, UnknownPropertyException};
 use yii\di\ServiceLocator;
-use yiiunit\framework\di\stubs\Creator;
-use yiiunit\framework\di\stubs\TestClass;
-use yiiunit\framework\di\stubs\TestSubclass;
+use yiiunit\framework\di\stubs\{Creator, ServiceLocatorStub, TestClass, TestSubclass};
 use yiiunit\TestCase;
 
 /**
@@ -54,7 +52,7 @@ class ServiceLocatorTest extends TestCase
         $this->assertFalse($container->has($className));
     }
 
-    public function testDi3Compatibility()
+    public function testDi3Compatibility(): void
     {
         $config = [
             'components' => [
@@ -100,6 +98,39 @@ class ServiceLocatorTest extends TestCase
         $container = new ServiceLocator();
 
         $this->assertNull($container->get('test', false));
+    }
+
+    public function testGetReturnsParentGet(): void
+    {
+        $serviceLocator = new ServiceLocatorStub();
+
+        $this->assertEquals('test value', $serviceLocator->testProperty);
+
+        $this->expectException(UnknownPropertyException::class);
+        $serviceLocator->nonExistentProperty;
+
+        $this->expectException(InvalidConfigException::class);
+        $serviceLocator->undefinedComponent;
+
+        $serviceLocator->set('definedComponent', 'component value');
+        $this->assertEquals('component value', $serviceLocator->definedComponent);
+    }
+
+    public function testIssetReturnsParentIsset(): void
+    {
+        $serviceLocator = new ServiceLocatorStub();
+
+        $this->assertTrue(isset($serviceLocator->testProperty));
+
+        $serviceLocator->testProperty = null;
+        $this->assertFalse(isset($serviceLocator->testProperty));
+
+        $serviceLocator->testProperty = 'test';
+        $this->assertTrue(isset($serviceLocator->testProperty));
+        $this->assertFalse(isset($serviceLocator->undefinedComponent));
+
+        $serviceLocator->set('definedComponent', 'some value');
+        $this->assertTrue(isset($serviceLocator->definedComponent));
     }
 
     /**

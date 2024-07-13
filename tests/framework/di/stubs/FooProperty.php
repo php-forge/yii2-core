@@ -1,21 +1,12 @@
 <?php
-/**
- * @link      https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license   https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\di\stubs;
 
 use yii\base\BaseObject;
 
-/**
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since  2.0
- *
- * @property BarSetter $bar
- */
-class FooProperty extends BaseObject
+final class FooProperty extends BaseObject
 {
     /**
      * @var BarSetter

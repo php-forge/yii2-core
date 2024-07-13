@@ -79,9 +79,10 @@ use function str_contains;
  * }
  *
  * $container = new Container;
- * $container->set('yii\db\Connection', [
- *     'dsn' => '...',
- * ]);
+ * $container->set(
+ *     'yii\db\Connection',
+ *     ['dsn' => '...']
+ * );
  * $container->set('app\models\UserFinderInterface', [
  *     'class' => 'app\models\UserFinder',
  * ]);
@@ -122,7 +123,7 @@ class Container extends Component implements ContainerInterface
     private ReflectionFactory|null $reflectionFactory = null;
 
     /**
-     * Removes all of the component's previously registered services.
+     * Removes all previously registered services from the container.
      */
     public function clear(): void
     {
@@ -131,6 +132,17 @@ class Container extends Component implements ContainerInterface
         $this->_params = [];
     }
 
+    /**
+     * Creates a new instance of the specified class.
+     *
+     * @param string $class the class name to create an instance of.
+     * @param array $params constructor parameters.
+     * @param array $config configuration array to be applied to the new instance.
+     *
+     * @return mixed the newly created instance.
+     *
+     * @throws InvalidConfigException|NotInstantiableException if the class cannot be instantiated.
+     */
     public function create(string $class, array $params = [], array $config = []): mixed
     {
         return $this->getInternal($class, $params, $config);
@@ -141,7 +153,7 @@ class Container extends Component implements ContainerInterface
      *
      * @param string $id class name, interface name or alias name.
      *
-     * @return bool Whether the container has the definition of the specified name.
+     * @return bool whether the container has the definition of the specified name.
      *
      * @see set()
      */
@@ -167,6 +179,15 @@ class Container extends Component implements ContainerInterface
         return $checkInstance ? isset($this->_singletons[$class]) : array_key_exists($class, $this->_singletons);
     }
 
+    /**
+     * Retrieves a dependency from the container.
+     *
+     * @param string $id the dependency ID (typically a class or interface name).
+     *
+     * @return mixed the resolved dependency.
+     *
+     * @throws NotInstantiableException|NotFoundException if the dependency cannot be resolved.
+     */
     public function get(string $id): mixed
     {
         try {
@@ -243,22 +264,28 @@ class Container extends Component implements ContainerInterface
      *
      * // register a class with configuration. The configuration
      * // will be applied when the class is instantiated by get()
-     * $container->set('yii\db\Connection', [
-     *     'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
-     *     'username' => 'root',
-     *     'password' => '',
-     *     'charset' => 'utf8',
-     * ]);
+     * $container->set(
+     *     'yii\db\Connection',
+     *     [
+     *         'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
+     *         'username' => 'root',
+     *         'password' => '',
+     *         'charset' => 'utf8',
+     *     ]
+     * );
      *
      * // register an alias name with class configuration
      * // In this case, a "class" element is required to specify the class
-     * $container->set('db', [
-     *     'class' => 'yii\db\Connection',
-     *     'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
-     *     'username' => 'root',
-     *     'password' => '',
-     *     'charset' => 'utf8',
-     * ]);
+     * $container->set(
+     *     'db',
+     *     [
+     *         'class' => 'yii\db\Connection',
+     *         'dsn' => 'mysql:host=127.0.0.1;dbname=demo',
+     *         'username' => 'root',
+     *         'password' => '',
+     *         'charset' => 'utf8',
+     *     ]
+     * );
      *
      * // register a PHP callable
      * // The callable will be executed when $container->get('db') is called
@@ -270,7 +297,7 @@ class Container extends Component implements ContainerInterface
      * If a class definition with the same name already exists, it will be overwritten with the new one.
      * You may use [[has()]] to check if a class definition already exists.
      *
-     * @param string $class class name, interface name or alias name
+     * @param string $class class name, interface name or alias name.
      * @param mixed $definition the definition associated with `$class`. It can be one of the following:
      * - a PHP callable: The callable will be executed when [[get()]] is invoked. The signature of the callable should
      *   be `function ($container, $params, $config)`, where `$params` stands for the list of constructor parameters,
@@ -329,47 +356,51 @@ class Container extends Component implements ContainerInterface
      *
      * @param array $definitions array of definitions. There are two allowed formats of an array.
      * The first format:
-     *  - key: class name, interface name or alias name. The key will be passed to the [[set()]] method
-     *    as a first argument `$class`.
+     *  - key: class name, interface name or alias name. The key will be passed to the [[set()]] method as a first
+     *    argument `$class`.
      *  - value: the definition associated with `$class`. Possible values are described in
-     *    [[set()]] documentation for the `$definition` parameter. It Will be passed to the [[set()]] method
-     *    as the second argument `$definition`.
+     *    [[set()]] documentation for the `$definition` parameter. It Will be passed to the [[set()]] method as the
+     *    second argument `$definition`.
      *
      * Example:
      * ```php
-     * $container->setDefinitions([
-     *     'yii\web\Request' => 'app\components\Request',
-     *     'yii\web\Response' => [
-     *         'class' => 'app\components\Response',
-     *         'format' => 'json'
-     *     ],
-     *     'foo\Bar' => function () {
-     *         $qux = new Qux;
-     *         $foo = new Foo($qux);
-     *         return new Bar($foo);
-     *     }
-     * ]);
+     * $container->setDefinitions(
+     *     [
+     *         'yii\web\Request' => 'app\components\Request',
+     *         'yii\web\Response' => [
+     *             'class' => 'app\components\Response',
+     *             'format' => 'json'
+     *         ],
+     *         'foo\Bar' => function () {
+     *             $qux = new Qux;
+     *             $foo = new Foo($qux);
+     *             return new Bar($foo);
+     *         }
+     *     ]
+     * );
      * ```
      *
      * The second format:
-     *  - key: class name, interface name or alias name. The key will be passed to the [[set()]] method
-     *    as a first argument `$class`.
-     *  - value: array of two elements. The first element will be passed the [[set()]] method as the
-     *    second argument `$definition`, the second one — as `$params`.
+     *  - key: class name, interface name or alias name. The key will be passed to the [[set()]] method as a first
+     *    argument `$class`.
+     *  - value: array of two elements. The first element will be passed the [[set()]] method as the second argument
+     *    `$definition`, the second one — as `$params`.
      *
      * Example:
      * ```php
-     * $container->setDefinitions([
-     *     'foo\Bar' => [
-     *          ['class' => 'app\Bar'],
-     *          [Instance::of('baz')]
-     *      ]
-     * ]);
+     * $container->setDefinitions(
+     *     [
+     *         'foo\Bar' => [
+     *              ['class' => 'app\Bar'],
+     *              [Instance::of('baz')]
+     *          ]
+     *     ]
+     * );
      * ```
      *
      * @throws InvalidConfigException if a definition is invalid.
      *
-     * @see set() to know more about possible values of definitions
+     * @see set() to know more about possible values of definitions.
      */
     public function setDefinitions(array $definitions): void
     {
@@ -389,8 +420,8 @@ class Container extends Component implements ContainerInterface
      *
      * @throws InvalidConfigException if a definition is invalid.
      *
-     * @see setSingleton() to know more about possible values of definitions
-     * @see setDefinitions() for allowed formats of $singletons parameter
+     * @see setSingleton() to know more about possible values of definitions.
+     * @see setDefinitions() for allowed formats of $singletons parameter.
      */
     public function setSingletons(array $singletons): void
     {
@@ -426,7 +457,7 @@ class Container extends Component implements ContainerInterface
      * @return array The resolved dependencies.
      *
      * @throws InvalidConfigException if a dependency cannot be resolved, or if a dependency cannot be fulfilled.
-     * @throws NotInstantiableException If resolved to an abstract class or an interface (since 2.0.9)
+     * @throws NotInstantiableException If resolved to an abstract class or an interface.
      * @throws ReflectionException|Throwable if the callback is not valid, callable.
      */
     public function resolveCallableDependencies(callable $callback, array $params = []): array

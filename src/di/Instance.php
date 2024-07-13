@@ -22,14 +22,20 @@ use yii\base\InvalidConfigException;
  *
  * ```php
  * $container = new \yii\di\Container;
- * $container->set('cache', [
- *     'class' => 'yii\caching\DbCache',
- *     'db' => Instance::of('db')
- * ]);
- * $container->set('db', [
- *     'class' => 'yii\db\Connection',
- *     'dsn' => 'sqlite:path/to/file.db',
- * ]);
+ * $container->set(
+ *     'cache',
+ *     [
+ *         'class' => 'yii\caching\DbCache',
+ *         'db' => Instance::of('db')
+ *     ]
+ * );
+ * $container->set(
+ *     'db',
+ *     [
+ *         'class' => 'yii\db\Connection',
+ *         'dsn' => 'sqlite:path/to/file.db',
+ *     ]
+ * );
  * ```
  *
  * And the following example shows how a class retrieves a component from a service locator:
@@ -90,8 +96,8 @@ class Instance
     /**
      * Resolves the specified reference into the actual object and makes sure it is of the specified type.
      *
-     * The reference may be specified as a string or an Instance object. If the former,
-     * it will be treated as a component ID, a class/interface name or an alias, depending on the container type.
+     * The reference may be specified as a string or an Instance object. If the former, it will be treated as a
+     * component ID, a class/interface name or an alias, depending on the container type.
      *
      * If you do not specify a container, the method will first try `Yii::$app` followed by `Yii::$container`.
      *

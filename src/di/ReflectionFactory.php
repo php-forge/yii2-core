@@ -18,6 +18,9 @@ use Yii;
 use yii\base\{Configurable, InvalidConfigException};
 use yii\helpers\ArrayHelper;
 
+/**
+ * ReflectionFactory class provides methods for creating and resolving dependencies using reflection.
+ */
 class ReflectionFactory
 {
     /**
@@ -37,6 +40,15 @@ class ReflectionFactory
     public function __construct(private Container $container) {
     }
 
+    /**
+     * Checks if a class can be autowired.
+     *
+     * @param string $id The class name or interface.
+     *
+     * @return bool Whether the class can be autowired.
+     *
+     * @throws ReflectionException If the class does not exist.
+     */
     public function canBeAutowired(string $id): bool
     {
         try {
@@ -48,6 +60,18 @@ class ReflectionFactory
         }
     }
 
+    /**
+     * Creates an instance of the specified class.
+     *
+     * @param string $class the class name.
+     * @param array $params constructor parameters.
+     * @param array $config configuration for the instance.
+     *
+     * @return object The created instance.
+     *
+     * @throws NotInstantiableException If the class is not instantiable.
+     * @throws InvalidConfigException If there's an invalid configuration.
+     */
     public function create(string $class, array $params = [], array $config = []): object
     {
         /* @var $reflection ReflectionClass */
@@ -169,7 +193,7 @@ class ReflectionFactory
      * @return array The resolved dependencies.
      *
      * @throws InvalidConfigException if a dependency cannot be resolved, or if a dependency cannot be fulfilled.
-     * @throws NotInstantiableException If resolved to an abstract class or an interface (since 2.0.9)
+     * @throws NotInstantiableException If resolved to an abstract class or an interface.
      * @throws ReflectionException|Throwable if the callback is not valid, callable.
      */
     public function resolveCallableDependencies(callable $callback, array $params = []): array
@@ -307,6 +331,13 @@ class ReflectionFactory
         return [$reflection, $dependencies];
     }
 
+    /**
+     * Returns a ReflectionClass object for the specified class.
+     *
+     * @param string $class the class name.
+     *
+     * @return ReflectionClass the ReflectionClass object for the specified class.
+     */
     private function getReflection(string $class): ReflectionClass
     {
         return $this->_reflections[$class] ?? new ReflectionClass($class);
