@@ -1,29 +1,17 @@
 <p align="center">
-    <a href="https://github.com/yii-tools/template" target="_blank">
+    <a href="https://github.com/php-forge/yii2-core" target="_blank">
         <img src="https://avatars.githubusercontent.com/u/121752654?s=200&v=4" height="100px">
     </a>
-    <h1 align="center">Template.</h1>
+    <h1 align="center">Yii2-Core</h1>
     <br>
 </p>
 
 <p align="center">
-    <a href="https://github.com/yii-tools/template/actions/workflows/build.yml" target="_blank">
-        <img src="https://github.com/yii-tools/template/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
+    <a href="https://github.com/php-forge/yii2-core/actions/workflows/build.yml" target="_blank">
+        <img src="https://github.com/php-forge/yii2-core/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a>
-    <a href="https://codecov.io/gh/yii-tools/template" target="_blank">
-        <img src="https://codecov.io/gh/yii-tools/template/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
-    </a>
-    <a href="https://dashboard.stryker-mutator.io/reports/github.com/yii-tools/template/main" target="_blank">
-        <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fyii2-extensions%2Fasset-bootstrap5%2Fmain" alt="Infection">
-    </a>
-    <a href="https://github.com/yii-tools/template/actions/workflows/static.yml" target="_blank">
-        <img src="https://github.com/yii-tools/template/actions/workflows/static.yml/badge.svg" alt="Psalm">
-    </a>
-    <a href="https://shepherd.dev/github/yii-tools/template" target="_blank">
-        <img src="https://shepherd.dev/github/yii-tools/template/coverage.svg" alt="Psalm Coverage">
-    </a>
-    <a href="https://github.styleci.io/repos/494495136?branch=main" target="_blank">
-        <img src="https://github.styleci.io/repos/494495136/shield?branch=main" alt="Style ci">
+    <a href="https://codecov.io/gh/php-forge/yii2-core" target="_blank">
+        <img src="https://codecov.io/gh/php-forge/yii2-core/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
     </a>           
 </p>
 
@@ -34,20 +22,16 @@ The preferred way to install this extension is through [composer](https://getcom
 Either run
 
 ```shell
-composer require --prefer-dist package
+composer require --prefer-dist php-forge/yii2-core
 ```
 
 or add
 
 ```json
-"package": "version"
+"php-forge/yii2-core": "^1.0dev"
 ```
 
 to the require-dev section of your `composer.json` file. 
-
-## Usage
-
-[Check the documentation docs](docs/README.md) to learn about usage.
 
 ## Testing
 
