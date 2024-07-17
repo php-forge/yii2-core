@@ -95,7 +95,7 @@ class View extends Component implements DynamicContentAwareInterface
      * @var array a list of placeholders for embedding dynamic contents. This property
      * is used internally to implement the content caching feature. Do not modify it directly.
      */
-    private $dynamicPlaceholders = [];
+    private array $dynamicPlaceholders = [];
 
     /**
      * @var array the view files currently being rendered. There may be multiple view files being
@@ -388,7 +388,7 @@ class View extends Component implements DynamicContentAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function getDynamicPlaceholders()
+    public function getDynamicPlaceholders(): array
     {
         return $this->dynamicPlaceholders;
     }
@@ -396,7 +396,7 @@ class View extends Component implements DynamicContentAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function setDynamicPlaceholders($placeholders)
+    public function setDynamicPlaceholders(array $placeholders): void
     {
         $this->dynamicPlaceholders = $placeholders;
     }
@@ -404,7 +404,7 @@ class View extends Component implements DynamicContentAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function addDynamicPlaceholder($placeholder, $statements)
+    public function addDynamicPlaceholder(string $placeholder, string $statements): void
     {
         foreach ($this->cacheStack as $cache) {
             if ($cache instanceof DynamicContentAwareInterface) {
