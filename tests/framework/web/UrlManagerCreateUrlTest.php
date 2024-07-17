@@ -8,9 +8,9 @@
 namespace yiiunit\framework\web;
 
 use Yii;
-use yii\caching\ArrayCache;
 use yii\web\UrlManager;
 use yii\web\UrlRule;
+use Yiisoft\Cache\ArrayCache;
 use yiiunit\framework\web\stubs\CachedUrlRule;
 use yiiunit\TestCase;
 
@@ -811,51 +811,55 @@ class UrlManagerCreateUrlTest extends TestCase
      */
     public function testCreatingRulesWithDifferentRuleConfigAndEnabledCache()
     {
-        $this->mockWebApplication([
-            'components' => [
-                'cache' => ArrayCache::className(),
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'cache' => ArrayCache::class,
+                ],
             ],
-        ]);
-        $urlManager = $this->getUrlManager([
-            'cache' => 'cache',
-            'rules' => [
-                '/' => 'site/index',
-            ],
-        ]);
+        );
 
-        $cachedUrlManager = $this->getUrlManager([
-            'cache' => 'cache',
-            'ruleConfig' => [
-                'class' => CachedUrlRule::className(),
+        $urlManager = $this->getUrlManager(
+            [
+                'cache' => 'cache',
+                'rules' => [
+                    '/' => 'site/index',
+                ],
             ],
-            'rules' => [
-                '/' => 'site/index',
+        );
+        $cachedUrlManager = $this->getUrlManager(
+            [
+                'cache' => 'cache',
+                'ruleConfig' => [
+                    'class' => CachedUrlRule::class,
+                ],
+                'rules' => [
+                    '/' => 'site/index',
+                ],
             ],
-        ]);
+        );
 
         $this->assertNotEquals($urlManager->rules, $cachedUrlManager->rules);
-        $this->assertInstanceOf(UrlRule::className(), $urlManager->rules[0]);
-        $this->assertInstanceOf(CachedUrlRule::className(), $cachedUrlManager->rules[0]);
+        $this->assertInstanceOf(UrlRule::class, $urlManager->rules[0]);
+        $this->assertInstanceOf(CachedUrlRule::class, $cachedUrlManager->rules[0]);
     }
 
-    public function testNotEnsuringCacheForEmptyRuleset()
+    public function testNotEnsuringCacheForEmptyRuleset(): void
     {
-        $this->mockWebApplication([
-            'components' => [
-                'cache' => ArrayCache::className(),
-            ],
-        ]);
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'cache' => ArrayCache::class,
+                ],
+            ]
+        );
+
         // no rules - don't ensure cache
-        $urlManager = $this->getUrlManager([
-            'cache' => 'cache',
-            'rules' => [],
-        ]);
+        $urlManager = $this->getUrlManager(['cache' => 'cache', 'rules' => []]);
         $this->assertSame('cache', $urlManager->cache);
+
         // with rules - ensure cache
-        $urlManager = $this->getUrlManager([
-            'cache' => 'cache',
-            'rules' => ['/' => 'site/index'],
-        ]);
-        $this->assertInstanceOf(ArrayCache::className(), $urlManager->cache);
+        $urlManager = $this->getUrlManager(['cache' => 'cache', 'rules' => ['/' => 'site/index']]);
+        $this->assertInstanceOf(ArrayCache::class, $urlManager->cache);
     }
 }
