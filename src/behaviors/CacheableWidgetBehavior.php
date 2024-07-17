@@ -1,17 +1,14 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\behaviors;
 
+use Psr\SimpleCache\CacheInterface;
 use yii\base\Behavior;
 use yii\base\InvalidConfigException;
 use yii\base\Widget;
 use yii\base\WidgetEvent;
-use yii\caching\CacheInterface;
 use yii\caching\Dependency;
 use yii\di\Instance;
 
@@ -40,9 +37,6 @@ use yii\di\Instance;
  *     ];
  * }
  * ```
- *
- * @author Nikolay Oleynikov <oleynikovny@mail.ru>
- * @since 2.0.14
  */
 class CacheableWidgetBehavior extends Behavior
 {
@@ -51,7 +45,7 @@ class CacheableWidgetBehavior extends Behavior
      * or a configuration array for creating a cache object.
      * Defaults to the `cache` application component.
      */
-    public $cache = 'cache';
+    public CacheInterface|string|array $cache = 'cache';
     /**
      * @var int cache duration in seconds.
      * Set to `0` to indicate that the cached data will never expire.
@@ -153,12 +147,12 @@ class CacheableWidgetBehavior extends Behavior
      * Returns the cache instance.
      *
      * @return CacheInterface cache instance.
+     *
      * @throws InvalidConfigException if cache instance instantiation fails.
      */
-    private function getCacheInstance()
+    private function getCacheInstance(): CacheInterface
     {
-        $cacheInterface = 'yii\caching\CacheInterface';
-        return Instance::ensure($this->cache, $cacheInterface);
+        return Instance::ensure($this->cache, CacheInterface::class);
     }
 
     /**
