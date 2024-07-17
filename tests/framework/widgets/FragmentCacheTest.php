@@ -1,15 +1,12 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\widgets;
 
 use Yii;
 use yii\base\View;
-use yii\caching\ArrayCache;
+use Yiisoft\Cache\ArrayCache;
 
 /**
  * @group widgets
@@ -21,9 +18,13 @@ class FragmentCacheTest extends \yiiunit\TestCase
     {
         parent::setUp();
         $this->mockWebApplication();
-        Yii::$app->set('cache', [
-            'class' => ArrayCache::className(),
-        ]);
+
+        Yii::$app->set(
+            'cache',
+            [
+                'class' => ArrayCache::class,
+            ],
+        );
     }
 
     public function testCacheEnabled()
@@ -147,7 +148,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
             }
 
             $expectedContent = vsprintf('multiple dynamic cached fragments: %s%d', [
-                md5($counter),
+                md5((string) $counter),
                 $counter,
             ]);
             $this->assertEquals($expectedContent, ob_get_clean());
@@ -186,8 +187,8 @@ class FragmentCacheTest extends \yiiunit\TestCase
             }
 
             $expectedContent = vsprintf('nested dynamic cached fragments: %s%s%d', [
-                md5($counter),
-                sha1($counter),
+                md5((string) $counter),
+                sha1((string) $counter),
                 $counter,
             ]);
             $this->assertEquals($expectedContent, ob_get_clean());
@@ -196,9 +197,11 @@ class FragmentCacheTest extends \yiiunit\TestCase
 
     public function testVariations()
     {
-        $this->setOutputCallback(function($output) {
-            return null;
-        });
+        $this->setOutputCallback(
+            function($output) {
+                return null;
+            }
+        );
 
         ob_start();
         ob_implicit_flush(false);
@@ -242,6 +245,4 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals('cached fragment', $cached);
         $this->assertFalse($view->beginCache('test', ['variations' => 'uz']), 'Cached fragment should be exist');
     }
-
-    // TODO test dynamic replacements
 }
