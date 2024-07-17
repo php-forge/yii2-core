@@ -117,7 +117,7 @@ class CacheableWidgetBehaviorTest extends TestCase
      *
      * @return PHPUnit_Framework_MockObject_MockObject Widget mock.
      */
-    private function getWidgetMock($widgetClass): PHPUnit_Framework_MockObject_MockObject
+    private function getWidgetMock($widgetClass)
     {
         $widgetMock = $this->getMockBuilder($widgetClass)
             ->setMethods(['run'])
