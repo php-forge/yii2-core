@@ -32,7 +32,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         );
     }
 
-    public function testCacheEnabled()
+    public function testCacheEnabled(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -52,7 +52,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testCacheDisabled1()
+    public function testCacheDisabled1(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -74,7 +74,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testCacheDisabled2()
+    public function testCacheDisabled2(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -96,7 +96,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testSingleDynamicFragment()
+    public function testSingleDynamicFragment(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -127,7 +127,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         }
     }
 
-    public function testMultipleDynamicFragments()
+    public function testMultipleDynamicFragments(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -160,7 +160,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         }
     }
 
-    public function testNestedDynamicFragments()
+    public function testNestedDynamicFragments(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -200,7 +200,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         }
     }
 
-    public function testVariations()
+    public function testVariations(): void
     {
         $this->setOutputCallback(
             function($output) {
@@ -249,5 +249,42 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $cached = ob_get_clean();
         $this->assertEquals('cached fragment', $cached);
         $this->assertFalse($view->beginCache('test', ['variations' => 'uz']), 'Cached fragment should be exist');
+    }
+
+    public function testCacheWithDependency(): void
+    {
+        ob_start();
+        ob_implicit_flush(false);
+
+        $view = new View();
+
+        $this->assertTrue(
+            $view->beginCache(
+                'test',
+                [
+                    'duration' => 30,
+                    'dependency' => new \Yiisoft\Cache\Dependency\TagDependency('test'),
+                ],
+            )
+        );
+
+        echo 'cached fragment';
+        $view->endCache();
+
+        $this->assertSame('cached fragment', ob_get_clean());
+    }
+
+    public function testCacheFragmentWithEmptyContent(): void
+    {
+        ob_start();
+        ob_implicit_flush(false);
+
+        $view = new View();
+
+        $this->assertTrue($view->beginCache('test', ['duration' => 30]));
+
+        $view->endCache();
+
+        $this->assertEmpty(ob_get_clean());
     }
 }
