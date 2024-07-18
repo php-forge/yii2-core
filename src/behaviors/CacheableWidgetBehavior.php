@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace yii\behaviors;
 
-use Psr\SimpleCache\CacheInterface;
 use yii\base\Behavior;
 use yii\base\InvalidConfigException;
 use yii\base\Widget;
 use yii\base\WidgetEvent;
-use yii\caching\Dependency;
 use yii\di\Instance;
+use Yiisoft\Cache\CacheInterface;
+use Yiisoft\Cache\Dependency\Dependency;
 
 /**
  * Cacheable widget behavior automatically caches widget contents according to duration and dependencies specified.
@@ -53,7 +53,7 @@ class CacheableWidgetBehavior extends Behavior
      */
     public $cacheDuration = 60;
     /**
-     * @var Dependency|array|null a cache dependency or a configuration array
+     * @var Dependency|null a cache dependency or a configuration array
      * for creating a cache dependency or `null` meaning no cache dependency.
      *
      * For example,
@@ -68,7 +68,7 @@ class CacheableWidgetBehavior extends Behavior
      * would make the widget cache depend on the last modified time of all posts.
      * If any post has its modification time changed, the cached content would be invalidated.
      */
-    public $cacheDependency;
+    public Dependency|null $cacheDependency = null;
     /**
      * @var string[]|string an array of strings or a single string which would cause
      * the variation of the content being cached (e.g. an application language, a GET parameter).
@@ -179,6 +179,7 @@ class CacheableWidgetBehavior extends Behavior
     private function getFragmentCacheConfiguration()
     {
         $cache = $this->getCacheInstance();
+
         $fragmentCacheConfiguration = [
             'cache' => $cache,
             'duration' => $this->cacheDuration,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii\widgets;
 
-use Yii;
 use yii\base\DynamicContentAwareInterface;
 use yii\base\DynamicContentAwareTrait;
 use yii\base\Widget;
@@ -109,10 +108,6 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
                 return;
             }
 
-            if (!empty($this->dependency)) {
-                $this->dependency = Yii::createObject($this->dependency);
-            }
-
             $data = [$content, $this->getDynamicPlaceholders()];
 
             $this->cache->getOrSet(
@@ -139,12 +134,12 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
 
         $this->_content = false;
 
-        if (!($this->cache instanceof CacheInterface)) {
+        if (!$this->cache instanceof CacheInterface) {
             return $this->_content;
         }
 
         $key = $this->calculateKey();
-        $data = $this->cache->getOrSet($key, fn () => null, $this->duration, $this->dependency);
+        $data = $this->cache->getOrSet($key, static fn () => null, $this->duration, $this->dependency);
 
         if (!is_array($data) || count($data) !== 2) {
             return $this->_content;
