@@ -6,6 +6,7 @@ namespace yiiunit\framework\widgets;
 
 use Yii;
 use yii\base\View;
+use yii\caching\Cache;
 use Yiisoft\Cache\ArrayCache;
 
 /**
@@ -22,7 +23,12 @@ class FragmentCacheTest extends \yiiunit\TestCase
         Yii::$app->set(
             'cache',
             [
-                'class' => ArrayCache::class,
+                'class' => Cache::class,
+                '__construct()' => [
+                    'handler' => [
+                        'class' => ArrayCache::class,
+                    ],
+                ],
             ],
         );
     }

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace yii\widgets;
 
-use Psr\SimpleCache\CacheInterface;
 use Yii;
 use yii\base\DynamicContentAwareInterface;
 use yii\base\DynamicContentAwareTrait;
 use yii\base\Widget;
-use yii\caching\CacheKeyNormalizer;
-use yii\caching\Dependency;
 use yii\di\Instance;
+use Yiisoft\Cache\CacheInterface;
+use Yiisoft\Cache\CacheKeyNormalizer;
+use Yiisoft\Cache\Dependency\Dependency;
 
 /**
  * FragmentCache is used by [[\yii\base\View]] to provide caching of page fragments.
@@ -35,7 +35,7 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
      */
     public int $duration = 60;
     /**
-     * @var array|Dependency the dependency that the cached content depends on.
+     * @var Dependency|null the dependency that the cached content depends on.
      * This can be either a [[Dependency]] object or a configuration array for creating the dependency object.
      * For example,
      *
@@ -49,7 +49,7 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
      * would make the output cache depends on the last modified time of all posts.
      * If any post has its modification time changed, the cached content would be invalidated.
      */
-    public array|Dependency $dependency = [];
+    public Dependency|null $dependency = null;
     /**
      * @var string[]|string list of factors that would cause the variation of the content being cached.
      * Each factor is a string representing a variation (e.g. the language, a GET parameter).
@@ -115,7 +115,7 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
 
             $data = [$content, $this->getDynamicPlaceholders()];
 
-            $this->cache->set($this->calculateKey(), $data, $this->duration, $this->dependency);
+            $this->cache->getOrSet($this->calculateKey(), $data, $this->duration, $this->dependency);
 
             echo $this->updateDynamicContent($content, $this->getDynamicPlaceholders());
         }
@@ -139,7 +139,7 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
         }
 
         $key = $this->calculateKey();
-        $data = $this->cache->get($key);
+        $data = $this->cache->getOrSet($key, fn () => null, $this->duration, $this->dependency);
 
         if (!is_array($data) || count($data) !== 2) {
             return $this->_content;
