@@ -115,7 +115,12 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
 
             $data = [$content, $this->getDynamicPlaceholders()];
 
-            $this->cache->getOrSet($this->calculateKey(), $data, $this->duration, $this->dependency);
+            $this->cache->getOrSet(
+                $this->calculateKey(),
+                static fn (): array|string => $data,
+                $this->duration,
+                $this->dependency,
+            );
 
             echo $this->updateDynamicContent($content, $this->getDynamicPlaceholders());
         }
