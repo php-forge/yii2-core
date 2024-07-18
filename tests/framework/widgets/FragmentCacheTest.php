@@ -6,8 +6,8 @@ namespace yiiunit\framework\widgets;
 
 use Yii;
 use yii\base\View;
-use yii\caching\Cache;
 use Yiisoft\Cache\ArrayCache;
+use Yiisoft\Cache\Cache;
 
 /**
  * @group widgets
