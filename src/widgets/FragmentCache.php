@@ -9,7 +9,6 @@ use yii\base\DynamicContentAwareTrait;
 use yii\base\Widget;
 use yii\di\Instance;
 use Yiisoft\Cache\CacheInterface;
-use Yiisoft\Cache\CacheKeyNormalizer;
 use Yiisoft\Cache\Dependency\Dependency;
 
 /**
@@ -160,10 +159,10 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
      * Generates a unique key used for storing the content in cache.
      * The key generated depends on both [[id]] and [[variations]].
      *
-     * @return string a valid cache key.
+     * @return array a valid cache key.
      */
-    protected function calculateKey(): string
+    protected function calculateKey(): array
     {
-        return CacheKeyNormalizer::normalize(array_merge([__CLASS__, $this->getId()], (array)$this->variations));
+        return array_merge([__CLASS__, $this->getId()], (array)$this->variations);
     }
 }
