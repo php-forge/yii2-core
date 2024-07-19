@@ -48,10 +48,13 @@ class CacheableWidgetBehavior extends Behavior
     public CacheInterface|string|array $cache = 'cache';
     /**
      * @var int cache duration in seconds.
-     * Set to `0` to indicate that the cached data will never expire.
-     * Defaults to 60 seconds or 1 minute.
+     * Defaults to 60 seconds.
+     * If this is 0, the cache will be invalidated on every request.
+     * Use null to indicate that the cached data will never expire.
+     *
+     * See also [[\Yiisoft\Cache\CacheInterface::getOrSet()]].
      */
-    public $cacheDuration = 60;
+    public int|null $cacheDuration = 60;
     /**
      * @var Dependency|null a cache dependency or a configuration array
      * for creating a cache dependency or `null` meaning no cache dependency.
@@ -82,7 +85,7 @@ class CacheableWidgetBehavior extends Behavior
      * ]
      * ```
      */
-    public $cacheKeyVariations = [];
+    public array|string $cacheKeyVariations = [];
     /**
      * @var bool whether to enable caching or not. Allows to turn the widget caching
      * on and off according to specific conditions.
@@ -92,8 +95,7 @@ class CacheableWidgetBehavior extends Behavior
      * empty(Yii::$app->request->get('disable-caching'))
      * ```
      */
-    public $cacheEnabled = true;
-
+    public bool $cacheEnabled = true;
 
     /**
      * {@inheritdoc}
@@ -160,7 +162,7 @@ class CacheableWidgetBehavior extends Behavior
      *
      * @return string[] an array of strings representing the cache key.
      */
-    private function getCacheKey()
+    private function getCacheKey(): array
     {
         // `$cacheKeyVariations` may be a `string` and needs to be cast to an `array`.
         $cacheKey = array_merge(
@@ -176,7 +178,7 @@ class CacheableWidgetBehavior extends Behavior
      *
      * @return array a fragment cache widget configuration array.
      */
-    private function getFragmentCacheConfiguration()
+    private function getFragmentCacheConfiguration(): array
     {
         $cache = $this->getCacheInstance();
 

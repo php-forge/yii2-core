@@ -59,8 +59,8 @@ class CacheableWidgetBehaviorTest extends TestCase
      */
     public function testWidgetIsNotRunWhenCacheIsNotEmpty(): void
     {
-        $this->simpleWidget->cacheDuration = 0;
-        $this->simpleWidget->expects($this->atLeastOnce())->method('run');
+        $this->simpleWidget->cacheDuration = null;
+        $this->simpleWidget->expects($this->once())->method('run');
 
         for ($counter = 0; $counter <= 1; $counter++) {
             $this->assertEquals('contents', $this->simpleWidget->test());
@@ -72,8 +72,8 @@ class CacheableWidgetBehaviorTest extends TestCase
      */
     public function testDynamicContent(): void
     {
-        $this->dynamicWidget->cacheDuration = 0;
-        $this->dynamicWidget->expects($this->atLeastOnce())->method('run');
+        $this->dynamicWidget->cacheDuration = null;
+        $this->dynamicWidget->expects($this->once())->method('run');
 
         for ($counter = 0; $counter <= 1; $counter++) {
             $expectedContents = sprintf('<div>dynamic contents: %d</div>', $counter);

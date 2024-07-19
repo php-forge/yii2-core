@@ -29,9 +29,13 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
     public CacheInterface|array|string|null $cache = 'cache';
     /**
      * @var int number of seconds that the data can remain valid in cache.
-     * Use 0 to indicate that the cached data will never expire.
+     * Defaults to 60 seconds.
+     * If this is 0, the cache will be invalidated on every request.
+     * Use null to indicate that the cached data will never expire.
+     *
+     * See also [[\Yiisoft\Cache\CacheInterface::getOrSet()]].
      */
-    public int $duration = 60;
+    public int|null $duration = 60;
     /**
      * @var Dependency|null the dependency that the cached content depends on.
      * This can be either a [[Dependency]] object or a configuration array for creating the dependency object.
@@ -145,10 +149,6 @@ class FragmentCache extends Widget implements DynamicContentAwareInterface
         }
 
         [$this->_content, $placeholders] = $data;
-
-        if (!is_array($placeholders) || count($placeholders) === 0) {
-            return $this->_content;
-        }
 
         $this->_content = $this->updateDynamicContent($this->_content, $placeholders, true);
 
