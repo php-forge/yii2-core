@@ -8,9 +8,9 @@ use Psr\SimpleCache\CacheInterface;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
-use yii\caching\CacheKeyNormalizer;
 use yii\di\Instance;
 use yii\helpers\Url;
+use Yiisoft\Cache\CacheKeyNormalizer;
 
 /**
  * UrlManager handles HTTP request parsing and creation of URLs based on a set of rules.

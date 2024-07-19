@@ -1,15 +1,14 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\widgets;
 
 use Yii;
 use yii\base\View;
-use yii\caching\ArrayCache;
+use yii\di\Instance;
+use Yiisoft\Cache\ArrayCache;
+use Yiisoft\Cache\Cache;
 
 /**
  * @group widgets
@@ -21,12 +20,19 @@ class FragmentCacheTest extends \yiiunit\TestCase
     {
         parent::setUp();
         $this->mockWebApplication();
-        Yii::$app->set('cache', [
-            'class' => ArrayCache::className(),
-        ]);
+
+        Yii::$app->set(
+            'cache',
+            [
+                '__class' => Cache::class,
+                '__construct()' => [
+                    Instance::of(ArrayCache::class),
+                ],
+            ],
+        );
     }
 
-    public function testCacheEnabled()
+    public function testCacheEnabled(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -46,7 +52,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testCacheDisabled1()
+    public function testCacheDisabled1(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -68,7 +74,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testCacheDisabled2()
+    public function testCacheDisabled2(): void
     {
         $expectedLevel = ob_get_level();
         ob_start();
@@ -90,7 +96,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertEquals($expectedLevel, ob_get_level(), 'Output buffer not closed correctly.');
     }
 
-    public function testSingleDynamicFragment()
+    public function testSingleDynamicFragment(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -121,7 +127,7 @@ class FragmentCacheTest extends \yiiunit\TestCase
         }
     }
 
-    public function testMultipleDynamicFragments()
+    public function testMultipleDynamicFragments(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -147,14 +153,14 @@ class FragmentCacheTest extends \yiiunit\TestCase
             }
 
             $expectedContent = vsprintf('multiple dynamic cached fragments: %s%d', [
-                md5($counter),
+                md5((string) $counter),
                 $counter,
             ]);
             $this->assertEquals($expectedContent, ob_get_clean());
         }
     }
 
-    public function testNestedDynamicFragments()
+    public function testNestedDynamicFragments(): void
     {
         Yii::$app->params['counter'] = 0;
 
@@ -186,19 +192,21 @@ class FragmentCacheTest extends \yiiunit\TestCase
             }
 
             $expectedContent = vsprintf('nested dynamic cached fragments: %s%s%d', [
-                md5($counter),
-                sha1($counter),
+                md5((string) $counter),
+                sha1((string) $counter),
                 $counter,
             ]);
             $this->assertEquals($expectedContent, ob_get_clean());
         }
     }
 
-    public function testVariations()
+    public function testVariations(): void
     {
-        $this->setOutputCallback(function($output) {
-            return null;
-        });
+        $this->setOutputCallback(
+            function($output) {
+                return null;
+            }
+        );
 
         ob_start();
         ob_implicit_flush(false);
@@ -243,5 +251,40 @@ class FragmentCacheTest extends \yiiunit\TestCase
         $this->assertFalse($view->beginCache('test', ['variations' => 'uz']), 'Cached fragment should be exist');
     }
 
-    // TODO test dynamic replacements
+    public function testCacheWithDependency(): void
+    {
+        ob_start();
+        ob_implicit_flush(false);
+
+        $view = new View();
+
+        $this->assertTrue(
+            $view->beginCache(
+                'test',
+                [
+                    'duration' => 30,
+                    'dependency' => new \Yiisoft\Cache\Dependency\TagDependency('test'),
+                ],
+            )
+        );
+
+        echo 'cached fragment';
+        $view->endCache();
+
+        $this->assertSame('cached fragment', ob_get_clean());
+    }
+
+    public function testCacheFragmentWithEmptyContent(): void
+    {
+        ob_start();
+        ob_implicit_flush(false);
+
+        $view = new View();
+
+        $this->assertTrue($view->beginCache('test', ['duration' => 30]));
+
+        $view->endCache();
+
+        $this->assertEmpty(ob_get_clean());
+    }
 }
