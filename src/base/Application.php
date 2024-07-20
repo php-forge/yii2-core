@@ -1,13 +1,11 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\base;
 
 use Yii;
+use Yiisoft\Cache\CacheInterface;
 
 /**
  * Application is the base class for all application classes.
@@ -522,9 +520,10 @@ abstract class Application extends Module
 
     /**
      * Returns the cache component.
-     * @return \yii\caching\CacheInterface|null the cache application component. Null if the component is not enabled.
+     *
+     * @return CacheInterface|null the cache application component. Null if the component is not enabled.
      */
-    public function getCache()
+    public function getCache(): CacheInterface|null
     {
         return $this->get('cache', false);
     }
