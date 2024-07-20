@@ -126,7 +126,7 @@ class UrlManager extends Component
      * cache configuration, which is unlimited by default. You may want to tune this value if your [[rules]] change
      * frequently.
      */
-    public CacheInterface|array|string|bool|null $cache = 'cache';
+    public CacheInterface|array|string|bool|null $cache = CacheInterface::class;
     /**
      * @var array the default configuration of URL rules. Individual rule configurations
      * specified via [[rules]] will take precedence when the same property of the rule is configured.
