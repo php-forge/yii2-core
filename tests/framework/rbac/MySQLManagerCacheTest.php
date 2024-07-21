@@ -1,14 +1,12 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\rbac;
 
-use yii\caching\FileCache;
+use Yii;
 use yii\rbac\DbManager;
+use Yiisoft\Cache\File\FileCache;
 
 /**
  * MySQLManagerCacheTest.
@@ -18,15 +16,14 @@ use yii\rbac\DbManager;
  */
 class MySQLManagerCacheTest extends MySQLManagerTest
 {
-    /**
-     * @return \yii\rbac\ManagerInterface
-     */
-    protected function createManager()
+    protected function createManager(): DbManager
     {
-        return new DbManager([
-            'db' => $this->getConnection(),
-            'cache' => new FileCache(['cachePath' => '@yiiunit/runtime/cache']),
-            'defaultRoles' => ['myDefaultRole'],
-        ]);
+        return new DbManager(
+            [
+                'db' => $this->getConnection(),
+                'cache' => new FileCache(Yii::getAlias('@yiiunit/runtime/cache')),
+                'defaultRoles' => ['myDefaultRole'],
+            ],
+        );
     }
 }

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\rbac;
 
@@ -19,7 +16,7 @@ class SqliteManagerTest extends DbManagerTestCase
 
     protected static $sqliteDb;
 
-    public static function createConnection()
+    public static function createConnection(): \yii\db\Connection
     {
         // sqlite db is in memory so it can not be reused
         if (static::$sqliteDb === null) {

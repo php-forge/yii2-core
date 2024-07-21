@@ -1,12 +1,10 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\rbac;
 
+use yii\rbac\Item;
 use yii\rbac\Rule;
 
 /**
@@ -14,13 +12,13 @@ use yii\rbac\Rule;
  */
 class AuthorRule extends Rule
 {
-    public $name = 'isAuthor';
-    public $reallyReally = false;
+    public string $name = 'isAuthor';
+    public bool $reallyReally = false;
 
     /**
      * {@inheritdoc}
      */
-    public function execute($user, $item, $params)
+    public function execute(string|int $user, Item $item, array $params): bool
     {
         return $params['authorID'] == $user;
     }
