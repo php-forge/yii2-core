@@ -84,17 +84,17 @@ class DbManager extends BaseManager
     public string $rolesCacheSuffix = 'roles';
 
     /**
-     * @var Item[] all auth items (name => Item).
+     * @var Item[]|null all auth items (name => Item).
      */
-    protected array $items = [];
+    protected array|null $items = [];
     /**
-     * @var Rule[] all auth rules (name => Rule).
+     * @var Rule[]|null all auth rules (name => Rule).
      */
-    protected array $rules = [];
+    protected array|null $rules = [];
     /**
      * @var array auth item parent-child relationships (childName => list of parents).
      */
-    protected array $parents = [];
+    protected array|null $parents = [];
     /**
      * @var array user assignments (user id => Assignment[]).
      */
