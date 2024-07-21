@@ -12,5 +12,5 @@ class Permission extends Item
     /**
      * {@inheritdoc}
      */
-    public $type = self::TYPE_PERMISSION;
+    public int $type = self::TYPE_PERMISSION;
 }
