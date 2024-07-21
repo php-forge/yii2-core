@@ -592,7 +592,7 @@ class MockResponse extends \yii\web\Response
 class AccessChecker extends BaseObject implements CheckAccessInterface
 {
 
-    public function checkAccess($userId, $permissionName, $params = [])
+    public function checkAccess(string|int $userId, string $permissionName, array $params = []): bool
     {
         // Implement checkAccess() method.
     }
