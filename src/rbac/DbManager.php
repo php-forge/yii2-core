@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\rbac;
 
 use Psr\SimpleCache\CacheInterface;
+use Stringable;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidCallException;
@@ -118,8 +119,12 @@ class DbManager extends BaseManager
     /**
      * {@inheritdoc}
      */
-    public function checkAccess(string|int $userId, string $permissionName, array $params = []): bool
+    public function checkAccess(string|int|Stringable $userId, string $permissionName, array $params = []): bool
     {
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
+        }
+
         if (isset($this->checkAccessAssignments[(string) $userId])) {
             $assignments = $this->checkAccessAssignments[(string) $userId];
         } else {
@@ -587,10 +592,14 @@ class DbManager extends BaseManager
     /**
      * {@inheritdoc}
      */
-    public function getPermissionsByUser(string|int $userId): array
+    public function getPermissionsByUser(string|int|Stringable $userId): array
     {
         if ($this->isEmptyUserId($userId)) {
             return [];
+        }
+
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
         }
 
         $directPermission = $this->getDirectPermissionsByUser($userId);
