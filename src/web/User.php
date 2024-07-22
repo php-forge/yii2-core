@@ -751,13 +751,22 @@ class User extends Component
      */
     public function can($permissionName, $params = [], $allowCaching = true)
     {
+        $id = $this->getId();
+
+        if ($id === null) {
+            return false;
+        }
+
         if ($allowCaching && empty($params) && isset($this->_access[$permissionName])) {
             return $this->_access[$permissionName];
         }
+
         if (($accessChecker = $this->getAccessChecker()) === null) {
             return false;
         }
-        $access = $accessChecker->checkAccess($this->getId(), $permissionName, $params);
+
+        $access = $accessChecker->checkAccess($id, $permissionName, $params);
+
         if ($allowCaching && empty($params)) {
             $this->_access[$permissionName] = $access;
         }
