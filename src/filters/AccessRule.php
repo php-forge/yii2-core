@@ -169,6 +169,10 @@ class AccessRule extends Component
      */
     public function allows($action, $user, $request)
     {
+        if ($user === null) {
+            return null;
+        }
+
         if (
             $this->matchAction($action)
             && $this->matchRole($user)
