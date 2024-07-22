@@ -766,10 +766,14 @@ class DbManager extends BaseManager
     /**
      * {@inheritdoc}
      */
-    public function getAssignment(string $roleName, string|int $userId): Assignment|null
+    public function getAssignment(string $roleName, string|int|Stringable $userId): Assignment|null
     {
         if ($this->isEmptyUserId($userId)) {
             return null;
+        }
+
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
         }
 
         $row = (new Query())
