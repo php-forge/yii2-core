@@ -23,9 +23,9 @@ class Item extends BaseObject
      */
     public string $name = '';
     /**
-     * @var string the item description
+     * @var string|null the item description
      */
-    public string $description = '';
+    public string|null $description = null;
     /**
      * @var string|null name of the rule associated with this item
      */
