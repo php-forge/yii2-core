@@ -966,10 +966,14 @@ class DbManager extends BaseManager
     /**
      * {@inheritdoc}
      */
-    public function revoke(Role|Permission $role, string|int $userId): bool
+    public function revoke(Role|Permission $role, string|int|Stringable $userId): bool
     {
         if ($this->isEmptyUserId($userId)) {
             return false;
+        }
+
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
         }
 
         unset($this->checkAccessAssignments[(string) $userId]);
