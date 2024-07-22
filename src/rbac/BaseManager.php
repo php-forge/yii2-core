@@ -219,24 +219,19 @@ abstract class BaseManager extends Component implements ManagerInterface
      * Set default roles
      * @param string[]|Closure $roles either array of roles or a callable returning it.
      *
-     * @throws InvalidArgumentException when $roles is neither array nor Closure.
      * @throws InvalidValueException when Closure return is not an array.
      */
     public function setDefaultRoles(array|Closure $roles): void
     {
-        if (is_array($roles)) {
-            $this->defaultRoles = $roles;
-        } elseif ($roles instanceof Closure) {
+        if ($roles instanceof Closure) {
             $roles = call_user_func($roles);
 
             if (!is_array($roles)) {
                 throw new InvalidValueException('Default roles closure must return an array');
             }
-
-            $this->defaultRoles = $roles;
-        } else {
-            throw new InvalidArgumentException('Default roles must be either an array or a callable');
         }
+
+        $this->defaultRoles = $roles;
     }
 
     /**

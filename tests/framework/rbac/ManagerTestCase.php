@@ -623,12 +623,4 @@ abstract class ManagerTestCase extends TestCase
             return 'test';
         };
     }
-
-    public function testDefaultRolesWithNonArrayValue(): void
-    {
-        $this->expectException('yii\base\InvalidArgumentException');
-        $this->expectExceptionMessage('Default roles must be either an array or a callable');
-
-        $this->auth->defaultRoles = 'test';
-    }
 }
