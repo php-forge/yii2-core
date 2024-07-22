@@ -35,11 +35,11 @@ class Item extends BaseObject
      */
     public mixed $data = null;
     /**
-     * @var int UNIX timestamp representing the item creation time
+     * @var int|null UNIX timestamp representing the item creation time
      */
-    public int $createdAt = 0;
+    public int|null $createdAt = null;
     /**
      * @var int UNIX timestamp representing the item updating time
      */
-    public int $updatedAt = 0;
+    public int|null $updatedAt = null;
 }
