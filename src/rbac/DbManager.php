@@ -86,15 +86,15 @@ class DbManager extends BaseManager
     /**
      * @var Item[]|null all auth items (name => Item).
      */
-    protected array|null $items = [];
+    protected array|null $items = null;
     /**
      * @var Rule[]|null all auth rules (name => Rule).
      */
-    protected array|null $rules = [];
+    protected array|null $rules = null;
     /**
      * @var array auth item parent-child relationships (childName => list of parents).
      */
-    protected array|null $parents = [];
+    protected array|null $parents = null;
     /**
      * @var array user assignments (user id => Assignment[]).
      */
