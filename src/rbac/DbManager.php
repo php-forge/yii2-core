@@ -534,7 +534,7 @@ class DbManager extends BaseManager
         }
 
         if ($this->cache !== null) {
-            $this->cacheUserRolesData($userId, $roles);
+            $this->cacheUserRolesData((string) $userId, $roles);
         }
 
         return $roles;
