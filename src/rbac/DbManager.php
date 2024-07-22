@@ -245,10 +245,7 @@ class DbManager extends BaseManager
             return $this->items[$name];
         }
 
-        $row = (new Query())
-            ->from($this->itemTable)
-            ->where(['name' => $name])
-            ->one($this->db);
+        $row = (new Query())->from($this->itemTable)->where(['name' => $name])->one($this->db);
 
         if ($row === false) {
             return null;
@@ -314,14 +311,10 @@ class DbManager extends BaseManager
                     ['or', '[[parent]]=:parent', '[[child]]=:child'],
                     [':parent' => $item->name, ':child' => $item->name]
                 )->execute();
-            $this->db->createCommand()
-                ->delete($this->assignmentTable, ['item_name' => $item->name])
-                ->execute();
+            $this->db->createCommand()->delete($this->assignmentTable, ['item_name' => $item->name])->execute();
         }
 
-        $this->db->createCommand()
-            ->delete($this->itemTable, ['name' => $item->name])
-            ->execute();
+        $this->db->createCommand()->delete($this->itemTable, ['name' => $item->name])->execute();
 
         $this->invalidateCache();
 
@@ -440,9 +433,7 @@ class DbManager extends BaseManager
                 ->execute();
         }
 
-        $this->db->createCommand()
-            ->delete($this->ruleTable, ['name' => $rule->name])
-            ->execute();
+        $this->db->createCommand()->delete($this->ruleTable, ['name' => $rule->name])->execute();
 
         $this->invalidateCache();
 
@@ -454,9 +445,7 @@ class DbManager extends BaseManager
      */
     protected function getItems(int $type): array
     {
-        $query = (new Query())
-            ->from($this->itemTable)
-            ->where(['type' => $type]);
+        $query = (new Query())->from($this->itemTable)->where(['type' => $type]);
 
         $items = [];
 
@@ -552,6 +541,7 @@ class DbManager extends BaseManager
         }
 
         $result = [];
+
         $this->getChildrenRecursive($roleName, $this->getChildrenList(), $result);
 
         $roles = [$roleName => $role];
@@ -721,20 +711,22 @@ class DbManager extends BaseManager
             return isset($this->rules[$name]) ? $this->rules[$name] : null;
         }
 
-        $row = (new Query())->select(['data'])
-            ->from($this->ruleTable)
-            ->where(['name' => $name])
-            ->one($this->db);
+        $row = (new Query())->select(['data'])->from($this->ruleTable)->where(['name' => $name])->one($this->db);
+
         if ($row === false) {
             return null;
         }
+
         $data = $row['data'];
+
         if (is_resource($data)) {
             $data = stream_get_contents($data);
         }
+
         if (!$data) {
             return null;
         }
+
         return unserialize($data);
     }
 
@@ -797,15 +789,17 @@ class DbManager extends BaseManager
     /**
      * {@inheritdoc}
      */
-    public function getAssignments(string|int $userId): array
+    public function getAssignments(string|int|Stringable $userId): array
     {
         if ($this->isEmptyUserId($userId)) {
             return [];
         }
 
-        $query = (new Query())
-            ->from($this->assignmentTable)
-            ->where(['user_id' => (string) $userId]);
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
+        }
+
+        $query = (new Query())->from($this->assignmentTable)->where(['user_id' => (string) $userId]);
 
         $assignments = [];
 
@@ -1057,17 +1051,11 @@ class DbManager extends BaseManager
 
             $key = $type == Item::TYPE_PERMISSION ? 'child' : 'parent';
 
-            $this->db->createCommand()
-                ->delete($this->itemChildTable, [$key => $names])
-                ->execute();
-            $this->db->createCommand()
-                ->delete($this->assignmentTable, ['item_name' => $names])
-                ->execute();
+            $this->db->createCommand()->delete($this->itemChildTable, [$key => $names])->execute();
+            $this->db->createCommand()->delete($this->assignmentTable, ['item_name' => $names])->execute();
         }
 
-        $this->db->createCommand()
-            ->delete($this->itemTable, ['type' => $type])
-            ->execute();
+        $this->db->createCommand()->delete($this->itemTable, ['type' => $type])->execute();
 
         $this->invalidateCache();
     }
@@ -1078,9 +1066,7 @@ class DbManager extends BaseManager
     public function removeAllRules(): void
     {
         if (!$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->update($this->itemTable, ['rule_name' => null])
-                ->execute();
+            $this->db->createCommand()->update($this->itemTable, ['rule_name' => null])->execute();
         }
 
         $this->db->createCommand()->delete($this->ruleTable)->execute();
@@ -1186,7 +1172,8 @@ class DbManager extends BaseManager
         return (new Query())
             ->select('[[user_id]]')
             ->from($this->assignmentTable)
-            ->where(['item_name' => $roleName])->column($this->db);
+            ->where(['item_name' => $roleName])
+            ->column($this->db);
     }
 
     /**
