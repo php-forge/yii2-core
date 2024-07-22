@@ -502,10 +502,14 @@ class DbManager extends BaseManager
      * {@inheritdoc}
      * The roles returned by this method include the roles assigned via [[$defaultRoles]].
      */
-    public function getRolesByUser(string|int $userId): array
+    public function getRolesByUser(string|int|Stringable $userId): array
     {
         if ($this->isEmptyUserId($userId)) {
             return [];
+        }
+
+        if ($userId instanceof Stringable) {
+            $userId = (string) $userId;
         }
 
         if ($this->cache !== null) {
