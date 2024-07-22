@@ -513,7 +513,7 @@ class DbManager extends BaseManager
         }
 
         if ($this->cache !== null) {
-            $data = $this->cache->get($this->getUserRolesCacheKey($userId), false);
+            $data = $this->cache->get($this->getUserRolesCacheKey((string) $userId), false);
 
             if ($data !== false) {
                 return $data;
