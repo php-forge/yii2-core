@@ -85,13 +85,13 @@ class DbManager extends BaseManager
     public string $rolesCacheSuffix = 'roles';
 
     /**
-     * @var Item[]|null all auth items (name => Item).
+     * @var Item[] all auth items (name => Item).
      */
     protected array $items = [];
     /**
-     * @var Rule[]|null all auth rules (name => Rule).
+     * @var Rule[] all auth rules (name => Rule).
      */
-    protected array|null $rules = null;
+    protected array $rules = [];
     /**
      * @var array auth item parent-child relationships (childName => list of parents).
      */
@@ -707,7 +707,7 @@ class DbManager extends BaseManager
      */
     public function getRule(string $name): Rule|null
     {
-        if ($this->rules !== null) {
+        if ($this->rules !== []) {
             return isset($this->rules[$name]) ? $this->rules[$name] : null;
         }
 
@@ -735,7 +735,7 @@ class DbManager extends BaseManager
      */
     public function getRules(): array
     {
-        if ($this->rules !== null) {
+        if ($this->rules !== []) {
             return $this->rules;
         }
 
@@ -1092,7 +1092,7 @@ class DbManager extends BaseManager
         if ($this->cache !== null) {
             $this->cache->delete($this->cacheKey);
             $this->items = [];
-            $this->rules = null;
+            $this->rules = [];
             $this->parents = null;
 
             $cachedUserIds = $this->cache->get($this->getUserRolesCachedSetKey(), false);
