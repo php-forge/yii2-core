@@ -87,7 +87,7 @@ class DbManager extends BaseManager
     /**
      * @var Item[]|null all auth items (name => Item).
      */
-    protected array|null $items = null;
+    protected array $items = [];
     /**
      * @var Rule[]|null all auth rules (name => Rule).
      */
@@ -138,7 +138,7 @@ class DbManager extends BaseManager
 
         $this->loadFromCache();
 
-        if ($this->items !== null) {
+        if ($this->items !== []) {
             return $this->checkAccessFromCache($userId, $permissionName, $params, $assignments);
         }
 
@@ -1091,7 +1091,7 @@ class DbManager extends BaseManager
     {
         if ($this->cache !== null) {
             $this->cache->delete($this->cacheKey);
-            $this->items = null;
+            $this->items = [];
             $this->rules = null;
             $this->parents = null;
 
@@ -1111,7 +1111,7 @@ class DbManager extends BaseManager
 
     public function loadFromCache(): void
     {
-        if ($this->items !== null || !$this->cache instanceof CacheInterface) {
+        if ($this->items !== [] || !$this->cache instanceof CacheInterface) {
             return;
         }
 
