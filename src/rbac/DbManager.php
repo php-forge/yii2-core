@@ -95,7 +95,7 @@ class DbManager extends BaseManager
     /**
      * @var array auth item parent-child relationships (childName => list of parents).
      */
-    protected array|null $parents = null;
+    protected array $parents = [];
     /**
      * @var array user assignments (user id => Assignment[]).
      */
@@ -217,6 +217,7 @@ class DbManager extends BaseManager
         }
 
         $query = new Query();
+        
         $parents = $query
             ->select(['parent'])
             ->from($this->itemChildTable)
@@ -1093,7 +1094,7 @@ class DbManager extends BaseManager
             $this->cache->delete($this->cacheKey);
             $this->items = [];
             $this->rules = [];
-            $this->parents = null;
+            $this->parents = [];
 
             $cachedUserIds = $this->cache->get($this->getUserRolesCachedSetKey(), false);
 
