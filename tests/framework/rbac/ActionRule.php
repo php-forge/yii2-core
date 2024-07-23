@@ -1,12 +1,10 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\rbac;
 
+use yii\rbac\Item;
 use yii\rbac\Rule;
 
 /**
@@ -14,21 +12,20 @@ use yii\rbac\Rule;
  */
 class ActionRule extends Rule
 {
-    public $name = 'action_rule';
-    public $action = 'read';
+    public string $name = 'action_rule';
+    public string $action = 'read';
 
     /**
-     * Private and protected properties to ensure that serialized object
-     * does not get corrupted after saving into the DB because of null-bytes
-     * in the string.
+     * Private and protected properties to ensure that serialized object does not get corrupted after saving into the DB
+     * because of null-bytes in the string.
      *
      * @see https://github.com/yiisoft/yii2/issues/10176
      * @see https://github.com/yiisoft/yii2/issues/12681
      */
-    private $somePrivateProperty;
-    protected $someProtectedProperty;
+    private string $somePrivateProperty = '';
+    protected string $someProtectedProperty = '';
 
-    public function execute($user, $item, $params)
+    public function execute(string|int $user, Item $item, array $params): bool
     {
         return $this->action === 'all' || $this->action === $params['action'];
     }

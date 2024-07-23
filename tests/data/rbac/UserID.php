@@ -1,13 +1,12 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\data\rbac;
 
-class UserID
+use Stringable;
+
+class UserID implements Stringable
 {
     private $id;
 
@@ -16,7 +15,7 @@ class UserID
         $this->id = $id;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return (string) $this->id;
     }

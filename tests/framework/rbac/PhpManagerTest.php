@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\rbac;
 
@@ -39,22 +36,22 @@ class PhpManagerTest extends ManagerTestCase
     public static $filemtime;
     public static $time;
 
-    protected function getItemFile()
+    protected function getItemFile(): string
     {
         return Yii::$app->getRuntimePath() . '/rbac-items.php';
     }
 
-    protected function getAssignmentFile()
+    protected function getAssignmentFile(): string
     {
         return Yii::$app->getRuntimePath() . '/rbac-assignments.php';
     }
 
-    protected function getRuleFile()
+    protected function getRuleFile(): string
     {
         return Yii::$app->getRuntimePath() . '/rbac-rules.php';
     }
 
-    protected function removeDataFiles()
+    protected function removeDataFiles(): void
     {
         @unlink($this->getItemFile());
         @unlink($this->getAssignmentFile());
@@ -64,14 +61,16 @@ class PhpManagerTest extends ManagerTestCase
     /**
      * {@inheritdoc}
      */
-    protected function createManager()
+    protected function createManager(): ExposedPhpManager
     {
-        return new ExposedPhpManager([
-            'itemFile' => $this->getItemFile(),
-            'assignmentFile' => $this->getAssignmentFile(),
-            'ruleFile' => $this->getRuleFile(),
-            'defaultRoles' => ['myDefaultRole'],
-        ]);
+        return new ExposedPhpManager(
+            [
+                'itemFile' => $this->getItemFile(),
+                'assignmentFile' => $this->getAssignmentFile(),
+                'ruleFile' => $this->getRuleFile(),
+                'defaultRoles' => ['myDefaultRole'],
+            ],
+        );
     }
 
     protected function setUp(): void
@@ -97,7 +96,7 @@ class PhpManagerTest extends ManagerTestCase
         parent::tearDown();
     }
 
-    public function testSaveLoad()
+    public function testSaveLoad(): void
     {
         static::$time = static::$filemtime = \time();
 
@@ -117,7 +116,7 @@ class PhpManagerTest extends ManagerTestCase
         $this->assertEquals($rules, $this->auth->rules);
     }
 
-    public function testUpdateItemName()
+    public function testUpdateItemName(): void
     {
         $this->prepareData();
 
@@ -127,7 +126,7 @@ class PhpManagerTest extends ManagerTestCase
         $this->assertTrue($this->auth->update($name, $permission), 'You should be able to update name.');
     }
 
-    public function testUpdateDescription()
+    public function testUpdateDescription(): void
     {
         $this->prepareData();
         $name = 'readPost';
@@ -136,7 +135,7 @@ class PhpManagerTest extends ManagerTestCase
         $this->assertTrue($this->auth->update($name, $permission), 'You should be able to save w/o changing name.');
     }
 
-    public function testOverwriteName()
+    public function testOverwriteName(): void
     {
         $this->prepareData();
 
@@ -149,7 +148,7 @@ class PhpManagerTest extends ManagerTestCase
         $this->auth->update($name, $permission);
     }
 
-    public function testSaveAssignments()
+    public function testSaveAssignments(): void
     {
         $this->auth->removeAll();
         $role = $this->auth->createRole('Admin');

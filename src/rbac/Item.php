@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\rbac;
 
@@ -11,9 +8,6 @@ use yii\base\BaseObject;
 
 /**
  * For more details and usage information on Item, see the [guide article on security authorization](guide:security-authorization).
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Item extends BaseObject
 {
@@ -23,29 +17,29 @@ class Item extends BaseObject
     /**
      * @var int the type of the item. This should be either [[TYPE_ROLE]] or [[TYPE_PERMISSION]].
      */
-    public $type;
+    public int $type = self::TYPE_ROLE;
     /**
      * @var string the name of the item. This must be globally unique.
      */
-    public $name;
+    public string $name = '';
     /**
-     * @var string the item description
+     * @var string|null the item description
      */
-    public $description;
+    public string|null $description = null;
     /**
-     * @var string name of the rule associated with this item
+     * @var string|null name of the rule associated with this item
      */
-    public $ruleName;
+    public string|null $ruleName = null;
     /**
      * @var mixed the additional data associated with this item
      */
-    public $data;
+    public mixed $data = null;
     /**
-     * @var int UNIX timestamp representing the item creation time
+     * @var int|null UNIX timestamp representing the item creation time
      */
-    public $createdAt;
+    public int|null $createdAt = null;
     /**
      * @var int UNIX timestamp representing the item updating time
      */
-    public $updatedAt;
+    public int|null $updatedAt = null;
 }
