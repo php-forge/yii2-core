@@ -1,12 +1,10 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\web;
 
+use SessionHandlerInterface;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidArgumentException;
@@ -66,9 +64,6 @@ use yii\base\InvalidConfigException;
  * @property bool $useStrictMode Whether strict mode is enabled or not.
  * @property bool $useTransparentSessionID Whether transparent sid support is enabled or not, defaults to
  * false.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Countable
 {
@@ -86,18 +81,20 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     public $flashParam = '__flash';
     /**
-     * @var \SessionHandlerInterface|array an object implementing the SessionHandlerInterface or a configuration array. If set, will be used to provide persistency instead of build-in methods.
+     * @var SessionHandlerInterface|array an object implementing the SessionHandlerInterface or a configuration array.
+     * If set, will be used to provide persistency instead of build-in methods.
      */
-    public $handler;
-
+    public SessionHandlerInterface|array|null $handler = null;
     /**
      * @var string|null Holds the session id in case useStrictMode is enabled and the session id needs to be regenerated
      */
     protected $_forceRegenerateId = null;
 
     /**
-     * @var array parameter-value pairs to override default session cookie parameters that are used for session_set_cookie_params() function
-     * Array may have the following possible keys: 'lifetime', 'path', 'domain', 'secure', 'httponly'
+     * @var array parameter-value pairs to override default session cookie parameters that are used for
+     * session_set_cookie_params() function Array may have the following possible keys: 'lifetime', 'path', 'domain',
+     * 'secure', 'httponly'.
+     *
      * @see https://www.php.net/manual/en/function.session-set-cookie-params.php
      */
     private $_cookieParams = ['httponly' => true];
@@ -114,7 +111,9 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     public function init()
     {
         parent::init();
+
         register_shutdown_function([$this, 'close']);
+
         if ($this->getIsActive()) {
             Yii::warning('Session is already started', __METHOD__);
             $this->updateFlashCounters();
@@ -165,43 +164,39 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
     /**
      * Registers session handler.
+     *
      * @throws \yii\base\InvalidConfigException
      */
     protected function registerSessionHandler()
     {
         $sessionModuleName = session_module_name();
+
         if (static::$_originalSessionModule === null) {
             static::$_originalSessionModule = $sessionModuleName;
         }
 
+        if ($this->handler === null && $this->getUseCustomStorage()) {
+            $this->handler = Yii::createObject(
+                [
+                    '__class' => SessionHandler::class,
+                    '__construct()' => [$this],
+                ]
+            );
+        }
+
         if ($this->handler !== null) {
-            if (!is_object($this->handler)) {
+            if (is_array($this->handler)) {
                 $this->handler = Yii::createObject($this->handler);
             }
-            if (!$this->handler instanceof \SessionHandlerInterface) {
-                throw new InvalidConfigException('"' . get_class($this) . '::handler" must implement the SessionHandlerInterface.');
-            }
-            YII_DEBUG ? session_set_save_handler($this->handler, false) : @session_set_save_handler($this->handler, false);
-        } elseif ($this->getUseCustomStorage()) {
-            if (YII_DEBUG) {
-                session_set_save_handler(
-                    [$this, 'openSession'],
-                    [$this, 'closeSession'],
-                    [$this, 'readSession'],
-                    [$this, 'writeSession'],
-                    [$this, 'destroySession'],
-                    [$this, 'gcSession']
-                );
-            } else {
-                @session_set_save_handler(
-                    [$this, 'openSession'],
-                    [$this, 'closeSession'],
-                    [$this, 'readSession'],
-                    [$this, 'writeSession'],
-                    [$this, 'destroySession'],
-                    [$this, 'gcSession']
+
+            if (!$this->handler instanceof SessionHandlerInterface) {
+                throw new InvalidConfigException(
+                    '"' . get_class($this) . '::handler" must implement the SessionHandlerInterface.'
                 );
             }
+
+            YII_DEBUG
+                ? session_set_save_handler($this->handler, false) : @session_set_save_handler($this->handler, false);
         } elseif (
             $sessionModuleName !== static::$_originalSessionModule
             && static::$_originalSessionModule !== null
@@ -549,7 +544,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * Note: Enabling `useStrictMode` on PHP < 5.5.2 is only supported with custom storage classes.
      * Warning! Although enabling strict mode is mandatory for secure sessions, the default value of 'session.use-strict-mode' is `0`.
      * @see https://www.php.net/manual/en/session.configuration.php#ini.session.use-strict-mode
-     * @since 2.0.38
      */
     public function setUseStrictMode($value)
     {
@@ -569,7 +563,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     /**
      * @return bool Whether strict mode is enabled or not.
      * @see setUseStrictMode()
-     * @since 2.0.38
      */
     public function getUseStrictMode()
     {
@@ -1009,7 +1002,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     /**
      * If session is started it's not possible to edit session ini settings. In PHP7.2+ it throws exception.
      * This function saves session data to temporary variable and stop session.
-     * @since 2.0.14
      */
     protected function freeze()
     {
@@ -1024,7 +1016,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
     /**
      * Starts session and restores data from temporary variable
-     * @since 2.0.14
      */
     protected function unfreeze()
     {
@@ -1048,7 +1039,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * Set cache limiter
      *
      * @param string $cacheLimiter
-     * @since 2.0.14
      */
     public function setCacheLimiter($cacheLimiter)
     {
@@ -1061,7 +1051,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * Returns current cache limiter
      *
      * @return string current cache limiter
-     * @since 2.0.14
      */
     public function getCacheLimiter()
     {
