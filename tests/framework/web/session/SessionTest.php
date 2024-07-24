@@ -25,7 +25,7 @@ class SessionTest extends TestCase
 
         $this->assertNotEmpty($oldSessionId);
 
-        $session->destroy();
+        $session->removeAll();
 
         $newSessionId = @session_id();
         $this->assertNotEmpty($newSessionId);

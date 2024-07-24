@@ -27,10 +27,10 @@ class CacheSessionTest extends \yiiunit\TestCase
     {
         $session = new CacheSession();
 
-        $session->write('test', 'sessionData');
+        $session->set('test', 'sessionData');
         $this->assertEquals('sessionData', $session->readSession('test'));
 
-        $session->destroy('test');
+        $session->remove('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 

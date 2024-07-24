@@ -102,10 +102,10 @@ abstract class AbstractDbSessionTest extends TestCase
     {
         $session = new DbSession();
 
-        $session->write('test', 'session data');
+        $session->set('test', 'session data');
         $this->assertEquals('session data', $session->readSession('test'));
 
-        $session->destroy('test');
+        $session->remove('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 
@@ -114,10 +114,10 @@ abstract class AbstractDbSessionTest extends TestCase
         // should produce no exceptions
         $session = new DbSession(['useCookies' => true]);
 
-        $session->write('test', 'session data');
+        $session->set('test', 'session data');
         $this->assertEquals('session data', $session->readSession('test'));
 
-        $session->destroy('test');
+        $session->remove('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 
@@ -128,8 +128,8 @@ abstract class AbstractDbSessionTest extends TestCase
     {
         $session = new DbSession();
 
-        $session->write('new', 'new data');
-        $session->write('expire', 'expire data');
+        $session->set('new', 'new data');
+        $session->set('expire', 'expire data');
 
         $session->db->createCommand()
             ->update('session', ['expire' => time() - 100], 'id = :id', ['id' => 'expire'])
@@ -151,7 +151,7 @@ abstract class AbstractDbSessionTest extends TestCase
             return ['data' => 'changed by callback data'];
         };
 
-        $session->write('test', 'session data');
+        $session->set('test', 'session data');
 
         $query = new Query();
         $this->assertSame('changed by callback data', $session->read('test'));
@@ -206,12 +206,12 @@ abstract class AbstractDbSessionTest extends TestCase
 
         $object = $this->buildObjectForSerialization();
         $serializedObject = serialize($object);
-        $session->write('test', $serializedObject);
+        $session->set('test', $serializedObject);
         $this->assertSame($serializedObject, $session->read('test'));
 
         $object->foo = 'modification checked';
         $serializedObject = serialize($object);
-        $session->write('test', $serializedObject);
+        $session->set('test', $serializedObject);
         $this->assertSame($serializedObject, $session->read('test'));
     }
 
