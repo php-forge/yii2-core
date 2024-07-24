@@ -65,11 +65,10 @@ class DbSession extends MultiFieldSession
      * `id` column. For example, if `session.hash_function=sha256`, you should use length 64 instead of 40.
      */
     public string $sessionTable = '{{%session}}';
-
     /**
      * @var array Session fields to be written into session table columns.
      */
-    protected array $fields = [];
+    public array $fields = [];
 
 
     /**

@@ -85,7 +85,7 @@ class DbSessionHandler implements SessionHandlerInterface
                     'expire' => time() + $this->session->getTimeout(),
                 ],
             );
-            
+
             $this->session->fields = $this->typecastFields($this->session->fields);
             $this->session->db->createCommand()->upsert($this->session->sessionTable, $this->session->fields)->execute();
             $this->session->fields = [];
