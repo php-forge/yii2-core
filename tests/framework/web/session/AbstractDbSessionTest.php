@@ -187,7 +187,7 @@ abstract class AbstractDbSessionTest extends TestCase
         $session->close();
     }
 
-    protected function buildObjectForSerialization(): \stdClass
+    protected function buildObjectForSerialization(): object
     {
         $object = new \stdClass();
         $object->nullValue = null;

@@ -140,9 +140,9 @@ class DbSessionHandler implements SessionHandlerInterface
      *
      * @param int $maxLifetime the number of seconds after which data will be seen as 'garbage' and cleaned up.
      *
-     * @return bool whether session is GCed successfully.
+     * @return bool|int whether session is GCed successfully.
      */
-    public function gc(int $maxLifetime): bool
+    public function gc(int $maxLifetime): bool|int
     {
         $this->session->db->createCommand()
             ->delete($this->session->sessionTable, '[[expire]]<:expire', [':expire' => time()])
