@@ -74,7 +74,7 @@ class DbSessionHandler implements SessionHandlerInterface
             if (!isset($this->session->fields['data'])) {
                 $this->session->fields['data'] = $data;
             } else {
-                $_SESSION = $this->session->fields['data'];
+                $this->session->$_SESSION = $this->session->fields['data'];
             }
 
             // ensure 'id' and 'expire' are never affected by [[writeCallback]]
