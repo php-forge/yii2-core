@@ -17,7 +17,7 @@ namespace yiiunit\framework\web\session\mysql;
  */
 class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
 {
-    protected function getDriverNames()
+    protected function getDriverNames(): array
     {
         return ['mysql'];
     }

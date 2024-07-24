@@ -103,10 +103,10 @@ abstract class AbstractDbSessionTest extends TestCase
         $session = new DbSession();
 
         $session->set('test', 'session data');
-        $this->assertEquals('session data', $session->readSession('test'));
+        $this->assertEquals('session data', $session->get('test'));
 
         $session->remove('test');
-        $this->assertEquals('', $session->readSession('test'));
+        $this->assertEquals('', $session->get('test'));
     }
 
     public function testInitializeWithConfig(): void
@@ -115,10 +115,10 @@ abstract class AbstractDbSessionTest extends TestCase
         $session = new DbSession(['useCookies' => true]);
 
         $session->set('test', 'session data');
-        $this->assertEquals('session data', $session->readSession('test'));
+        $this->assertEquals('session data', $session->get('test'));
 
         $session->remove('test');
-        $this->assertEquals('', $session->readSession('test'));
+        $this->assertEquals('', $session->get('test'));
     }
 
     /**
