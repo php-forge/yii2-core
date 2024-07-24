@@ -397,6 +397,21 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     }
 
     /**
+     * @param int $value the probability (percentage) that the GC (garbage collection) process is started on every
+     * session initialization.
+     *
+     * @throws InvalidArgumentException if the value is not between 0 and 100.
+     */
+    public function setGCProbability(int $value): void
+    {
+        $this->freeze();
+
+        $this->handler->gc($value);
+
+        $this->unfreeze();
+    }
+
+    /**
      * @return bool whether transparent sid support is enabled or not, defaults to false.
      */
     public function getUseTransparentSessionID(): bool

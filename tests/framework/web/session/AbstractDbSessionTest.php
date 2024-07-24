@@ -134,7 +134,7 @@ abstract class AbstractDbSessionTest extends TestCase
         $session->db->createCommand()
             ->update('session', ['expire' => time() - 100], 'id = :id', ['id' => 'expire'])
             ->execute();
-        $session->gcSession(1);
+        $session->setGCProbability(1);
 
         $this->assertEquals('', $session->read('expire'));
         $this->assertEquals('new data', $session->read('new'));
@@ -154,7 +154,7 @@ abstract class AbstractDbSessionTest extends TestCase
         $session->set('test', 'session data');
 
         $query = new Query();
-        $this->assertSame('changed by callback data', $session->read('test'));
+        $this->assertSame('changed by callback data', $session->get('test'));
     }
 
     /**
@@ -207,12 +207,12 @@ abstract class AbstractDbSessionTest extends TestCase
         $object = $this->buildObjectForSerialization();
         $serializedObject = serialize($object);
         $session->set('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->read('test'));
+        $this->assertSame($serializedObject, $session->get('test'));
 
         $object->foo = 'modification checked';
         $serializedObject = serialize($object);
         $session->set('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->read('test'));
+        $this->assertSame($serializedObject, $session->get('test'));
     }
 
     protected function runMigrate(string $action, array $params = []): array
