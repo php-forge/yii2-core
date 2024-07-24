@@ -82,8 +82,8 @@ class DbSession extends MultiFieldSession
     {
         parent::init();
 
-        $this->hander = new DbSessionHandler($this);
         $this->db = Instance::ensure($this->db, Connection::class);
+        $this->handler = new DbSessionHandler($this);
     }
 
     /**
