@@ -134,6 +134,7 @@ abstract class AbstractDbSessionTest extends TestCase
         $session->db->createCommand()
             ->update('session', ['expire' => time() - 100], 'id = :id', ['id' => 'expire'])
             ->execute();
+            
         $session->setGCProbability(1);
 
         $this->assertEquals('', $session->get('expire'));

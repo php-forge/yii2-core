@@ -87,6 +87,17 @@ class DbSession extends MultiFieldSession
     }
 
     /**
+     * @param int $value the probability (percentage) that the GC (garbage collection) process is started on every
+     * session initialization.
+     *
+     * @throws InvalidArgumentException if the value is not between 0 and 100.
+     */
+    public function setGCProbability(int $value): void
+    {
+        $this->handler->gc($value);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function regenerateID(bool $deleteOldSession = false): void
