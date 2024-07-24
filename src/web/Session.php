@@ -113,36 +113,8 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
             Yii::warning('Session is already started', __METHOD__);
             $this->updateFlashCounters();
         }
-    }
-
-    /**
-     * Starts the session.
-     */
-    public function open(): void
-    {
-        if ($this->getIsActive()) {
-            return;
-        }
 
         $this->registerSessionHandler();
-
-        $this->setCookieParamsInternal();
-
-        YII_DEBUG ? session_start() : @session_start();
-
-        if ($this->getUseStrictMode() && $this->_forceRegenerateId) {
-            $this->regenerateID();
-            $this->_forceRegenerateId = null;
-        }
-
-        if ($this->getIsActive()) {
-            Yii::info('Session started', __METHOD__);
-            $this->updateFlashCounters();
-        } else {
-            $error = error_get_last();
-            $message = isset($error['message']) ? $error['message'] : 'Failed to start session.';
-            Yii::error($message, __METHOD__);
-        }
     }
 
     /**
@@ -152,8 +124,12 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     protected function registerSessionHandler(): void
     {
+        if (is_array($this->handler)) {
+            $this->handler = Yii::createObject($this->handler);
+        }
+
         if ($this->handler === null) {
-            return;
+            $this->handler = new SessionHandler($this);
         }
 
         if (!$this->handler instanceof SessionHandlerInterface) {
@@ -166,41 +142,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     }
 
     /**
-     * Ends the current session and store session data.
-     */
-    public function close(): void
-    {
-        if ($this->getIsActive()) {
-            YII_DEBUG ? session_write_close() : @session_write_close();
-        }
-
-        $this->_forceRegenerateId = null;
-    }
-
-    /**
-     * Frees all session variables and destroys all data registered to a session.
-     *
-     * This method has no effect when session is not [[getIsActive()|active]].
-     * Make sure to call [[open()]] before calling it.
-     *
-     * @see open()
-     * @see isActive
-     */
-    public function destroy(): void
-    {
-        if ($this->getIsActive()) {
-            $sessionId = session_id();
-            $this->close();
-            $this->setId($sessionId);
-            $this->open();
-            session_unset();
-            session_destroy();
-            $this->setId($sessionId);
-        }
-    }
-
-    /**
-     * @return bool whether the session has started
+     * @return bool whether the session has started.
      */
     public function getIsActive(): bool
     {
@@ -211,8 +153,8 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * Returns a value indicating whether the current request has sent the session ID.
      *
      * The default implementation will check cookie and $_GET using the session name.
-     * If you send session ID via other ways, you may need to override this method
-     * or call [[setHasSessionId()]] to explicitly set whether the session ID is sent.
+     * If you send session ID via other ways, you may need to override this method or call [[setHasSessionId()]] to
+     * explicitly set whether the session ID is sent.
      *
      * @return bool whether the current request has sent the session ID.
      */
@@ -221,6 +163,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
         if ($this->_hasSessionId === null) {
             $name = $this->getName();
             $request = Yii::$app->getRequest();
+
             if (!empty($_COOKIE[$name]) && ini_get('session.use_cookies')) {
                 $this->_hasSessionId = true;
             } elseif (!ini_get('session.use_only_cookies') && ini_get('session.use_trans_sid')) {
@@ -387,35 +330,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     }
 
     /**
-     * Sets the session cookie parameters.
-     * This method is called by [[open()]] when it is about to open the session.
-     *
-     * @throws InvalidArgumentException if the parameters are incomplete.
-     *
-     * @see https://www.php.net/manual/en/function.session-set-cookie-params.php
-     */
-    private function setCookieParamsInternal(): void
-    {
-        $data = $this->getCookieParams();
-        if (isset($data['lifetime'], $data['path'], $data['domain'], $data['secure'], $data['httponly'])) {
-            if (!empty($data['samesite'])) {
-                $data['path'] .= '; samesite=' . $data['samesite'];
-            }
-            session_set_cookie_params(
-                $data['lifetime'],
-                $data['path'],
-                $data['domain'],
-                $data['secure'],
-                $data['httponly'],
-            );
-        } else {
-            throw new InvalidArgumentException(
-                'Please make sure cookieParams contains these elements: lifetime, path, domain, secure and httponly.'
-            );
-        }
-    }
-
-    /**
      * Returns the value indicating whether cookies should be used to store session IDs.
      *
      * @return bool|null the value indicating whether cookies should be used to store session IDs.
@@ -470,27 +384,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     public function getGCProbability(): float
     {
         return (float) (ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
-    }
-
-    /**
-     * @param float $value the probability (percentage) that the GC (garbage collection) process is started on every
-     * session initialization.
-     *
-     * @throws InvalidArgumentException if the value is not between 0 and 100.
-     */
-    public function setGCProbability($value)
-    {
-        $this->freeze();
-
-        if ($value >= 0 && $value <= 100) {
-            // percent * 21474837 / 2147483647 ≈ percent * 0.01
-            ini_set('session.gc_probability', floor($value * 21474836.47));
-            ini_set('session.gc_divisor', 2147483647);
-        } else {
-            throw new InvalidArgumentException('GCProbability must be a value between 0 and 100.');
-        }
-
-        $this->unfreeze();
     }
 
     /**

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
@@ -32,7 +29,9 @@ abstract class AbstractDbSessionTest extends TestCase
         parent::setUp();
 
         $this->mockApplication();
+
         Yii::$app->set('db', $this->getDbConfig());
+
         $this->dropTableSession();
         $this->createTableSession();
     }
@@ -43,30 +42,38 @@ abstract class AbstractDbSessionTest extends TestCase
         parent::tearDown();
     }
 
-    protected function getDbConfig()
+    protected function getDbConfig(): array
     {
         $driverNames = $this->getDriverNames();
         $databases = self::getParam('databases');
+
         foreach ($driverNames as $driverName) {
             if (in_array($driverName, \PDO::getAvailableDrivers()) && array_key_exists($driverName, $databases)) {
                 $driverAvailable = $driverName;
                 break;
             }
         }
+
         if (!isset($driverAvailable)) {
-            $this->markTestIncomplete(get_called_class() . ' requires ' . implode(' or ', $driverNames) . ' PDO driver! Configuration for connection required too.');
+            $this->markTestIncomplete(
+                get_called_class() . ' requires ' . implode(' or ', $driverNames) .
+                ' PDO driver! Configuration for connection required too.'
+            );
+
             return [];
         }
+
         $config = $databases[$driverAvailable];
 
         $result = [
-            'class' => Connection::className(),
+            'class' => Connection::class,
             'dsn' => $config['dsn'],
         ];
 
         if (isset($config['username'])) {
             $result['username'] = $config['username'];
         }
+
         if (isset($config['password'])) {
             $result['password'] = $config['password'];
         }
@@ -74,12 +81,12 @@ abstract class AbstractDbSessionTest extends TestCase
         return $result;
     }
 
-    protected function createTableSession()
+    protected function createTableSession(): void
     {
         $this->runMigrate('up');
     }
 
-    protected function dropTableSession()
+    protected function dropTableSession(): void
     {
         try {
             $this->runMigrate('down', ['all']);
@@ -91,52 +98,52 @@ abstract class AbstractDbSessionTest extends TestCase
 
     // Tests :
 
-    public function testReadWrite()
+    public function testReadWrite(): void
     {
         $session = new DbSession();
 
-        $session->writeSession('test', 'session data');
+        $session->write('test', 'session data');
         $this->assertEquals('session data', $session->readSession('test'));
-        $session->destroySession('test');
+
+        $session->destroy('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 
-    public function testInitializeWithConfig()
+    public function testInitializeWithConfig(): void
     {
         // should produce no exceptions
-        $session = new DbSession([
-            'useCookies' => true,
-        ]);
+        $session = new DbSession(['useCookies' => true]);
 
-        $session->writeSession('test', 'session data');
+        $session->write('test', 'session data');
         $this->assertEquals('session data', $session->readSession('test'));
-        $session->destroySession('test');
+
+        $session->destroy('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 
     /**
      * @depends testReadWrite
      */
-    public function testGarbageCollection()
+    public function testGarbageCollection(): void
     {
         $session = new DbSession();
 
-        $session->writeSession('new', 'new data');
-        $session->writeSession('expire', 'expire data');
+        $session->write('new', 'new data');
+        $session->write('expire', 'expire data');
 
         $session->db->createCommand()
             ->update('session', ['expire' => time() - 100], 'id = :id', ['id' => 'expire'])
             ->execute();
         $session->gcSession(1);
 
-        $this->assertEquals('', $session->readSession('expire'));
-        $this->assertEquals('new data', $session->readSession('new'));
+        $this->assertEquals('', $session->read('expire'));
+        $this->assertEquals('new data', $session->read('new'));
     }
 
     /**
      * @depends testReadWrite
      */
-    public function testWriteCustomField()
+    public function testWriteCustomField(): void
     {
         $session = new DbSession();
 
@@ -144,18 +151,19 @@ abstract class AbstractDbSessionTest extends TestCase
             return ['data' => 'changed by callback data'];
         };
 
-        $session->writeSession('test', 'session data');
+        $session->write('test', 'session data');
 
         $query = new Query();
-        $this->assertSame('changed by callback data', $session->readSession('test'));
+        $this->assertSame('changed by callback data', $session->read('test'));
     }
 
     /**
      * @depends testReadWrite
      */
-    public function testWriteCustomFieldWithUserId()
+    public function testWriteCustomFieldWithUserId(): void
     {
         $session = new DbSession();
+
         $session->open();
         $session->set('user_id', 12345);
 
@@ -175,10 +183,11 @@ abstract class AbstractDbSessionTest extends TestCase
         $session->open();
         $loadedUserId = empty($session['user_id']) ? null : $session['user_id'];
         $this->assertSame($loadedUserId, 12345);
+
         $session->close();
     }
 
-    protected function buildObjectForSerialization()
+    protected function buildObjectForSerialization(): \stdClass
     {
         $object = new \stdClass();
         $object->nullValue = null;
@@ -188,54 +197,61 @@ abstract class AbstractDbSessionTest extends TestCase
         $object->binary = base64_decode('5qS2UUcXWH7rjAmvhqGJTDNkYWFiOGMzNTFlMzNmMWIyMDhmOWIwYzAwYTVmOTFhM2E5MDg5YjViYzViN2RlOGZlNjllYWMxMDA0YmQxM2RQ3ZC0in5ahjNcehNB/oP/NtOWB0u3Skm67HWGwGt9MA==');
         $object->with_null_byte = 'hey!' . "\0" . 'y"ûƒ^äjw¾bðúl5êù-Ö=W¿Š±¬GP¥Œy÷&ø';
 
-        if (version_compare(PHP_VERSION, '5.5.0', '<')) {
-            unset($object->binary);
-            // Binary data can not be inserted on PHP <5.5
-        }
-
         return $object;
     }
 
-    public function testSerializedObjectSaving()
+    public function testSerializedObjectSaving(): void
     {
         $session = new DbSession();
 
         $object = $this->buildObjectForSerialization();
         $serializedObject = serialize($object);
-        $session->writeSession('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->readSession('test'));
+        $session->write('test', $serializedObject);
+        $this->assertSame($serializedObject, $session->read('test'));
 
         $object->foo = 'modification checked';
         $serializedObject = serialize($object);
-        $session->writeSession('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->readSession('test'));
+        $session->write('test', $serializedObject);
+        $this->assertSame($serializedObject, $session->read('test'));
     }
 
-    protected function runMigrate($action, $params = [])
+    protected function runMigrate(string $action, array $params = []): array
     {
-        $migrate = new EchoMigrateController('migrate', Yii::$app, [
-            'migrationPath' => '@yii/web/migrations',
-            'interactive' => false,
-        ]);
+        $migrate = new EchoMigrateController(
+            'migrate',
+            Yii::$app,
+            [
+                'migrationPath' => '@yii/web/migrations',
+                'interactive' => false,
+            ]
+        );
 
         ob_start();
         ob_implicit_flush(false);
+
         $migrate->run($action, $params);
+
         ob_get_clean();
 
-        return array_map(function ($version) {
-            return substr($version, 15);
-        }, (new Query())->select(['version'])->from('migration')->column());
+        return array_map(
+            static function (string $version): string {
+                return substr($version, 15);
+            },
+            (new Query())->select(['version'])->from('migration')->column(),
+        );
     }
 
-    public function testMigration()
+    public function testMigration(): void
     {
         $this->dropTableSession();
-        $this->mockWebApplication([
-            'components' => [
-                'db' => $this->getDbConfig(),
+
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'db' => $this->getDbConfig(),
+                ],
             ],
-        ]);
+        );
 
         $history = $this->runMigrate('history');
         $this->assertEquals(['base'], $history);
@@ -245,37 +261,37 @@ abstract class AbstractDbSessionTest extends TestCase
 
         $history = $this->runMigrate('down');
         $this->assertEquals(['base'], $history);
+
         $this->createTableSession();
     }
 
-    public function testInstantiate()
+    public function testInstantiate(): void
     {
         $oldTimeout = ini_get('session.gc_maxlifetime');
         // unset Yii::$app->db to make sure that all queries are made against sessionDb
         Yii::$app->set('sessionDb', Yii::$app->db);
         Yii::$app->set('db', null);
 
-        $session = new DbSession([
-            'timeout' => 300,
-            'db' => 'sessionDb',
-        ]);
+        $session = new DbSession(['timeout' => 300, 'db' => 'sessionDb']);
 
         $this->assertSame(Yii::$app->sessionDb, $session->db);
         $this->assertSame(300, $session->timeout);
+
         $session->close();
 
         Yii::$app->set('db', Yii::$app->sessionDb);
         Yii::$app->set('sessionDb', null);
+
         ini_set('session.gc_maxlifetime', $oldTimeout);
     }
 
-    public function testInitUseStrictMode()
+    public function testInitUseStrictMode(): void
     {
-        $this->initStrictModeTest(DbSession::className());
+        $this->initStrictModeTest(DbSession::class);
     }
 
-    public function testUseStrictMode()
+    public function testUseStrictMode(): void
     {
-        $this->useStrictModeTest(DbSession::className());
+        $this->useStrictModeTest(DbSession::class);
     }
 }

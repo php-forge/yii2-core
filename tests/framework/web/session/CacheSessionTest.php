@@ -23,41 +23,42 @@ class CacheSessionTest extends \yiiunit\TestCase
         Yii::$app->set('cache', new FileCache(Yii::getAlias('@runtime/cache')));
     }
 
-    public function testCacheSession()
+    public function testCacheSession(): void
     {
         $session = new CacheSession();
 
-        $session->writeSession('test', 'sessionData');
+        $session->write('test', 'sessionData');
         $this->assertEquals('sessionData', $session->readSession('test'));
-        $session->destroySession('test');
+
+        $session->destroy('test');
         $this->assertEquals('', $session->readSession('test'));
     }
 
-    public function testInvalidCache()
+    public function testInvalidCache(): void
     {
         $this->expectException('\Exception');
+
         new CacheSession(['cache' => 'invalid']);
     }
 
     /**
      * @see https://github.com/yiisoft/yii2/issues/13537
      */
-    public function testNotWrittenSessionDestroying()
+    public function testNotWrittenSessionDestroying(): void
     {
         $session = new CacheSession();
 
         $session->set('foo', 'bar');
         $this->assertEquals('bar', $session->get('foo'));
-
         $this->assertTrue($session->destroySession($session->getId()));
     }
 
-    public function testInitUseStrictMode()
+    public function testInitUseStrictMode(): void
     {
         $this->initStrictModeTest(CacheSession::class);
     }
 
-    public function testUseStrictMode()
+    public function testUseStrictMode(): void
     {
         $this->useStrictModeTest(CacheSession::class);
     }
