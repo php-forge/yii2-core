@@ -28,8 +28,8 @@ function microtime($float = false)
 
 namespace yiiunit\framework\caching;
 
-use yii\caching\CacheInterface;
-use yii\caching\TagDependency;
+use Yiisoft\Cache\CacheInterface;
+use Yiisoft\Cache\Dependency\TagDependency;
 use yiiunit\TestCase;
 
 /**

@@ -1,11 +1,10 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\web;
+
+use Closure;
 
 /**
  * MultiFieldSession is the base class for session storage implementations with multi-field data storage support.
@@ -23,14 +22,11 @@ namespace yii\web;
  * [[extractData()]] - while reading session data from the storage.
  *
  * @property-read bool $useCustomStorage Whether to use custom storage.
- *
- * @author Paul Klimov <klimov.paul@gmail.com>
- * @since 2.0.6
  */
 abstract class MultiFieldSession extends Session
 {
     /**
-     * @var callable a callback that will be called during session data reading.
+     * @var Closure a callback that will be called during session data reading.
      * The signature of the callback should be as follows:
      *
      * ```
@@ -50,9 +46,9 @@ abstract class MultiFieldSession extends Session
      * }
      * ```
      */
-    public $readCallback;
+    public Closure $readCallback;
     /**
-     * @var callable a callback that will be called during session data writing.
+     * @var Closure a callback that will be called during session data writing.
      * The signature of the callback should be as follows:
      *
      * ```
@@ -74,49 +70,47 @@ abstract class MultiFieldSession extends Session
      * }
      * ```
      */
-    public $writeCallback;
-
-
-    /**
-     * Returns a value indicating whether to use custom session storage.
-     * This method overrides the parent implementation and always returns true.
-     * @return bool whether to use custom storage.
-     */
-    public function getUseCustomStorage()
-    {
-        return true;
-    }
+    public Closure|null $writeCallback = null;
 
     /**
      * Composes storage field set for session writing.
-     * @param string|null $id Optional session id
-     * @param string|null $data Optional session data
-     * @return array storage fields
+     *
+     * @param string|null $id Optional session id.
+     * @param string|null $data Optional session data.
+     *
+     * @return array storage fields.
      */
-    protected function composeFields($id = null, $data = null)
+    protected function composeFields(string|null $id = null, string|null $data = null): array
     {
         $fields = $this->writeCallback ? call_user_func($this->writeCallback, $this) : [];
+
         if ($id !== null) {
             $fields['id'] = $id;
         }
+
         if ($data !== null) {
             $fields['data'] = $data;
         }
+
         return $fields;
     }
 
     /**
      * Extracts session data from storage field set.
+     *
      * @param array $fields storage fields.
+     *
      * @return string session data.
      */
-    protected function extractData($fields)
+    protected function extractData(array $fields): string
     {
         if ($this->readCallback !== null) {
             if (!isset($fields['data'])) {
                 $fields['data'] = '';
             }
+
             $extraData = call_user_func($this->readCallback, $fields);
+
             if (!empty($extraData)) {
                 session_decode($fields['data']);
                 $_SESSION = array_merge((array) $_SESSION, (array) $extraData);

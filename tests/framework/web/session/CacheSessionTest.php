@@ -1,15 +1,12 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
 use Yii;
-use yii\caching\FileCache;
 use yii\web\CacheSession;
+use Yiisoft\Cache\File\FileCache;
 
 /**
  * @group web
@@ -22,7 +19,8 @@ class CacheSessionTest extends \yiiunit\TestCase
     {
         parent::setUp();
         $this->mockApplication();
-        Yii::$app->set('cache', new FileCache());
+
+        Yii::$app->set('cache', new FileCache(Yii::getAlias('@runtime/cache')));
     }
 
     public function testCacheSession()
@@ -56,11 +54,11 @@ class CacheSessionTest extends \yiiunit\TestCase
 
     public function testInitUseStrictMode()
     {
-        $this->initStrictModeTest(CacheSession::className());
+        $this->initStrictModeTest(CacheSession::class);
     }
 
     public function testUseStrictMode()
     {
-        $this->useStrictModeTest(CacheSession::className());
+        $this->useStrictModeTest(CacheSession::class);
     }
 }

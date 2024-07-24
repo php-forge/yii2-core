@@ -559,7 +559,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     public function getUseStrictMode(): bool
     {
-        return (bool)ini_get('session.use_strict_mode');
+        return (bool) ini_get('session.use_strict_mode');
     }
 
     /**
