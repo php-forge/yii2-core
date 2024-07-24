@@ -102,13 +102,13 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    public function gc(int $maxLifetime): int|bool
+    public function gc(int $maxLifetime): false|int
     {
         $this->session->db->createCommand()
             ->delete($this->session->sessionTable, '[[expire]]<:expire', [':expire' => time()])
             ->execute();
 
-        return true;
+        return 0;
     }
 
     /**

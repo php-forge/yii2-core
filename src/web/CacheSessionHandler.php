@@ -64,9 +64,9 @@ class CacheSessionHandler implements SessionHandlerInterface
     /**
      * @inheritDoc
      */
-    public function gc(int $maxLifetime): bool|int
+    public function gc(int $maxLifetime): false|int
     {
-        return true;
+        return 0;
     }
 
     /**
