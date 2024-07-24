@@ -69,6 +69,7 @@ class DbSessionHandler implements SessionHandlerInterface
             if ($this->session->writeCallback && !$this->session->fields) {
                 $this->session->fields = $this->session->composeFields();
             }
+
             // ensure data consistency
             if (!isset($this->session->fields['data'])) {
                 $this->session->fields['data'] = $data;
@@ -84,6 +85,7 @@ class DbSessionHandler implements SessionHandlerInterface
                     'expire' => time() + $this->session->getTimeout(),
                 ],
             );
+            
             $this->session->fields = $this->typecastFields($this->session->fields);
             $this->session->db->createCommand()->upsert($this->session->sessionTable, $this->session->fields)->execute();
             $this->session->fields = [];

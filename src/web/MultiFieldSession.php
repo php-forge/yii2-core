@@ -46,7 +46,7 @@ abstract class MultiFieldSession extends Session
      * }
      * ```
      */
-    public Closure $readCallback;
+    public Closure|null $readCallback = null;
     /**
      * @var Closure a callback that will be called during session data writing.
      * The signature of the callback should be as follows:
