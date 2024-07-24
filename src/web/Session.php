@@ -119,12 +119,12 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
     public function open(string $path = '', string $name = ''): bool
     {
-        return true;
+        return $this->handler->open($path, $name);
     }
 
     public function close(): bool
     {
-        return true;
+        return $this->handler->close();
     }
 
     /**
