@@ -80,7 +80,7 @@ abstract class MultiFieldSession extends Session
      *
      * @return array storage fields.
      */
-    protected function composeFields(string|null $id = null, string|null $data = null): array
+    public function composeFields(string|null $id = null, string|null $data = null): array
     {
         $fields = $this->writeCallback ? call_user_func($this->writeCallback, $this) : [];
 
@@ -102,7 +102,7 @@ abstract class MultiFieldSession extends Session
      *
      * @return string session data.
      */
-    protected function extractData(array $fields): string
+    public function extractData(array $fields): string
     {
         if ($this->readCallback !== null) {
             if (!isset($fields['data'])) {
