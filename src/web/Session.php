@@ -117,6 +117,16 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
         $this->registerSessionHandler();
     }
 
+    public function open(string $path, string $name): bool
+    {
+        return true;
+    }
+
+    public function close(): bool
+    {
+        return true;
+    }
+
     /**
      * Registers session handler.
      *
