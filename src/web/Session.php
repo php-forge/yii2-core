@@ -76,11 +76,10 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * If set, will be used to provide persistency instead of build-in methods.
      */
     public SessionHandlerInterface|array|null $handler = null;
-
     /**
      * @var string|null Holds the session id in case useStrictMode is enabled and the session id needs to be regenerated
      */
-    protected string|null $_forceRegenerateId = null;
+    public string|null $_forceRegenerateId = null;
 
     /**
      * @var array parameter-value pairs to override default session cookie parameters that are used for
