@@ -145,10 +145,14 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     public function close(): bool
     {
         if ($this->getIsActive()) {
-            YII_DEBUG ? session_write_close() : @session_write_close();
-        }
+            $this->_forceRegenerateId = null;
 
-        $this->_forceRegenerateId = null;
+            if ($this->handler instanceof SessionHandlerInterface) {
+                return $this->handler->close();
+            }
+
+            return YII_DEBUG ? session_write_close() : @session_write_close();
+        }
 
         return true;
     }
