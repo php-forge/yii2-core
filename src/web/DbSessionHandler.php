@@ -16,14 +16,6 @@ class DbSessionHandler implements SessionHandlerInterface
     {
     }
 
-    /**
-     * Session open handler.
-     *
-     * @param string $savePath session save path.
-     * @param string $sessionName session name.
-     *
-     * @return bool whether session is opened successfully.
-     */
     public function open(string $savePath, string $sessionName): bool
     {
         if ($this->session->getUseStrictMode()) {
@@ -38,9 +30,6 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    /**
-     * Ends the current session and store session data.
-     */
     public function close(): bool
     {
         if ($this->session->getIsActive()) {
@@ -52,13 +41,6 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    /**
-     * Session read handler.
-     *
-     * @param string $id session ID.
-     *
-     * @return string the session data.
-     */
     public function read(string $id): string
     {
         $query = $this->getReadQuery($id);
@@ -73,14 +55,6 @@ class DbSessionHandler implements SessionHandlerInterface
         return $data === false ? '' : $data;
     }
 
-    /**
-     * Session write handler.
-     *
-     * @param string $id session ID.
-     * @param string $data session data.
-     *
-     * @return bool whether session write is successful.
-     */
     public function write(string $id, string $data): bool
     {
         if ($this->session->getUseStrictMode() && $id === $this->session->_forceRegenerateId) {
@@ -121,13 +95,6 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    /**
-     * Session destroy handler.
-     *
-     * @param string $id session ID.
-     *
-     * @return bool whether session is destroyed successfully.
-     */
     public function destroy(string $id): bool
     {
         $this->session->db->createCommand()->delete($this->session->sessionTable, ['id' => $id])->execute();
@@ -135,14 +102,7 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    /**
-     * Session GC (garbage collection) handler.
-     *
-     * @param int $maxLifetime the number of seconds after which data will be seen as 'garbage' and cleaned up.
-     *
-     * @return bool|int whether session is GCed successfully.
-     */
-    public function gc(int $maxLifetime): bool|int
+    public function gc(int $maxLifetime): int|bool
     {
         $this->session->db->createCommand()
             ->delete($this->session->sessionTable, '[[expire]]<:expire', [':expire' => time()])

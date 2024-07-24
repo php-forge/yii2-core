@@ -85,7 +85,7 @@ class SessionHandler implements SessionHandlerInterface
     /**
      * @throws InvalidArgumentException if the `$maxLifetime` is invalid.
      */
-    public function gc(int $maxLifetime): bool
+    public function gc(int $maxLifetime): bool|int
     {
         $this->session->freeze();
 

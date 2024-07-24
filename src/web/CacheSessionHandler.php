@@ -14,14 +14,6 @@ class CacheSessionHandler implements SessionHandlerInterface
     {
     }
 
-    /**
-     * Session open handler.
-     *
-     * @param string $savePath session save path.
-     * @param string $sessionName session name.
-     *
-     * @return bool whether session is opened successfully.
-     */
     public function open(string $savePath, string $sessionName): bool
     {
         if ($this->session->getUseStrictMode()) {
@@ -36,13 +28,6 @@ class CacheSessionHandler implements SessionHandlerInterface
         return true;
     }
 
-    /**
-     * Session read handler.
-     *
-     * @param string $id session ID.
-     *
-     * @return string the session data.
-     */
     public function read(string $id): string
     {
         $data = $this->session->cache->get($this->calculateKey($id), false);
@@ -50,14 +35,6 @@ class CacheSessionHandler implements SessionHandlerInterface
         return $data === false ? '' : $data;
     }
 
-    /**
-     * Session write handler.
-     *
-     * @param string $id session ID.
-     * @param string $data session data.
-     *
-     * @return bool whether session write is successful.
-     */
     public function write(string $id, string $data): bool
     {
         if ($this->session->getUseStrictMode() && $id === $this->session->_forceRegenerateId) {
@@ -68,13 +45,6 @@ class CacheSessionHandler implements SessionHandlerInterface
         return $this->session->cache->set($this->calculateKey($id), $data, $this->session->getTimeout());
     }
 
-    /**
-     * Session destroy handler.
-     *
-     * @param string $id session ID.
-     *
-     * @return bool whether session is destroyed successfully.
-     */
     public function destroy(string $id): bool
     {
         $cacheId = $this->calculateKey($id);
@@ -86,9 +56,6 @@ class CacheSessionHandler implements SessionHandlerInterface
         return $this->session->cache->delete($cacheId);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function close(): bool
     {
         return true;
@@ -97,7 +64,7 @@ class CacheSessionHandler implements SessionHandlerInterface
     /**
      * @inheritDoc
      */
-    public function gc(int $maxLifetime): bool
+    public function gc(int $maxLifetime): bool|int
     {
         return true;
     }
