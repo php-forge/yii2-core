@@ -136,8 +136,8 @@ abstract class AbstractDbSessionTest extends TestCase
             ->execute();
         $session->setGCProbability(1);
 
-        $this->assertEquals('', $session->read('expire'));
-        $this->assertEquals('new data', $session->read('new'));
+        $this->assertEquals('', $session->get('expire'));
+        $this->assertEquals('new data', $session->get('new'));
     }
 
     /**
