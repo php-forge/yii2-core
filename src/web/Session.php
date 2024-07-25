@@ -32,8 +32,8 @@ use yii\base\InvalidConfigException;
  * Session can be extended to support customized session storage.
  * To do so, override [[useCustomStorage]] so that it returns true, and
  * override these methods with the actual logic about using custom storage:
- * [[openSession()]], [[closeSession()]], [[readSession()]], [[writeSession()]],
- * [[destroySession()]] and [[gcSession()]].
+ * [[openSession()]], [[closeSession()]], [[readSession()]], [[writeSession()]], [[destroySession()]] and
+ * [[gcSession()]].
  *
  * Session also supports a special type of session data, called *flash messages*.
  * A flash message is available only in the current request and the next request.
@@ -116,7 +116,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
         }
     }
 
-    public function open(string $path = '', string $name = ''): bool
+    public function open(): bool
     {
         if ($this->getIsActive()) {
             return true;
@@ -143,22 +143,16 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
         return true;
     }
 
-    public function close(): bool
+    public function close(): void
     {
         if ($this->getIsActive()) {
-            $this->_forceRegenerateId = null;
-
-            if ($this->handler instanceof SessionHandlerInterface) {
-                return $this->handler->close();
-            }
-
-            return YII_DEBUG ? session_write_close() : @session_write_close();
+            YII_DEBUG ? session_write_close() : @session_write_close();
         }
 
-        return true;
+        $this->_forceRegenerateId = null;
     }
 
-    public function destroy(string $id = ''): bool
+    public function destroy(): bool
     {
         if ($this->getIsActive()) {
             $sessionId = session_id();
@@ -167,7 +161,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
             $this->setId($sessionId);
 
-            $this->open('', '');
+            $this->open();
 
             session_unset();
             session_destroy();
@@ -176,26 +170,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
         }
 
         return true;
-    }
-
-    /**
-     * @throws InvalidArgumentException if the `$maxLifetime` is invalid.
-     */
-    public function gc(int $maxLifetime): false|int
-    {
-        $this->freeze();
-
-        if ($maxLifetime >= 0 && $maxLifetime <= 100) {
-            // percent * 21474837 / 2147483647 ≈ percent * 0.01
-            ini_set('session.gc_probability', floor($maxLifetime * 21474836.47));
-            ini_set('session.gc_divisor', 2147483647);
-        } else {
-            throw new InvalidArgumentException('GCProbability must be a value between 0 and 100.');
-        }
-
-        $this->unfreeze();
-
-        return 0;
     }
 
     /**
@@ -387,8 +361,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
     /**
      * Sets the session cookie parameters.
-     * The cookie parameters passed to this method will be merged with the result
-     * of `session_get_cookie_params()`.
+     * The cookie parameters passed to this method will be merged with the result of `session_get_cookie_params()`.
      *
      * @param array $value cookie parameters, valid keys include: `lifetime`, `path`, `domain`, `secure` and `httponly`.
      * Starting with `sameSite` is also supported.
@@ -468,16 +441,22 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     }
 
     /**
-     * @param int $value the probability (percentage) that the GC (garbage collection) process is started on every
+     * @param float $value the probability (percentage) that the GC (garbage collection) process is started on every
      * session initialization.
      *
      * @throws InvalidArgumentException if the value is not between 0 and 100.
      */
-    public function setGCProbability(int $value): void
+    public function setGCProbability(float $value): void
     {
         $this->freeze();
 
-        $this->handler->gc($value);
+        if ($value >= 0 && $value <= 100) {
+            // percent * 21474837 / 2147483647 ≈ percent * 0.01
+            ini_set('session.gc_probability', floor($value * 21474836.47));
+            ini_set('session.gc_divisor', 2147483647);
+        } else {
+            throw new InvalidArgumentException('GCProbability must be a value between 0 and 100.');
+        }
 
         $this->unfreeze();
     }

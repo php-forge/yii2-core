@@ -31,7 +31,7 @@ trait SessionTestTrait
         //non-strict-mode test
         $session->useStrictMode = false;
         $session->close();
-        $session->remove('non-existing-non-strict');
+        $session->destroy();
         $session->setId('non-existing-non-strict');
         $session->open();
         $this->assertEquals('non-existing-non-strict', $session->getId());
@@ -40,7 +40,7 @@ trait SessionTestTrait
         //strict-mode test
         $session->useStrictMode = true;
         $session->close();
-        $session->remove('non-existing-strict');
+        $session->destroy();
         $session->setId('non-existing-strict');
         $session->open();
         $id = $session->getId();

@@ -8,9 +8,10 @@ use yii\web\Session;
 use yiiunit\TestCase;
 
 /**
+ * @group session
  * @group web
  */
-class SessionTest extends TestCase
+final class SessionTest extends TestCase
 {
     use SessionTestTrait;
 
@@ -66,12 +67,12 @@ class SessionTest extends TestCase
         }
 
         $oldGcProbability = $session->getGCProbability();
-        $session->gc(100);
+        $session->setGCProbability(100);
         $newGcProbability = $session->getGCProbability();
         $this->assertNotEquals($oldGcProbability, $newGcProbability);
         $this->assertEquals(100, $newGcProbability);
 
-        $session->gc($oldGcProbability);
+        $session->setGCProbability($oldGcProbability);
     }
 
     /**
