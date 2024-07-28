@@ -107,6 +107,11 @@ abstract class AbstractDbSessionTest extends TestCase
             ->bindValue(':id', $validSessionId)
             ->queryOne();
         $this->assertNotNull($validData);
+
+        if (is_resource($validData['data'])) {
+            $validData['data'] = stream_get_contents($validData['data']);
+        }
+
         $this->assertSame('__flash|a:0:{}new|s:8:"new data";', $validData['data']);
 
         $session->close();
