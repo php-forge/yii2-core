@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit;
 
@@ -60,7 +57,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @param array $config The application configuration, if needed.
      * @param string $appClass name of the application class to create.
      */
-    protected function mockApplication($config = [], $appClass = '\yii\console\Application')
+    protected function mockApplication($config = [], $appClass = '\yii\console\Application'): void
     {
         new $appClass(
             ArrayHelper::merge(
@@ -74,25 +71,38 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
-    protected function mockWebApplication($config = [], $appClass = '\yii\web\Application')
+    /**
+     * Populates Yii::$app with a new web application.
+     *
+     * The application will be destroyed on tearDown() automatically.
+     *
+     * @param array $config The application configuration, if needed.
+     * @param string $appClass name of the application class to create.
+     */
+    protected function mockWebApplication($config = [], $appClass = '\yii\web\Application'): void
     {
-        new $appClass(ArrayHelper::merge([
-            'id' => 'testapp',
-            'basePath' => __DIR__,
-            'vendorPath' => $this->getVendorPath(),
-            'aliases' => [
-                '@bower' => '@vendor/bower-asset',
-                '@npm' => '@vendor/npm-asset',
-            ],
-            'components' => [
-                'request' => [
-                    'cookieValidationKey' => 'wefJDF8sfdsfSDefwqdxj9oq',
-                    'scriptFile' => __DIR__ . '/index.php',
-                    'scriptUrl' => '/index.php',
-                    'isConsoleRequest' => false,
+        new $appClass(
+            ArrayHelper::merge(
+                [
+                    'id' => 'testapp',
+                    'basePath' => __DIR__,
+                    'vendorPath' => $this->getVendorPath(),
+                    'aliases' => [
+                        '@bower' => '@vendor/bower-asset',
+                        '@npm' => '@vendor/npm-asset',
+                    ],
+                    'components' => [
+                        'request' => [
+                            'cookieValidationKey' => 'wefJDF8sfdsfSDefwqdxj9oq',
+                            'scriptFile' => __DIR__ . '/index.php',
+                            'scriptUrl' => '/index.php',
+                            'isConsoleRequest' => false,
+                        ],
+                    ],
                 ],
-            ],
-        ], $config));
+                $config,
+            )
+        );
     }
 
     protected function getVendorPath()
