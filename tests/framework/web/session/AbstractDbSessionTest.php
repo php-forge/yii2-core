@@ -13,6 +13,8 @@ use yiiunit\framework\console\controllers\EchoMigrateController;
 use yiiunit\TestCase;
 
 /**
+ * @runTestsInSeparateProcesses
+ *
  * @group db
  */
 abstract class AbstractDbSessionTest extends TestCase

@@ -14,18 +14,16 @@ use Yiisoft\Cache\CacheKeyNormalizer;
 class CacheSessionHandler implements SessionHandlerInterface
 {
     private string $forceRegenerateId = '';
-    private int|null $timeout = 0;
-    private bool $useStrictMode = false;
 
     public function __construct(private CacheInterface $cache)
     {
-        $this->timeout = (int) ini_get('session.gc_maxlifetime');
-        $this->useStrictMode = (bool) ini_get('session.use_strict_mode');
     }
 
     public function open(string $savePath, string $sessionName): bool
     {
-        if ($this->useStrictMode) {
+        $strictMode = (bool) ini_get('session.use_strict_mode');
+
+        if ($strictMode) {
             $id = session_id();
 
             if (!$this->cache->has($this->calculateKey($id))) {
@@ -51,12 +49,15 @@ class CacheSessionHandler implements SessionHandlerInterface
 
     public function write(string $id, string $data): bool
     {
-        if ($this->useStrictMode && $id === $this->forceRegenerateId) {
+        $strictMode = (bool) ini_get('session.use_strict_mode');
+        $timeout = (int) ini_get('session.gc_maxlifetime');
+
+        if ($strictMode && $id === $this->forceRegenerateId) {
             //Ignore write when forceRegenerate is active for this id
             return true;
         }
 
-        return $this->cache->set($this->calculateKey($id), $data, $this->timeout);
+        return $this->cache->set($this->calculateKey($id), $data, $timeout);
     }
 
     public function destroy(string $id): bool

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\web\session;
+namespace yiiunit\framework\web\session\cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Yii;
 use yii\web\session\CacheSession;
 use Yiisoft\Cache\File\FileCache;
+use yiiunit\framework\web\session\SessionTestTrait;
 
 /**
  * @group web
@@ -20,8 +21,20 @@ class CacheSessionTest extends \yiiunit\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->mockApplication();
+
         Yii::$app->set(CacheInterface::class, new FileCache(Yii::getAlias('@runtime/cache')));
+    }
+
+    protected function tearDown(): void
+    {
+        $cache = Yii::$app->get(CacheInterface::class);
+        $cache->clear();
+
+        Yii::$app->set(CacheInterface::class, null);
+
+        parent::tearDown();
     }
 
     public function testCacheSession(): void

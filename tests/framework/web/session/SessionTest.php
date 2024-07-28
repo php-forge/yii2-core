@@ -8,8 +8,8 @@ use yii\web\session\Session;
 use yiiunit\TestCase;
 
 /**
- * @group session
  * @group web
+ * @group session
  */
 final class SessionTest extends TestCase
 {

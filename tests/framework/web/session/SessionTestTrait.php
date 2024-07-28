@@ -32,16 +32,16 @@ trait SessionTestTrait
         $session->setId('non-existing-non-strict');
         $session->open();
         $this->assertEquals('non-existing-non-strict', $session->getId());
+        $session->close();
 
         //strict-mode test
         $session->useStrictMode = true;
         $session->close();
-        $session->destroy('non-existing-non-strict');
+        $session->destroy('non-existing-strict');
         $session->setId('non-existing-strict');
         $session->open();
         $id = $session->getId();
         $this->assertNotEquals('non-existing-strict', $id);
-
         $session->set('strict_mode_test', 'session data');
         $session->close();
 
@@ -49,16 +49,15 @@ trait SessionTestTrait
         $session->setId('non-existing-strict');
         $session->open();
         $this->assertNotEquals('session data', $session->get('strict_mode_test'));
+        $session->close();
 
         //Ensure session can be accessed with the new (and thus existing) id.
-        $session->close();
         $session->setId($id);
         $session->open();
         $this->assertNotEmpty($id);
         $this->assertEquals($id, $session->getId());
         $this->assertEquals('session data', $session->get('strict_mode_test'));
-
-        $session->close();
+        $session->destroy('strict_mode_test');
     }
 
     public function sessionIterator(string $class): void
@@ -76,17 +75,11 @@ trait SessionTestTrait
         $this->assertEquals([], $iterator->current());
 
         $iterator->next();
-        $this->assertEquals('strict_mode_test', $iterator->key());
-        $this->assertEquals('session data', $iterator->current());
-
-        $iterator->next();
         $this->assertEquals('key1', $iterator->key());
         $this->assertEquals('value1', $iterator->current());
 
         $iterator->next();
         $this->assertNull($iterator->key());
         $this->assertNull($iterator->current());
-
-        $session->close();
     }
 }
