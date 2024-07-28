@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session\mssql;
 
+use PDO;
 use yiiunit\support\MssqlConnection;
 
 /**
@@ -24,12 +25,13 @@ class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
         parent::setUp();
     }
 
-    protected function buildObjectForSerialization(): object
+    public function testSerializedObjectSaving(): void
     {
-        $object = parent::buildObjectForSerialization();
+        // Data is 8-bit characters as specified in the code page of the Windows locale that is set on the system.
+        // Any multi-byte characters or characters that do not map into this code page are substituted with a
+        // single-byte question mark (?) character.
+        $this->db->getSlavePdo()->setAttribute(PDO::SQLSRV_ATTR_ENCODING, PDO::SQLSRV_ENCODING_SYSTEM);
 
-        unset($object->binary);
-
-        return $object;
+        parent::testSerializedObjectSaving();
     }
 }
