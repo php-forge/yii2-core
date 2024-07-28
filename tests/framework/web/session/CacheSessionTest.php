@@ -1,18 +1,17 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
+use Psr\SimpleCache\CacheInterface;
 use Yii;
-use yii\caching\FileCache;
-use yii\web\CacheSession;
+use yii\web\session\CacheSession;
+use Yiisoft\Cache\File\FileCache;
 
 /**
  * @group web
+ * @group session-cache
  */
 class CacheSessionTest extends \yiiunit\TestCase
 {
@@ -22,45 +21,48 @@ class CacheSessionTest extends \yiiunit\TestCase
     {
         parent::setUp();
         $this->mockApplication();
-        Yii::$app->set('cache', new FileCache());
+        Yii::$app->set(CacheInterface::class, new FileCache(Yii::getAlias('@runtime/cache')));
     }
 
-    public function testCacheSession()
+    public function testCacheSession(): void
     {
         $session = new CacheSession();
 
-        $session->writeSession('test', 'sessionData');
-        $this->assertEquals('sessionData', $session->readSession('test'));
-        $session->destroySession('test');
-        $this->assertEquals('', $session->readSession('test'));
+        $session->set('test', 'sessionData');
+        $this->assertEquals('sessionData', $session->get('test'));
+
+        $session->destroy('test');
+        $this->assertEquals('', $session->get('test'));
     }
 
-    public function testInvalidCache()
+    public function testInvalidCache(): void
     {
         $this->expectException('\Exception');
+        $this->expectExceptionMessage('Failed to instantiate component or class "invalid".');
+
         new CacheSession(['cache' => 'invalid']);
     }
 
     /**
      * @see https://github.com/yiisoft/yii2/issues/13537
      */
-    public function testNotWrittenSessionDestroying()
+    public function testNotWrittenSessionDestroying(): void
     {
         $session = new CacheSession();
 
         $session->set('foo', 'bar');
         $this->assertEquals('bar', $session->get('foo'));
 
-        $this->assertTrue($session->destroySession($session->getId()));
+        $this->assertTrue($session->destroy($session->getId()));
     }
 
-    public function testInitUseStrictMode()
+    public function testInitUseStrictMode(): void
     {
-        $this->initStrictModeTest(CacheSession::className());
+        $this->initStrictModeTest(CacheSession::class);
     }
 
-    public function testUseStrictMode()
+    public function testUseStrictMode(): void
     {
-        $this->useStrictModeTest(CacheSession::className());
+        $this->useStrictModeTest(CacheSession::class);
     }
 }

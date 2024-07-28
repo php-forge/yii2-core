@@ -1,33 +1,26 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\web\session\pgsql;
+
+use yiiunit\support\PgsqlConnection;
 
 /**
  * Class DbSessionTest.
  *
- * @author Dmytro Naumenko <d.naumenko.a@gmail.com>
- *
  * @group db
  * @group pgsql
+ * @group session-db-pgsql
  */
 class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
 {
     protected function setUp(): void
     {
-        if (defined('HHVM_VERSION')) {
-            $this->markTestSkipped('HHVMs PgSQL implementation does not seem to support blob columns in the way they are used here.');
-        }
+        $this->mockWebApplication();
+
+        $this->db = PgsqlConnection::getConnection();
 
         parent::setUp();
-    }
-
-    protected function getDriverNames()
-    {
-        return ['pgsql'];
     }
 }
