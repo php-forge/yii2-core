@@ -18,9 +18,7 @@ class PSRCacheSessionHandler implements SessionHandlerInterface
      */
     private string $forceRegenerateId = '';
 
-    public function __construct(private CacheInterface $cache)
-    {
-    }
+    public function __construct(private CacheInterface $cache) {}
 
     /**
      * {@inheritdoc}

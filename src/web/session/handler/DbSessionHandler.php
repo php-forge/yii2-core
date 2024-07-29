@@ -15,9 +15,7 @@ class DbSessionHandler implements SessionHandlerInterface
      */
     private string $forceRegenerateId = '';
 
-    public function __construct(private Connection $db, private string $sessionTable = '{{%session}}')
-    {
-    }
+    public function __construct(private Connection $db, private string $sessionTable = '{{%session}}') {}
 
     /**
      * {@inheritdoc}
