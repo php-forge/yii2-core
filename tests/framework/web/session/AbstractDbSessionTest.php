@@ -226,6 +226,11 @@ abstract class AbstractDbSessionTest extends TestCase
         $this->removeAll(DbSession::class);
     }
 
+    public function testSetFlash(): void
+    {
+        $this->set(DbSession::class);
+    }
+
     protected function buildObjectForSerialization(): object
     {
         $object = new \stdClass();

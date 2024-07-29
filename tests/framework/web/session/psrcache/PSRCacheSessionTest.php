@@ -136,4 +136,9 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
     {
         $this->removeAll(PSRCacheSession::class);
     }
+
+    public function testSetFlash(): void
+    {
+        $this->set(PSRCacheSession::class);
+    }
 }

@@ -100,4 +100,23 @@ trait FlashTestTrait
 
         $this->assertSame([], $session->getAllFlashes());
     }
+
+    public function set(string $class): void
+    {
+        /** @var Session $class */
+        $session = new $class();
+
+        $session->setFlash('key');
+
+        $this->assertSame(['key' => true], $session->getAllFlashes());
+
+        $session->setFlash('key', 'value');
+
+        $this->assertSame(['key' => 'value'], $session->getAllFlashes());
+
+        $session->setFlash('key', 'value', true);
+
+        $this->assertSame(['key' => 'value'], $session->getAllFlashes());
+        $this->assertNull($session->getFlash('key'));
+    }
 }

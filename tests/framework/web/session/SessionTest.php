@@ -157,4 +157,9 @@ final class SessionTest extends TestCase
     {
         $this->removeAll(Session::class);
     }
+
+    public function testSetFlash(): void
+    {
+        $this->set(Session::class);
+    }
 }
