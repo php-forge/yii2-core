@@ -28,6 +28,7 @@ use yii\base\InvalidArgumentException;
  */
 class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Countable
 {
+    protected Flash $flash;
     /**
      * @var string|null Holds the session id in case useStrictMode is enabled and the session id needs to be
      * regenerated.
@@ -38,6 +39,12 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * restored when a Session component without custom handler is used after one that has.
      */
     protected string|null $_originalSessionModule = null;
+    /**
+     * @var SessionHandlerInterface|array|string|null $_handler The session handler to be used for storing and
+     * retrieving session data. This can either be an instance of a class implementing SessionHandlerInterface, an array
+     * configuration that can be used to create such an instance, or a string representing the handler class name.
+     */
+    protected SessionHandlerInterface|array|string|null $_handler = null;
 
     /**
      * @var array parameter-value pairs to override default session cookie parameters that are used for
@@ -52,8 +59,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     private array|null $_frozenSessionData = null;
     private bool|null $_hasSessionId = null;
-    protected Flash $flash;
-    public SessionHandlerInterface|null $_handler = null;
 
     /**
      * Initializes the application component.
@@ -69,7 +74,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
         if ($this->getIsActive()) {
             Yii::warning('Session is already started', __METHOD__);
-            $this->flash->updateCounters();
         }
     }
 
@@ -96,7 +100,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 
         if ($this->getIsActive()) {
             Yii::info('Session started', __METHOD__);
-            $this->flash->updateCounters();
         } else {
             $error = error_get_last();
             $message = isset($error['message']) ? $error['message'] : 'Failed to start session.';
@@ -608,7 +611,13 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     public function getFlash(string $key, mixed $defaultValue = null, bool $delete = false): mixed
     {
-        return $this->flash->get($key, $defaultValue, $delete);
+        $value = $this->flash->get($key) ?? $defaultValue;
+
+        if ($delete) {
+            $this->flash->remove($key);
+        }
+
+        return $value;
     }
 
     /**
@@ -643,7 +652,13 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     public function getAllFlashes(bool $delete = false): array
     {
-        return $this->flash->getAll($delete);
+        $values = $this->flash->getAll();
+
+        if ($delete) {
+            $this->flash->removeAll();
+        }
+
+        return $values;
     }
 
     /**
@@ -693,26 +708,23 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * Removes a flash message.
      *
      * @param string $key the key identifying the flash message. Note that flash messages and normal session variables
-     * share the same name space.  If you have a normal session variable using the same name, it will be removed by this
+     * share the same name space. If you have a normal session variable using the same name, it will be removed by this
      * method.
-     *
-     * @return mixed the removed flash message. Null if the flash message does not exist.
      *
      * @see getFlash()
      * @see setFlash()
      * @see addFlash()
      * @see removeAllFlashes()
      */
-    public function removeFlash(string $key): mixed
+    public function removeFlash(string $key): void
     {
-        return $this->flash->remove($key);
+        $this->flash->remove($key);
     }
 
     /**
      * Removes all flash messages.
      * Note that flash messages and normal session variables share the same name space.
-     * If you have a normal session variable using the same name, it will be removed
-     * by this method.
+     * If you have a normal session variable using the same name, it will be removed by this method.
      *
      * @see getFlash()
      * @see setFlash()

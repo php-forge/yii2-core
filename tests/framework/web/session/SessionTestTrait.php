@@ -71,10 +71,6 @@ trait SessionTestTrait
         $iterator = $session->getIterator();
 
         $this->assertInstanceOf(\Iterator::class, $iterator);
-        $this->assertEquals('__flash', $iterator->key());
-        $this->assertEquals([], $iterator->current());
-
-        $iterator->next();
         $this->assertEquals('key1', $iterator->key());
         $this->assertEquals('value1', $iterator->current());
 

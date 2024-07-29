@@ -6,16 +6,22 @@ namespace yii\web\session;
 
 use yii\base\Component;
 
-use function array_keys;
-use function array_key_exists;
 use function is_array;
 
 class Flash extends Component
 {
     /**
+     * @var string the name of the session variable that stores the counter for flash messages.
+     */
+    private const COUNTERS = '__counters';
+    /**
      * @var string the name of the session variable that stores the flash message data.
      */
-    public string $flashParam = '__flash';
+    private const FLASH_PARAM = '__flash';
+
+    /**
+     * @var Session the session object to be used.
+     */
     private Session $session;
 
     public function __construct(Session $session, array $config = [])
@@ -25,138 +31,155 @@ class Flash extends Component
         parent::__construct($config);
     }
 
-    /**
-     * Adds a flash message.
-     * If there are existing flash messages with the same key, the new one will be appended to the existing message
-     * array.
-     *
-     * @param string $key the key identifying the flash message.
-     * @param mixed $value flash message.
-     * @param bool $removeAfterAccess whether the flash message should be automatically removed only if it is accessed.
-     * If false, the flash message will be automatically removed after the next request, regardless if it is accessed or
-     * not. If true (default value), the flash message will remain until after it is accessed.
-     *
-     * @see get()
-     * @see set()
-     * @see remove()
-     */
-    public function add(string $key, mixed $value = true, bool $removeAfterAccess = true): void
+    public function get(string $key)
     {
-        $counters = $this->session->get($this->flashParam, []);
+        $flashes = $this->fetch();
 
-        $counters[$key] = $removeAfterAccess ? -1 : 0;
+        if (!isset($flashes[$key], $flashes[self::COUNTERS][$key])) {
+            return null;
+        }
 
-        $this->session->set($this->flashParam, $counters);
+        if ($flashes[self::COUNTERS][$key] < 0) {
+            // Mark for deletion in the next request.
+            $flashes[self::COUNTERS][$key] = 1;
 
-        if ($this->session->has($key) === false) {
-            $this->session->set($key, $value);
-        } elseif (is_array($_SESSION[$key])) {
-            $_SESSION[$key][] = $value;
+            $this->save($flashes);
+        }
+
+        return $flashes[$key];
+    }
+
+    public function getAll(): array
+    {
+        $flashes = $this->fetch();
+
+        $list = [];
+
+        foreach ($flashes as $key => $value) {
+            if ($key === self::COUNTERS) {
+                continue;
+            }
+
+            $list[$key] = $value;
+
+            if ($flashes[self::COUNTERS][$key] < 0) {
+                // Mark for deletion in the next request.
+                $flashes[self::COUNTERS][$key] = 1;
+            }
+        }
+
+        $this->save($flashes);
+
+        return $list;
+    }
+
+    public function set(string $key, $value = true, bool $removeAfterAccess = true): void
+    {
+        $flashes = $this->fetch();
+
+        /** @psalm-suppress MixedArrayAssignment */
+        $flashes[self::COUNTERS][$key] = $removeAfterAccess ? -1 : 0;
+        $flashes[$key] = $value;
+
+        $this->save($flashes);
+    }
+
+    public function add(string $key, $value = true, bool $removeAfterAccess = true): void
+    {
+        $flashes = $this->fetch();
+
+        /** @psalm-suppress MixedArrayAssignment */
+        $flashes[self::COUNTERS][$key] = $removeAfterAccess ? -1 : 0;
+
+        if (empty($flashes[$key])) {
+            $flashes[$key] = [$value];
+        } elseif (is_array($flashes[$key])) {
+            $flashes[$key][] = $value;
         } else {
-            $_SESSION[$key] = [$_SESSION[$key], $value];
-        }
-    }
-
-    public function get(string $key, mixed $defaultValue = null, bool $delete = false): mixed
-    {
-        $counters = $this->session->get($this->flashParam, []);
-
-        if (isset($counters[$key])) {
-            $value = $this->session->get($key, $defaultValue);
-
-            if ($delete) {
-                $this->removeFlash($key);
-            } elseif ($counters[$key] < 0) {
-                // mark for deletion in the next request
-                $counters[$key] = 1;
-                $this->session->set($this->flashParam, $counters);
-            }
-
-            return $value;
+            $flashes[$key] = [$flashes[$key], $value];
         }
 
-        return $defaultValue;
+        $this->save($flashes);
     }
 
-    public function getAll(bool $delete = false): array
+    public function remove(string $key): void
     {
-        $counters = $this->session->get($this->flashParam, []);
-        $flashes = [];
-
-        foreach (array_keys($counters) as $key) {
-            if (array_key_exists($key, $_SESSION)) {
-                $flashes[$key] = $_SESSION[$key];
-
-                if ($delete) {
-                    unset($counters[$key], $_SESSION[$key]);
-                } elseif ($counters[$key] < 0) {
-                    // mark for deletion in the next request
-                    $counters[$key] = 1;
-                }
-            } else {
-                unset($counters[$key]);
-            }
-        }
-
-        $this->session->set($this->flashParam, $counters);
-
-        return $flashes;
-    }
-
-    public function remove(string $key): mixed
-    {
-        $counters = $this->session->get($this->flashParam, []);
-
-        $value = isset($_SESSION[$key], $counters[$key]) ? $_SESSION[$key] : null;
-
-        unset($counters[$key], $_SESSION[$key]);
-
-        $this->session->set($this->flashParam, $counters);
-
-        return $value;
+        $flashes = $this->fetch();
+        unset($flashes[self::COUNTERS][$key], $flashes[$key]);
+        $this->save($flashes);
     }
 
     public function removeAll(): void
     {
-        $counters = $this->session->get($this->flashParam, []);
-
-        foreach (array_keys($counters) as $key) {
-            unset($_SESSION[$key]);
-        }
-
-        unset($_SESSION[$this->flashParam]);
+        $this->save([self::COUNTERS => []]);
     }
 
-    public function setFlash(string $key, mixed $value = true, bool $removeAfterAccess = true): void
+    public function has(string $key): bool
     {
-        $counters = $this->session->get($this->flashParam, []);
+        $flashes = $this->fetch();
 
-        $counters[$key] = $removeAfterAccess ? -1 : 0;
-
-        $this->session->set($key, $value);
-        $this->session->set($this->flashParam, $counters);
+        return isset($flashes[$key], $flashes[self::COUNTERS][$key]);
     }
 
     /**
      * Updates the counters for flash messages and removes outdated flash messages.
-     * This method should only be called once in [[init()]].
+     * This method should be called once after session initialization.
      */
-    public function updateCounters(): void
+    private function updateCounters(): void
     {
-        $counters = $this->session->get($this->flashParam, []);
+        $flashes = $this->session->get(self::FLASH_PARAM, []);
 
-        if (is_array($counters)) {
-            foreach ($counters as $key => $count) {
-                if ($count > 0) {
-                    unset($counters[$key], $_SESSION[$key]);
-                } elseif ($count == 0) {
-                    $counters[$key]++;
-                }
-            }
-            $this->session->set($this->flashParam, $counters);
-        } else {
-            // fix the unexpected problem that flashParam doesn't return an array
-            $this->session->set($this->flashParam, []);
+        if (!is_array($flashes)) {
+            $flashes = [self::COUNTERS => []];
         }
+
+        $counters = $flashes[self::COUNTERS] ?? [];
+
+        if (!is_array($counters)) {
+            $counters = [];
+        }
+
+        /** @var array<string, int> $counters */
+        foreach ($counters as $key => $count) {
+            if ($count > 0) {
+                unset($counters[$key], $flashes[$key]);
+            } elseif ($count === 0) {
+                $counters[$key]++;
+            }
+        }
+
+        $flashes[self::COUNTERS] = $counters;
+
+        $this->save($flashes);
+    }
+
+    /**
+     * Obtains flash messages. Updates counters once per session.
+     *
+     * @return array Flash messages array.
+     *
+     * @psalm-return array{__counters:array<string,int>}&array
+     */
+    private function fetch(): array
+    {
+        // Ensure session is active (and has id).
+        $this->session->open();
+
+        if ($this->session->getIsActive()) {
+            $this->updateCounters();
+        }
+
+        /** @psalm-var array{__counters:array<string,int>}&array */
+        return $this->session->get(self::FLASH_PARAM, []);
+    }
+
+    /**
+     * Save flash messages into session.
+     *
+     * @param array $flashes Flash messages to save.
+     */
+    private function save(array $flashes): void
+    {
+        $this->session->set(self::FLASH_PARAM, $flashes);
     }
 }

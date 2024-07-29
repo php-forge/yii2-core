@@ -13,6 +13,7 @@ use yiiunit\TestCase;
  */
 final class SessionTest extends TestCase
 {
+    use FlashTestTrait;
     use SessionTestTrait;
 
     /**
@@ -115,5 +116,45 @@ final class SessionTest extends TestCase
     public function testSessionIterator(): void
     {
         $this->sessionIterator(Session::class);
+    }
+
+    public function testAddFlash(): void
+    {
+        $this->add(Session::class);
+    }
+
+    public function testAddWithRemoveFlash(): void
+    {
+        $this->addWithRemove(Session::class);
+    }
+
+    public function testGetFlash(): void
+    {
+        $this->get(Session::class);
+    }
+
+    public function testGellAllFlash(): void
+    {
+        $this->getAll(Session::class);
+    }
+
+    public function testGetWithRemoveFlash(): void
+    {
+        $this->getWithRemove(Session::class);
+    }
+
+    public function testHasFlash(): void
+    {
+        $this->has(Session::class);
+    }
+
+    public function testRemoveFlash(): void
+    {
+        $this->remove(Session::class);
+    }
+
+    public function testRemoveAllFlash(): void
+    {
+        $this->removeAll(Session::class);
     }
 }

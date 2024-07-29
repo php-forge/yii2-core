@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii\web\session;
 
-use Closure;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\Connection;
@@ -23,7 +22,7 @@ use yii\web\session\handler\DbSessionHandler;
  *
  * ```php
  * 'session' => [
- *     'class' => 'yii\web\DbSession',
+ *     'class' => 'yii\web\session\DbSession',
  *     // 'db' => 'mydb',
  *     // 'sessionTable' => 'my_session',
  * ]
@@ -36,7 +35,7 @@ class DbSession extends Session
      * After the DbSession object is created, if you want to change this property, you should only assign it with a DB
      * connection object.
      */
-    public Connection|array|string $db = 'db';
+    public Connection|array|string|null $db = 'db';
     /**
      * @var string the name of the DB table that stores the session data.
      * The table should be pre-created as follows:
@@ -76,11 +75,16 @@ class DbSession extends Session
         parent::init();
 
         $this->db = Instance::ensure($this->db, Connection::class);
-        $this->_handler = new DbSessionHandler($this->db, $this->sessionTable);
+        $this->_handler ??= Instance::ensure(
+            [
+                'class' => DbSessionHandler::class,
+                '__construct()' => [$this->db, $this->sessionTable],
+            ]
+        );
     }
 
     /**
-     * Ends the current session and store session data.
+     * {@inheritdoc}
      */
     public function close(): void
     {
@@ -108,6 +112,7 @@ class DbSession extends Session
         // if session id regeneration failed, no need to create/update it.
         if (empty($newID)) {
             Yii::warning('Failed to generate new session ID', __METHOD__);
+
             return;
         }
 
@@ -120,14 +125,10 @@ class DbSession extends Session
 
         if ($row !== false && $this->getIsActive()) {
             if ($deleteOldSession) {
-                $this->db->createCommand()
-                    ->update($this->sessionTable, ['id' => $newID], ['id' => $oldID])
-                    ->execute();
+                $this->db->createCommand()->update($this->sessionTable, ['id' => $newID], ['id' => $oldID])->execute();
             } else {
                 $row['id'] = $newID;
-                $this->db->createCommand()
-                    ->insert($this->sessionTable, $row)
-                    ->execute();
+                $this->db->createCommand()->insert($this->sessionTable, $row)->execute();
             }
         }
     }

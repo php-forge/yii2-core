@@ -10,19 +10,23 @@ use yii\web\session\SessionHandlerInterface;
 
 class DbSessionHandler implements SessionHandlerInterface
 {
+    /**
+     * @var string The session id that needs to be regenerated.
+     */
     private string $forceRegenerateId = '';
-    private int|null $timeout = 0;
-    private bool $useStrictMode = false;
 
     public function __construct(private Connection $db, private string $sessionTable = '{{%session}}')
     {
-        $this->timeout = (int) ini_get('session.gc_maxlifetime');
-        $this->useStrictMode = (bool) ini_get('session.use_strict_mode');
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function open(string $savePath, string $sessionName): bool
     {
-        if ($this->useStrictMode) {
+        $useStrictMode = (bool) ini_get('session.use_strict_mode');
+
+        if ($useStrictMode) {
             $id = session_id();
 
             if (!$this->getReadQuery($id)->exists($this->db)) {
@@ -33,11 +37,17 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function close(): bool
     {
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function read(string $id,  mixed $defaultValue = ''): string
     {
         $query = $this->getReadQuery($id);
@@ -46,17 +56,23 @@ class DbSessionHandler implements SessionHandlerInterface
         return $data === false ? '' : $data;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function write(string $id, string $data): bool
     {
+        $timeout = (int) ini_get('session.gc_maxlifetime');
+
         $this->db->createCommand()
-            ->upsert(
-                $this->sessionTable,
-                ['id' => $id, 'expire' => time() + $this->timeout, 'data' => $data],
-            )->execute();
+            ->upsert($this->sessionTable, ['id' => $id, 'expire' => time() + $timeout, 'data' => $data])
+            ->execute();
 
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function destroy(string $id): bool
     {
         $this->db->createCommand()->delete($this->sessionTable, ['id' => $id])->execute();
@@ -64,6 +80,9 @@ class DbSessionHandler implements SessionHandlerInterface
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function gc(int $maxLifetime): int|false
     {
         return $this->db->createCommand()
@@ -71,6 +90,9 @@ class DbSessionHandler implements SessionHandlerInterface
             ->execute();
     }
 
+    /**
+     * @return bool Whether the session id needs to be regenerated.
+     */
     public function isRegenerateId(): bool
     {
         return $this->forceRegenerateId !== '';
