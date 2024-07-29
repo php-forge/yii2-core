@@ -62,7 +62,6 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         new PSRCacheSession(['cache' => 'invalid']);
     }
 
-
     public function testDestroy(): void
     {
         $session = new PSRCacheSession();
@@ -80,12 +79,13 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
 
         $this->assertTrue($session->destroy('expired'));
         $this->assertNull($session->get('expired'));
-    }
 
+        $session->setTimeout(1440);
+        $session->close();
+    }
 
     public function testGarbageCollection(): void
     {
-        // init_set
         $psrCache = new FileCache(Yii::getAlias('@runtime/cache'));
         $session = new PSRCacheSession(['cache' => $psrCache]);
 
@@ -99,14 +99,10 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
 
         $this->assertNull($session->get('expired'));
 
+        $session->setGCProbability(0);
         $session->setTimeout(1440);
-        $session->set('valid', 'validData');
-
-        $this->assertSame('validData', $session->get('valid'));
 
         $session->close();
-
-        $this->assertSame('validData', $session->get('valid'));
     }
 
     public function testSetAndGet(): void

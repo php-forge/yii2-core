@@ -6,17 +6,11 @@ namespace yiiunit\framework\web\session;
 
 use Yii;
 use yii\db\Connection;
-use yii\db\Migration;
 use yii\db\Query;
 use yii\web\session\DbSession;
 use yiiunit\framework\console\controllers\EchoMigrateController;
 use yiiunit\TestCase;
 
-/**
- * @runTestsInSeparateProcesses
- *
- * @group db
- */
 abstract class AbstractDbSessionTest extends TestCase
 {
     use FlashTestTrait;
