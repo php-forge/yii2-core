@@ -62,6 +62,53 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         new PSRCacheSession(['cache' => 'invalid']);
     }
 
+
+    public function testDestroy(): void
+    {
+        $session = new PSRCacheSession();
+
+        $session->set('test', 'sessionData');
+        $this->assertEquals('sessionData', $session->get('test'));
+
+        $this->assertTrue($session->destroy());
+        $this->assertNull($session->get('test'));
+
+        $session->setTimeout(0);
+
+        $session->set('expired', 'expiredData');
+        $this->assertSame('expiredData', $session->get('expired'));
+
+        $this->assertTrue($session->destroy('expired'));
+        $this->assertNull($session->get('expired'));
+    }
+
+
+    public function testGarbageCollection(): void
+    {
+        // init_set
+        $psrCache = new FileCache(Yii::getAlias('@runtime/cache'));
+        $session = new PSRCacheSession(['cache' => $psrCache]);
+
+        $session->setGCProbability(100);
+        $session->setTimeout(0);
+        $session->set('expired', 'expiredData');
+
+        $this->assertSame('expiredData', $session->get('expired'));
+
+        $session->close();
+
+        $this->assertNull($session->get('expired'));
+
+        $session->setTimeout(1440);
+        $session->set('valid', 'validData');
+
+        $this->assertSame('validData', $session->get('valid'));
+
+        $session->close();
+
+        $this->assertSame('validData', $session->get('valid'));
+    }
+
     public function testSetAndGet(): void
     {
         $session = new PSRCacheSession();
