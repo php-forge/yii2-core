@@ -9,6 +9,7 @@ use Yii;
 use yii\web\session\PSRCacheSession;
 use Yiisoft\Cache\ArrayCache;
 use Yiisoft\Cache\File\FileCache;
+use yiiunit\framework\web\session\FlashTestTrait;
 use yiiunit\framework\web\session\SessionTestTrait;
 
 /**
@@ -17,6 +18,7 @@ use yiiunit\framework\web\session\SessionTestTrait;
  */
 class PSRCacheSessionTest extends \yiiunit\TestCase
 {
+    use FlashTestTrait;
     use SessionTestTrait;
 
     protected function setUp(): void
@@ -93,5 +95,45 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
 
         $this->assertTrue($session->destroy($session->getId()));
         $this->assertNull($session->get('foo'));
+    }
+
+    public function testAddFlash(): void
+    {
+        $this->add(PSRCacheSession::class);
+    }
+
+    public function testAddWithRemoveFlash(): void
+    {
+        $this->addWithRemove(PSRCacheSession::class);
+    }
+
+    public function testGetFlash(): void
+    {
+        $this->get(PSRCacheSession::class);
+    }
+
+    public function testGellAllFlash(): void
+    {
+        $this->getAll(PSRCacheSession::class);
+    }
+
+    public function testGetWithRemoveFlash(): void
+    {
+        $this->getWithRemove(PSRCacheSession::class);
+    }
+
+    public function testHasFlash(): void
+    {
+        $this->has(PSRCacheSession::class);
+    }
+
+    public function testRemoveFlash(): void
+    {
+        $this->remove(PSRCacheSession::class);
+    }
+
+    public function testRemoveAllFlash(): void
+    {
+        $this->removeAll(PSRCacheSession::class);
     }
 }

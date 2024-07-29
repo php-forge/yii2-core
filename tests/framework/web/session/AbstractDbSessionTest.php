@@ -19,6 +19,7 @@ use yiiunit\TestCase;
  */
 abstract class AbstractDbSessionTest extends TestCase
 {
+    use FlashTestTrait;
     use SessionTestTrait;
 
     protected Connection $db;
@@ -183,6 +184,46 @@ abstract class AbstractDbSessionTest extends TestCase
     public function testUseStrictMode(): void
     {
         $this->useStrictModeTest(DbSession::class);
+    }
+
+    public function testAddFlash(): void
+    {
+        $this->add(DbSession::class);
+    }
+
+    public function testAddWithRemoveFlash(): void
+    {
+        $this->addWithRemove(DbSession::class);
+    }
+
+    public function testGetFlash(): void
+    {
+        $this->get(DbSession::class);
+    }
+
+    public function testGellAllFlash(): void
+    {
+        $this->getAll(DbSession::class);
+    }
+
+    public function testGetWithRemoveFlash(): void
+    {
+        $this->getWithRemove(DbSession::class);
+    }
+
+    public function testHasFlash(): void
+    {
+        $this->has(DbSession::class);
+    }
+
+    public function testRemoveFlash(): void
+    {
+        $this->remove(DbSession::class);
+    }
+
+    public function testRemoveAllFlash(): void
+    {
+        $this->removeAll(DbSession::class);
     }
 
     protected function buildObjectForSerialization(): object
