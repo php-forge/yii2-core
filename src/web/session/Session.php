@@ -28,6 +28,13 @@ use yii\base\InvalidArgumentException;
  */
 class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Countable
 {
+    /**
+     * @var SessionHandlerInterface|array|string|null $_handler The session handler to be used for storing and
+     * retrieving session data. This can either be an instance of a class implementing SessionHandlerInterface, an array
+     * configuration that can be used to create such an instance, or a string representing the handler class name.
+     */
+    public SessionHandlerInterface|array|string|null $_handler = null;
+
     protected Flash $flash;
     /**
      * @var string|null Holds the session id in case useStrictMode is enabled and the session id needs to be
@@ -39,12 +46,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      * restored when a Session component without custom handler is used after one that has.
      */
     protected string|null $_originalSessionModule = null;
-    /**
-     * @var SessionHandlerInterface|array|string|null $_handler The session handler to be used for storing and
-     * retrieving session data. This can either be an instance of a class implementing SessionHandlerInterface, an array
-     * configuration that can be used to create such an instance, or a string representing the handler class name.
-     */
-    protected SessionHandlerInterface|array|string|null $_handler = null;
 
     /**
      * @var array parameter-value pairs to override default session cookie parameters that are used for

@@ -8,6 +8,7 @@ use Yii;
 use yii\db\Connection;
 use yii\db\Query;
 use yii\web\session\DbSession;
+use yii\web\session\handler\DbSessionHandler;
 use yiiunit\framework\console\controllers\EchoMigrateController;
 use yiiunit\TestCase;
 
@@ -31,21 +32,6 @@ abstract class AbstractDbSessionTest extends TestCase
         parent::tearDown();
 
         $this->dropTableSession();
-    }
-
-    protected function createTableSession(): void
-    {
-        $this->runMigrate('up');
-    }
-
-    protected function dropTableSession(): void
-    {
-        try {
-            $this->runMigrate('down', ['all']);
-        } catch (\Exception $e) {
-            // Table may not exist for different reasons, but since this method
-            // reverts DB changes to make next test pass, this exception is skipped.
-        }
     }
 
     // Tests :
@@ -158,6 +144,10 @@ abstract class AbstractDbSessionTest extends TestCase
             [
                 'timeout' => 300,
                 'db' => 'sessionDb',
+                '_handler' => [
+                    'class' => DbSessionHandler::class,
+                    '__construct()' => ['sessionDb'],
+                ],
             ],
         );
 
@@ -167,6 +157,7 @@ abstract class AbstractDbSessionTest extends TestCase
 
         Yii::$app->set('db', Yii::$app->sessionDb);
         Yii::$app->set('sessionDb', null);
+
         ini_set('session.gc_maxlifetime', $oldTimeout);
     }
 
@@ -236,6 +227,21 @@ abstract class AbstractDbSessionTest extends TestCase
         $object->with_null_byte = 'hey!' . "\0" . 'y"ûƒ^äjw¾bðúl5êù-Ö=W¿Š±¬GP¥Œy÷&ø';
 
         return $object;
+    }
+
+    protected function createTableSession(): void
+    {
+        $this->runMigrate('up');
+    }
+
+    protected function dropTableSession(): void
+    {
+        try {
+            $this->runMigrate('down', ['all']);
+        } catch (\Exception $e) {
+            // Table may not exist for different reasons, but since this method
+            // reverts DB changes to make next test pass, this exception is skipped.
+        }
     }
 
     protected function runMigrate($action, $params = []): array

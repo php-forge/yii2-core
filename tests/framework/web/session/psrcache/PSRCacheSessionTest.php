@@ -6,6 +6,7 @@ namespace yiiunit\framework\web\session\cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Yii;
+use yii\web\session\handler\PSRCacheSessionHandler;
 use yii\web\session\PSRCacheSession;
 use Yiisoft\Cache\ArrayCache;
 use Yiisoft\Cache\File\FileCache;
@@ -45,7 +46,11 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         $session = new PSRCacheSession(
             [
                 'cache' => [
-                    'class' => ArrayCache::class
+                    'class' => ArrayCache::class,
+                ],
+                '_handler' => [
+                    'class' => PSRCacheSessionHandler::class,
+                    '__construct()' => ['cache'],
                 ],
             ],
         );
