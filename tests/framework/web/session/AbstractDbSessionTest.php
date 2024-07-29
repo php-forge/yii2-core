@@ -114,7 +114,7 @@ abstract class AbstractDbSessionTest extends TestCase
             $validData['data'] = stream_get_contents($validData['data']);
         }
 
-        $this->assertSame('__flash|a:0:{}new|s:8:"new data";', $validData['data']);
+        $this->assertSame('new|s:8:"new data";', $validData['data']);
 
         $session->close();
     }
