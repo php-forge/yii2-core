@@ -123,6 +123,16 @@ final class SessionTest extends TestCase
         $this->add(Session::class);
     }
 
+    public function testAddToExistingArrayFlash(): void
+    {
+        $this->addToExistingArray(Session::class);
+    }
+
+    public function testAddValueToExistingNonArrayFlash(): void
+    {
+        $this->addValueToExistingNonArray(Session::class);
+    }
+
     public function testAddWithRemoveFlash(): void
     {
         $this->addWithRemove(Session::class);
@@ -161,5 +171,15 @@ final class SessionTest extends TestCase
     public function testSetFlash(): void
     {
         $this->set(Session::class);
+    }
+
+    public function testUpdateCountersWithNonArrayFlashes(): void
+    {
+        $this->updateCountersWithNonArrayFlashes(Session::class);
+    }
+
+    public function testUpdateCountersWithNonArrayCounters(): void
+    {
+        $this->updateCountersWithNonArrayCounters(Session::class);
     }
 }

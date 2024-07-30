@@ -18,6 +18,33 @@ trait FlashTestTrait
         $this->assertSame(['value'], $session->getFlash('key'));
     }
 
+    public function addToExistingArray(string $class): void
+    {
+        /** @var Session $class */
+        $session = new $class();
+
+        $session->addFlash('key', 'value1', false);
+        $session->addFlash('key', 'value2', false);
+
+        $this->assertSame(['value1', 'value2'], $session->getFlash('key'));
+    }
+
+    public function addValueToExistingNonArray(string $class): void
+    {
+        /** @var Session $class */
+        $session = new $class();
+
+        $session->setFlash('testKey', 'initialValue');
+        $session->addFlash('testKey', 'newValue');
+
+        $result = $session->getFlash('testKey');
+
+        $this->assertIsArray($result);
+        $this->assertCount(2, $result);
+        $this->assertSame('initialValue', $result[0]);
+        $this->assertSame('newValue', $result[1]);
+    }
+
     public function addWithRemove(string $class): void
     {
         /** @var Session $class */
@@ -118,5 +145,41 @@ trait FlashTestTrait
 
         $this->assertSame(['key' => 'value'], $session->getAllFlashes());
         $this->assertNull($session->getFlash('key'));
+    }
+
+    public function updateCountersWithNonArrayFlashes(string $class): void
+    {
+        /** @var Session $class */
+        $session = new $class();
+
+        $session->set('__flash', 'not an array');
+
+        $result = $session->getAllFlashes();
+
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+
+        $flashes = $session->get('__flash');
+
+        $this->assertIsArray($flashes);
+        $this->assertArrayHasKey('__counters', $flashes);
+        $this->assertIsArray($flashes['__counters']);
+        $this->assertEmpty($flashes['__counters']);
+    }
+
+    public function updateCountersWithNonArrayCounters(string $class): void
+    {
+        /** @var Session $class */
+        $session = new $class();
+
+        $session->set('__flash', ['__counters' => 'not an array']);
+        $session->addFlash('testKey', 'testValue');
+        $flashes = $session->get('__flash');
+
+        $this->assertIsArray($flashes);
+        $this->assertArrayHasKey('__counters', $flashes);
+        $this->assertIsArray($flashes['__counters']);
+        $this->assertArrayHasKey('testKey', $flashes['__counters']);
+        $this->assertEquals(-1, $flashes['__counters']['testKey']);
     }
 }

@@ -746,7 +746,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
      */
     public function hasFlash(string $key): bool
     {
-        return $this->flash->get($key) !== null;
+        return $this->flash->has($key);
     }
 
     /**
