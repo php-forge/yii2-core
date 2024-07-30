@@ -19,15 +19,8 @@ class Flash extends Component
      */
     private const FLASH_PARAM = '__flash';
 
-    /**
-     * @var Session the session object to be used.
-     */
-    private Session $session;
-
-    public function __construct(Session $session, array $config = [])
+    public function __construct(private Session $session, array $config = [])
     {
-        $this->session = $session;
-
         parent::__construct($config);
     }
 
