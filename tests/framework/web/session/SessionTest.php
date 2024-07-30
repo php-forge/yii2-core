@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
+use Yii;
 use yii\base\InvalidArgumentException;
+use yii\log\Logger;
 use yii\web\session\Session;
 use yiiunit\TestCase;
 
@@ -60,6 +62,26 @@ final class SessionTest extends TestCase
         $this->assertEquals(1, $session->getCount());
 
         $session->destroy();
+    }
+
+    public function testSessionOpenFailure(): void
+    {
+        /** @var Session $session */
+        $session = $this->getMockBuilder(Session::class)->onlyMethods(['getIsActive'])->getMock();
+        $session->method('getIsActive')->willReturn(false);
+
+        $logger = new Logger();
+
+        Yii::setLogger($logger);
+
+        $session->open();
+
+        $logs = $logger->messages;
+
+        $this->assertCount(1, $logs);
+        $this->assertSame('Failed to start session.', $logs[0][0]);
+        $this->assertSame(Logger::LEVEL_ERROR, $logs[0][1]);
+        $this->assertSame('yii\web\session\Session::open', $logs[0][2]);
     }
 
     /**
