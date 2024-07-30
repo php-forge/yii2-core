@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
+use yii\base\InvalidArgumentException;
 use yii\web\session\Session;
 use yiiunit\TestCase;
 
@@ -33,6 +34,32 @@ final class SessionTest extends TestCase
         $newSessionId = @session_id();
         $this->assertNotEmpty($newSessionId);
         $this->assertEquals($oldSessionId, $newSessionId);
+    }
+
+    public function testHas(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertFalse($session->has('name'));
+
+        $session->set('name', 'value');
+        $this->assertTrue($session->has('name'));
+
+        $session->destroy();
+    }
+
+    public function testGetCount(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertEquals(0, $session->getCount());
+
+        $session->set('name', 'value');
+        $this->assertEquals(1, $session->getCount());
+
+        $session->destroy();
     }
 
     /**
@@ -75,6 +102,97 @@ final class SessionTest extends TestCase
         $session->setGCProbability($oldGcProbability);
     }
 
+    public function testRegenerateID(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $oldSessionId = $session->getId();
+
+        $session->regenerateID();
+
+        $newSessionId = $session->getId();
+
+        $this->assertNotEquals($oldSessionId, $newSessionId);
+    }
+
+    public function testRemove(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session->set('name', 'value');
+        $this->assertEquals('value', $session->get('name'));
+
+        $session->remove('name');
+        $this->assertNull($session->get('name'));
+
+        $session->destroy();
+    }
+
+    public function testRemoveAll(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session->set('name1', 'value1');
+        $session->set('name2', 'value2');
+        $this->assertEquals('value1', $session->get('name1'));
+        $this->assertEquals('value2', $session->get('name2'));
+
+        $session->removeAll();
+        $this->assertNull($session->get('name1'));
+        $this->assertNull($session->get('name2'));
+
+        $session->destroy();
+    }
+
+    public static function setCacheLimiterDataProvider(): array
+    {
+        return [
+            ['no-cache'],
+            ['public'],
+            ['private'],
+            ['private_no_expire'],
+        ];
+    }
+
+    /**
+     * @dataProvider setCacheLimiterDataProvider
+     *
+     * @param string $cacheLimiter
+     */
+    public function testSetCacheLimiter(string $cacheLimiter): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session->setCacheLimiter($cacheLimiter);
+        $this->assertEquals($cacheLimiter, $session->getCacheLimiter());
+
+        $session->destroy();
+    }
+
+    public function testSetHasSessionId(): void
+    {
+        $this->mockWebApplication();
+
+        $session = new Session();
+        $session->open();
+
+        $this->assertFalse($session->getHasSessionID());
+
+        $session->setHasSessionID(false);
+        $this->assertFalse($session->getHasSessionID());
+
+        $session->setHasSessionID(true);
+        $this->assertTrue($session->getHasSessionID());
+
+        $session->destroy();
+
+        $this->destroyApplication();
+    }
+
     /**
      * Test set name. Also check set name twice and after open.
      */
@@ -90,6 +208,35 @@ final class SessionTest extends TestCase
         $this->assertEquals('newName', $session->getName());
 
         $session->destroy();
+    }
+
+    public function testSetSavePath(): void
+    {
+        $session = new Session();
+
+        if (!is_dir(dirname(__DIR__, 3) . '/runtime/sessions')) {
+            mkdir(dirname(__DIR__, 3) . '/runtime/sessions', 0777, true);
+        }
+
+        $session->setSavePath(dirname(__DIR__, 3) . '/runtime/sessions');
+        $this->assertSame(dirname(__DIR__, 3) . '/runtime/sessions', $session->getSavePath());
+
+        $session->setSavePath(dirname(__DIR__, 3) . '/runtime');
+        $session->open();
+
+        $this->assertSame(dirname(__DIR__, 3) . '/runtime', $session->getSavePath());
+
+        $session->destroy();
+    }
+
+    public function testSetSavePathWithInvalidPath(): void
+    {
+        $session = new Session();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Session save path is not a valid directory: /non-existing-directory');
+
+        $session->setSavePath('/non-existing-directory');
     }
 
     public function testInitUseStrictMode(): void
