@@ -176,6 +176,16 @@ abstract class AbstractDbSessionTest extends TestCase
         $this->add(DbSession::class);
     }
 
+    public function testAddToExistingArrayFlash(): void
+    {
+        $this->addToExistingArray(DbSession::class);
+    }
+
+    public function testAddValueToExistingNonArrayFlash(): void
+    {
+        $this->addValueToExistingNonArray(DbSession::class);
+    }
+
     public function testAddWithRemoveFlash(): void
     {
         $this->addWithRemove(DbSession::class);

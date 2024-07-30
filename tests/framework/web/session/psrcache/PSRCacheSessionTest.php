@@ -150,6 +150,16 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         $this->add(PSRCacheSession::class);
     }
 
+    public function testAddToExistingArrayFlash(): void
+    {
+        $this->addToExistingArray(PSRCacheSession::class);
+    }
+
+    public function testAddValueToExistingNonArrayFlash(): void
+    {
+        $this->addValueToExistingNonArray(PSRCacheSession::class);
+    }
+
     public function testAddWithRemoveFlash(): void
     {
         $this->addWithRemove(PSRCacheSession::class);
