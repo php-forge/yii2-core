@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\web\session\mssql;
 
 use PDO;
+use yiiunit\framework\web\session\AbstractDbSession;
 use yiiunit\support\MssqlConnection;
 
 /**
@@ -14,7 +15,7 @@ use yiiunit\support\MssqlConnection;
  * @group mssql
  * @group session-db-mssql
  */
-class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
+class DbSessionTest extends AbstractDbSession
 {
     protected function setUp(): void
     {

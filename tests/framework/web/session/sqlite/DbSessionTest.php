@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session\sqlite;
 
+use Yii;
+use yii\web\session\DbSession;
+use yiiunit\framework\web\session\AbstractDbSession;
 use yiiunit\support\SqliteConnection;
 
 /**
@@ -13,7 +16,7 @@ use yiiunit\support\SqliteConnection;
  * @group sqlite
  * @group session-db-sqlite
  */
-class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
+class DbSessionTest extends AbstractDbSession
 {
     protected function setUp(): void
     {

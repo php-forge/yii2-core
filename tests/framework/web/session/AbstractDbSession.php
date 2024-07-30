@@ -10,18 +10,18 @@ use yii\db\Query;
 use yii\web\session\DbSession;
 use yii\web\session\handler\DbSessionHandler;
 use yiiunit\framework\console\controllers\EchoMigrateController;
-use yiiunit\TestCase;
 
-abstract class AbstractDbSessionTest extends TestCase
+abstract class AbstractDbSession extends AbstractSession
 {
-    use FlashTestTrait;
-    use SessionTestTrait;
-
     protected Connection $db;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        Yii::$app->set('session', ['class' => DbSession::class]);
+
+        $this->session = Yii::$app->getSession();
 
         $this->dropTableSession();
         $this->createTableSession();
@@ -34,20 +34,6 @@ abstract class AbstractDbSessionTest extends TestCase
         $this->dropTableSession();
     }
 
-    // Tests :
-    public function testReadWrite(): void
-    {
-        $session = new DbSession();
-
-        $session->set('test', 'session data');
-        $this->assertEquals('session data', $session->get('test'));
-
-        $session->destroy('test');
-        $this->assertEquals('', $session->get('test'));
-
-        $session->close();
-    }
-
     public function testInitializeWithConfig(): void
     {
         // should produce no exceptions
@@ -58,37 +44,39 @@ abstract class AbstractDbSessionTest extends TestCase
 
         $session->destroy('test');
         $this->assertEquals('', $session->get('test'));
-
-        $session->close();
     }
 
     public function testGarbageCollection(): void
     {
-        $session = new DbSession();
+        $this->session->destroy();
 
         $expiredSessionId = 'expired_session_id';
-        $session->setId($expiredSessionId);
-        $session->set('expire', 'expire data');
-        $session->close();
 
-        $session->db->createCommand()
-            ->update($session->sessionTable, ['expire' => time() - 100], ['id' => $expiredSessionId])
+        $this->session->setId($expiredSessionId);
+        $this->session->set('expire', 'expire data');
+        $this->session->close();
+
+        $this->session->db->createCommand()
+            ->update($this->session->sessionTable, ['expire' => time() - 100], ['id' => $expiredSessionId])
             ->execute();
 
         $validSessionId = 'valid_session_id';
-        $session->setId($validSessionId);
-        $session->set('new', 'new data');
-        $session->setGCProbability(100);
-        $session->close();
 
-        $expiredData = $session->db->createCommand("SELECT * FROM {$session->sessionTable} WHERE id = :id")
+        $this->session->setId($validSessionId);
+        $this->session->set('new', 'new data');
+        $this->session->setGCProbability(100);
+        $this->session->close();
+
+        $expiredData = $this->session->db->createCommand("SELECT * FROM {$this->session->sessionTable} WHERE id = :id")
             ->bindValue(':id', $expiredSessionId)
             ->queryOne();
+
         $this->assertFalse($expiredData);
 
-        $validData = $session->db->createCommand("SELECT * FROM {$session->sessionTable} WHERE id = :id")
+        $validData = $this->session->db->createCommand("SELECT * FROM {$this->session->sessionTable} WHERE id = :id")
             ->bindValue(':id', $validSessionId)
             ->queryOne();
+
         $this->assertNotNull($validData);
 
         if (is_resource($validData['data'])) {
@@ -97,24 +85,26 @@ abstract class AbstractDbSessionTest extends TestCase
 
         $this->assertSame('new|s:8:"new data";', $validData['data']);
 
-        $session->close();
+        $this->session->setGCProbability(1);
+        $this->session->destroy();
     }
 
     public function testSerializedObjectSaving(): void
     {
-        $session = new DbSession();
-
         $object = $this->buildObjectForSerialization();
         $serializedObject = serialize($object);
-        $session->set('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->get('test'));
+        $this->session->set('test', $serializedObject);
+
+        $this->assertSame($serializedObject, $this->session->get('test'));
 
         $object->foo = 'modification checked';
         $serializedObject = serialize($object);
-        $session->set('test', $serializedObject);
-        $this->assertSame($serializedObject, $session->get('test'));
 
-        $session->close();
+        $this->session->set('test', $serializedObject);
+
+        $this->assertSame($serializedObject, $this->session->get('test'));
+
+        $this->session->destroy();
     }
 
     public function testMigration(): void
@@ -122,20 +112,22 @@ abstract class AbstractDbSessionTest extends TestCase
         $this->dropTableSession();
 
         $history = $this->runMigrate('history');
-        $this->assertEquals(['base'], $history);
+
+        $this->assertSame(['base'], $history);
 
         $history = $this->runMigrate('up');
-        $this->assertEquals(['base', 'session_init'], $history);
+
+        $this->assertSame(['base', 'session_init'], $history);
 
         $history = $this->runMigrate('down');
-        $this->assertEquals(['base'], $history);
+
+        $this->assertSame(['base'], $history);
         $this->createTableSession();
     }
 
     public function testInstantiate(): void
     {
         $oldTimeout = ini_get('session.gc_maxlifetime');
-        // unset Yii::$app->db to make sure that all queries are made against sessionDb
 
         Yii::$app->set('sessionDb', Yii::$app->db);
         Yii::$app->set('db', null);
@@ -159,71 +151,6 @@ abstract class AbstractDbSessionTest extends TestCase
         Yii::$app->set('sessionDb', null);
 
         ini_set('session.gc_maxlifetime', $oldTimeout);
-    }
-
-    public function testInitUseStrictMode(): void
-    {
-        $this->initStrictModeTest(DbSession::class);
-    }
-
-    public function testUseStrictMode(): void
-    {
-        $this->useStrictModeTest(DbSession::class);
-    }
-
-    public function testAddFlash(): void
-    {
-        $this->add(DbSession::class);
-    }
-
-    public function testAddToExistingArrayFlash(): void
-    {
-        $this->addToExistingArray(DbSession::class);
-    }
-
-    public function testAddValueToExistingNonArrayFlash(): void
-    {
-        $this->addValueToExistingNonArray(DbSession::class);
-    }
-
-    public function testAddWithRemoveFlash(): void
-    {
-        $this->addWithRemove(DbSession::class);
-    }
-
-    public function testGetFlash(): void
-    {
-        $this->get(DbSession::class);
-    }
-
-    public function testGellAllFlash(): void
-    {
-        $this->getAll(DbSession::class);
-    }
-
-    public function testGetWithRemoveFlash(): void
-    {
-        $this->getWithRemove(DbSession::class);
-    }
-
-    public function testHasFlash(): void
-    {
-        $this->has(DbSession::class);
-    }
-
-    public function testRemoveFlash(): void
-    {
-        $this->remove(DbSession::class);
-    }
-
-    public function testRemoveAllFlash(): void
-    {
-        $this->removeAll(DbSession::class);
-    }
-
-    public function testSetFlash(): void
-    {
-        $this->set(DbSession::class);
     }
 
     protected function buildObjectForSerialization(): object

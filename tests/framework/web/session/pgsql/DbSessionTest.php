@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session\pgsql;
 
+use yiiunit\framework\web\session\AbstractDbSession;
 use yiiunit\support\PgsqlConnection;
 
 /**
@@ -13,7 +14,7 @@ use yiiunit\support\PgsqlConnection;
  * @group pgsql
  * @group session-db-pgsql
  */
-class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
+class DbSessionTest extends AbstractDbSession
 {
     protected function setUp(): void
     {

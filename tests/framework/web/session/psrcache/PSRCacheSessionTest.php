@@ -10,25 +10,22 @@ use yii\web\session\handler\PSRCacheSessionHandler;
 use yii\web\session\PSRCacheSession;
 use Yiisoft\Cache\ArrayCache;
 use Yiisoft\Cache\File\FileCache;
-use yiiunit\framework\web\session\FlashTestTrait;
-use yiiunit\framework\web\session\SessionTestTrait;
+use yiiunit\framework\web\session\AbstractSession;
 
 /**
  * @group web
  * @group session-psr-cache
  */
-class PSRCacheSessionTest extends \yiiunit\TestCase
+class PSRCacheSessionTest extends AbstractSession
 {
-    use FlashTestTrait;
-    use SessionTestTrait;
-
     protected function setUp(): void
     {
-        parent::setUp();
-
-        $this->mockApplication();
+        $this->mockWebApplication();
 
         Yii::$app->set(CacheInterface::class, new FileCache(Yii::getAlias('@runtime/cache')));
+        Yii::$app->set('session', ['class' => PSRCacheSession::class]);
+
+        parent::setUp();
     }
 
     protected function tearDown(): void
@@ -37,6 +34,7 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         $cache->clear();
 
         Yii::$app->set(CacheInterface::class, null);
+        Yii::$app->set('session', null);
 
         parent::tearDown();
     }
@@ -67,28 +65,6 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         new PSRCacheSession(['cache' => 'invalid']);
     }
 
-    public function testDestroy(): void
-    {
-        $session = new PSRCacheSession();
-
-        $session->set('test', 'sessionData');
-        $this->assertEquals('sessionData', $session->get('test'));
-
-        $this->assertTrue($session->destroy());
-        $this->assertNull($session->get('test'));
-
-        $session->setTimeout(0);
-
-        $session->set('expired', 'expiredData');
-        $this->assertSame('expiredData', $session->get('expired'));
-
-        $this->assertTrue($session->destroy('expired'));
-        $this->assertNull($session->get('expired'));
-
-        $session->setTimeout(1440);
-        $session->close();
-    }
-
     public function testGarbageCollection(): void
     {
         $psrCache = new FileCache(Yii::getAlias('@runtime/cache'));
@@ -107,96 +83,6 @@ class PSRCacheSessionTest extends \yiiunit\TestCase
         $session->setGCProbability(0);
         $session->setTimeout(1440);
 
-        $session->close();
-    }
-
-    public function testSetAndGet(): void
-    {
-        $session = new PSRCacheSession();
-
-        $session->set('test', 'sessionData');
-        $this->assertEquals('sessionData', $session->get('test'));
-
-        $session->destroy('test');
-        $this->assertEquals('', $session->get('test'));
-    }
-
-    public function testInitUseStrictMode(): void
-    {
-        $this->initStrictModeTest(PSRCacheSession::class);
-    }
-
-    public function testUseStrictMode(): void
-    {
-        $this->useStrictModeTest(PSRCacheSession::class);
-    }
-
-    /**
-     * @see https://github.com/yiisoft/yii2/issues/13537
-     */
-    public function testWrittenSessionDestroying(): void
-    {
-        $session = new PSRCacheSession();
-
-        $session->set('foo', 'bar');
-        $this->assertEquals('bar', $session->get('foo'));
-
-        $this->assertTrue($session->destroy($session->getId()));
-        $this->assertNull($session->get('foo'));
-    }
-
-    public function testAddFlash(): void
-    {
-        $this->add(PSRCacheSession::class);
-    }
-
-    public function testAddToExistingArrayFlash(): void
-    {
-        $this->addToExistingArray(PSRCacheSession::class);
-    }
-
-    public function testAddValueToExistingNonArrayFlash(): void
-    {
-        $this->addValueToExistingNonArray(PSRCacheSession::class);
-    }
-
-    public function testAddWithRemoveFlash(): void
-    {
-        $this->addWithRemove(PSRCacheSession::class);
-    }
-
-    public function testGetFlash(): void
-    {
-        $this->get(PSRCacheSession::class);
-    }
-
-    public function testGellAllFlash(): void
-    {
-        $this->getAll(PSRCacheSession::class);
-    }
-
-    public function testGetWithRemoveFlash(): void
-    {
-        $this->getWithRemove(PSRCacheSession::class);
-    }
-
-    public function testHasFlash(): void
-    {
-        $this->has(PSRCacheSession::class);
-    }
-
-    public function testRemoveFlash(): void
-    {
-        $this->remove(PSRCacheSession::class);
-    }
-
-    public function testRemoveAllFlash(): void
-    {
-        $this->removeAll(PSRCacheSession::class);
-    }
-
-    public function testSetFlash(): void
-    {
-        $this->set(PSRCacheSession::class);
+        $session->destroy();
     }
 }
