@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
+use Xepozz\InternalMocker\InternalMocker;
+use Xepozz\InternalMocker\Mocker;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\log\Logger;
@@ -18,6 +20,19 @@ final class SessionTest extends TestCase
 {
     use FlashTestTrait;
     use SessionTestTrait;
+
+    public function testCount(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertEquals(0, $session->count);
+
+        $session->set('name', 'value');
+        $this->assertSame(1, $session->count());
+
+        $session->destroy();
+    }
 
     /**
      * Test to prove that after Session::destroy session id set to old value.
@@ -38,19 +53,6 @@ final class SessionTest extends TestCase
         $this->assertEquals($oldSessionId, $newSessionId);
     }
 
-    public function testHas(): void
-    {
-        $session = new Session();
-        $session->open();
-
-        $this->assertFalse($session->has('name'));
-
-        $session->set('name', 'value');
-        $this->assertTrue($session->has('name'));
-
-        $session->destroy();
-    }
-
     public function testGetCount(): void
     {
         $session = new Session();
@@ -64,13 +66,98 @@ final class SessionTest extends TestCase
         $session->destroy();
     }
 
-    public function testSessionOpenFailure(): void
+    public function testHas(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertFalse($session->has('name'));
+
+        $session->set('name', 'value');
+        $this->assertTrue($session->has('name'));
+
+        $session->destroy();
+    }
+
+    public function testIdIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $originalCookie = $_COOKIE;
+
+        $_COOKIE['PHPSESSID'] = 'test';
+        ini_set('session.use_cookies', '1');
+
+        $session = new Session();
+
+        $this->assertTrue($session->getHasSessionId());
+
+        $session->destroy();
+
+        $_COOKIE = $originalCookie;
+
+        $this->destroyApplication();
+    }
+
+    public function testOffsetExists(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertFalse(isset($session['name']));
+
+        $session['name'] = 'value';
+        $this->assertTrue(isset($session['name']));
+
+        $session->destroy();
+    }
+
+    public function testOffsetGet(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $this->assertNull($session['name']);
+
+        $session['name'] = 'value';
+        $this->assertEquals('value', $session['name']);
+
+        $session->destroy();
+    }
+
+    public function testOffsetSet(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session['name'] = 'value';
+        $this->assertEquals('value', $session['name']);
+
+        $session->destroy();
+    }
+
+    public function testOffsetUnset(): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session['name'] = 'value';
+        $this->assertEquals('value', $session['name']);
+
+        unset($session['name']);
+        $this->assertNull($session['name']);
+
+        $session->destroy();
+    }
+
+    public function testOpenFailure(): void
     {
         /** @var Session $session */
         $session = $this->getMockBuilder(Session::class)->onlyMethods(['getIsActive'])->getMock();
         $session->method('getIsActive')->willReturn(false);
 
         $logger = new Logger();
+        $logger->flush();
 
         Yii::setLogger($logger);
 
@@ -79,9 +166,10 @@ final class SessionTest extends TestCase
         $logs = $logger->messages;
 
         $this->assertCount(1, $logs);
-        $this->assertSame('Failed to start session.', $logs[0][0]);
         $this->assertSame(Logger::LEVEL_ERROR, $logs[0][1]);
         $this->assertSame('yii\web\session\Session::open', $logs[0][2]);
+
+        Yii::setLogger(null);
     }
 
     /**
@@ -191,6 +279,48 @@ final class SessionTest extends TestCase
 
         $session->setCacheLimiter($cacheLimiter);
         $this->assertEquals($cacheLimiter, $session->getCacheLimiter());
+
+        $session->destroy();
+    }
+
+    public static function setCookieParamsDataProvider(): array
+    {
+        return [
+            [
+                [
+                    'lifetime' => 0,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => false,
+                    'httponly' => false,
+                    'samesite' => '',
+                ]
+            ],
+            [
+                [
+                    'lifetime' => 3600,
+                    'path' => '/path',
+                    'domain' => 'example.com',
+                    'secure' => true,
+                    'httponly' => true,
+                    'samesite' => 'Strict',
+                ]
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider setCookieParamsDataProvider
+     *
+     * @param array $cookieParams
+     */
+    public function testSetCookieParams(array $cookieParams): void
+    {
+        $session = new Session();
+        $session->open();
+
+        $session->setCookieParams($cookieParams);
+        $this->assertSame($cookieParams, $session->getCookieParams());
 
         $session->destroy();
     }

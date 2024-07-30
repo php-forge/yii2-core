@@ -96,7 +96,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
             $this->regenerateID();
 
             $this->_forceRegenerateId = null;
-
         }
 
         if ($this->getIsActive()) {
