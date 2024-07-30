@@ -104,7 +104,7 @@ abstract class AbstractDbSession extends AbstractSession
 
         $this->assertSame($serializedObject, $this->session->get('test'));
 
-        $this->session->destroy();
+        $this->session->close();
     }
 
     public function testMigration(): void
