@@ -105,7 +105,7 @@ class DbSession extends Session
             return;
         }
 
-        parent::regenerateID();
+        parent::regenerateID($deleteOldSession);
 
         $newID = session_id();
 
