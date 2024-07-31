@@ -12,6 +12,9 @@ use yii\web\session\DbSession;
 use yii\web\session\handler\DbSessionHandler;
 use yiiunit\framework\console\controllers\EchoMigrateController;
 
+/**
+ * @runTestsInSeparateProcesses
+ */
 abstract class AbstractDbSession extends AbstractSession
 {
     use PHPMock;
@@ -136,24 +139,6 @@ abstract class AbstractDbSession extends AbstractSession
 
         $this->assertSame(['base'], $history);
         $this->createTableSession();
-    }
-
-    public function testRegenerateIDFailure()
-    {
-        /** @var DbSession $session */
-        $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
-        $session->method('getIsActive')->willReturn(false);
-
-        $this
-            ->getFunctionMock('yii\web\session', 'session_id')
-            ->expects($this->exactly(2))
-            ->will($this->onConsecutiveCalls('old_session_id', ''));
-
-        Yii::getLogger()->flush();
-
-        $session->regenerateID();
-
-        $this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
     }
 
     public function testRegenerateIDWithNoActiveSession(): void

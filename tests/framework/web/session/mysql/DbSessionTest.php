@@ -12,7 +12,7 @@ use yiiunit\support\MysqlConnection;
  *
  * @group db
  * @group mysql
- * @group session-db-mysql
+ * @group session-db
  */
 class DbSessionTest extends AbstractDbSession
 {

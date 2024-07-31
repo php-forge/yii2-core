@@ -12,7 +12,7 @@ use yiiunit\support\SqliteConnection;
  *
  * @group db
  * @group sqlite
- * @group session-db-sqlite
+ * @group session-db
  */
 class DbSessionTest extends AbstractDbSession
 {

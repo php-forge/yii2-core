@@ -13,7 +13,7 @@ use yiiunit\support\MssqlConnection;
  *
  * @group db
  * @group mssql
- * @group session-db-mssql
+ * @group session-db
  */
 class DbSessionTest extends AbstractDbSession
 {

@@ -14,7 +14,7 @@ use yiiunit\framework\web\session\AbstractSession;
 
 /**
  * @group web
- * @group session-psr-cache
+ * @group session-cache
  */
 class PSRCacheSessionTest extends AbstractSession
 {

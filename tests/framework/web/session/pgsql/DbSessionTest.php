@@ -12,7 +12,7 @@ use yiiunit\support\PgsqlConnection;
  *
  * @group db
  * @group pgsql
- * @group session-db-pgsql
+ * @group session-db
  */
 class DbSessionTest extends AbstractDbSession
 {
