@@ -167,6 +167,11 @@ abstract class AbstractDbSession extends AbstractSession
 
         $this->assertNotNull($data);
         $this->assertNotSame('old_session_id', $data['id']);
+
+        if (is_resource($data['data'])) {
+            $data['data'] = stream_get_contents($data['data']);
+        }
+
         $this->assertSame('data|s:4:"data";', $data['data']);
 
         $this->session->destroy();
