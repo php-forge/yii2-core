@@ -12,6 +12,7 @@ use yiiunit\TestCase;
 /**
  * Class SessionExceptionTest.
  *
+ * @group web
  * @group session
  */
 class SessionExceptionTest extends TestCase

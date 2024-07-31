@@ -47,7 +47,7 @@ class RegenerateFailureTest extends TestCase
         $this
             ->getFunctionMock('yii\web\session', 'session_id')
             ->expects($this->exactly(2))
-            ->withConsecutive('old_session_id', '');
+            ->will($this->onConsecutiveCalls('old_session_id', ''));
 
         /** @var DbSession $session */
         $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
