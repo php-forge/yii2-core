@@ -115,7 +115,7 @@ abstract class AbstractSession extends TestCase
         $this->assertFalse($this->session->get('key', false));
     }
 
-    public function testGellAllFlash(): void
+    public function testGellAllFlashes(): void
     {
         $this->session->addFlash('key1', 'value1');
         $this->session->addFlash('key2', 'value2');
@@ -123,6 +123,17 @@ abstract class AbstractSession extends TestCase
         $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
 
         $this->session->removeAllFlashes();
+
+        $this->assertSame([], $this->session->getAllFlashes());
+    }
+
+    public function testGellAllFlashesWithDelete(): void
+    {
+        $this->session->addFlash('key1', 'value1');
+        $this->session->addFlash('key2', 'value2');
+
+        $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes(true));
+        $this->assertSame([], $this->session->getAllFlashes());
     }
 
     public function testGetWithRemoveFlash(): void
