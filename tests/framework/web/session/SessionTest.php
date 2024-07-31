@@ -23,21 +23,6 @@ final class SessionTest extends AbstractSession
         parent::setUp();
     }
 
-    public function testIdIsSet(): void
-    {
-        $originalCookie = $_COOKIE;
-
-        $_COOKIE['PHPSESSID'] = 'test';
-
-        ini_set('session.use_cookies', '1');
-
-        $this->assertTrue($this->session->getHasSessionId());
-
-        $this->session->destroy();
-
-        $_COOKIE = $originalCookie;
-    }
-
     public function testOpenFailure(): void
     {
         /** @var Session $session */
@@ -58,49 +43,5 @@ final class SessionTest extends AbstractSession
         $this->assertSame('yii\web\session\Session::open', $logs[0][2]);
 
         Yii::setLogger(null);
-    }
-
-    /**
-     * Test to prove that after Session::open changing session parameters will not throw exceptions and its values will
-     * be changed as expected.
-     */
-    public function testParamsAfterSessionStart(): void
-    {
-        $this->session->open();
-
-        $oldUseTransparentSession = $this->session->getUseTransparentSessionID();
-        $this->session->setUseTransparentSessionID(true);
-        $newUseTransparentSession = $this->session->getUseTransparentSessionID();
-
-        $this->assertNotSame($oldUseTransparentSession, $newUseTransparentSession);
-        $this->assertTrue($newUseTransparentSession);
-
-        $this->session->setUseTransparentSessionID(false);
-        $oldTimeout = $this->session->getTimeout();
-        $this->session->setTimeout(600);
-        $newTimeout = $this->session->getTimeout();
-
-        $this->assertNotEquals($oldTimeout, $newTimeout);
-        $this->assertSame(600, $newTimeout);
-
-        $oldUseCookies = $this->session->getUseCookies();
-        $this->session->setUseCookies(false);
-        $newUseCookies = $this->session->getUseCookies();
-
-        if (null !== $newUseCookies) {
-            $this->assertNotSame($oldUseCookies, $newUseCookies);
-            $this->assertFalse($newUseCookies);
-        }
-
-        $oldGcProbability = $this->session->getGCProbability();
-        $this->session->setGCProbability(100);
-        $newGcProbability = $this->session->getGCProbability();
-
-        $this->assertNotEquals($oldGcProbability, $newGcProbability);
-        $this->assertEquals(100, $newGcProbability);
-
-        $this->session->setGCProbability($oldGcProbability);
-
-        $this->session->destroy();
     }
 }

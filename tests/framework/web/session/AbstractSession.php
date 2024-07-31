@@ -84,6 +84,25 @@ abstract class AbstractSession extends TestCase
         $this->session->destroy();
     }
 
+    public function testIdIsSet(): void
+    {
+        $_COOKIE['PHPSESSID'] = 'test-id';
+
+        $this->session->setName('PHPSESSID');
+        $this->session->setUseCookies(true);
+
+        $this->assertTrue($this->session->getUseCookies());
+        $this->assertTrue($this->session->getHasSessionId());
+
+        $this->session->setUseCookies(false);
+
+        $this->assertFalse($this->session->getUseCookies());
+
+        $this->session->destroy();
+
+        $_COOKIE = [];
+    }
+
     public function testOffsetExists(): void
     {
         $this->session->open();
@@ -434,6 +453,54 @@ abstract class AbstractSession extends TestCase
         $this->assertTrue($this->session->hasFlash('key'));
 
         $this->session->removeFlash('key');
+    }
+
+    /**
+     * Test to prove that after Session::open changing session parameters will not throw exceptions and its values will
+     * be changed as expected.
+     */
+    public function testParamsAfterSessionStart(): void
+    {
+        $this->session->open();
+
+        $this->session->setUseCookies(true);
+
+        $oldUseTransparentSession = $this->session->getUseTransparentSessionID();
+        $this->session->setUseTransparentSessionID(true);
+        $newUseTransparentSession = $this->session->getUseTransparentSessionID();
+
+        $this->assertNotSame($oldUseTransparentSession, $newUseTransparentSession);
+        $this->assertTrue($newUseTransparentSession);
+
+        $this->session->setUseTransparentSessionID(false);
+        $oldTimeout = $this->session->getTimeout();
+        $this->session->setTimeout(600);
+        $newTimeout = $this->session->getTimeout();
+
+        $this->assertNotEquals($oldTimeout, $newTimeout);
+        $this->assertSame(600, $newTimeout);
+
+        $oldUseCookies = $this->session->getUseCookies();
+
+        $this->session->setUseCookies(false);
+
+        $newUseCookies = $this->session->getUseCookies();
+
+        if (null !== $newUseCookies) {
+            $this->assertNotSame($oldUseCookies, $newUseCookies);
+            $this->assertFalse($newUseCookies);
+        }
+
+        $oldGcProbability = $this->session->getGCProbability();
+        $this->session->setGCProbability(100);
+        $newGcProbability = $this->session->getGCProbability();
+
+        $this->assertNotEquals($oldGcProbability, $newGcProbability);
+        $this->assertEquals(100, $newGcProbability);
+
+        $this->session->setGCProbability($oldGcProbability);
+
+        $this->session->destroy();
     }
 
     public function testRemoveFlash(): void
