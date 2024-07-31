@@ -45,6 +45,10 @@ class RegenerateFailureTest extends TestCase
 
     public function testRegenerateIDWithFailure(): void
     {
+        if (!\extension_loaded('uopz')) {
+            $this->markTestSkipped('uopz extension is required.');
+        }
+
         // Mocking the session_id function
         \uopz_set_return(
             'session_id',
