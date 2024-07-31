@@ -200,6 +200,8 @@ abstract class AbstractSession extends TestCase
 
         $this->assertFalse($this->session->getUseTransparentSessionID());
 
+        Yii::$app->request->setQueryParams([]);
+
         $_COOKIE = [];
     }
 

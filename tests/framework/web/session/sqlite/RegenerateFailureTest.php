@@ -42,16 +42,16 @@ class RegenerateFailureTest extends TestCase
         parent::tearDown();
     }
 
-    public function testRegenerateIDFailure()
+    public function testRegenerateIDFailure(): void
     {
-        /** @var DbSession $session */
-        $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
-        $session->method('getIsActive')->willReturn(false);
-
         $this
             ->getFunctionMock('yii\web\session', 'session_id')
             ->expects($this->exactly(2))
-            ->will($this->onConsecutiveCalls('old_session_id', ''));
+            ->withConsecutive('old_session_id', '');
+
+        /** @var DbSession $session */
+        $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
+        $session->method('getIsActive')->willReturn(false);
 
         Yii::getLogger()->flush();
 
