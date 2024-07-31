@@ -15,7 +15,6 @@ use yiiunit\TestCase;
 /**
  * Class RegenerateFailureTest.
  *
- * @group db
  * @group sqlite
  * @group session-db-sqlite
  */
