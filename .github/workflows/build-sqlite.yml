@@ -65,7 +65,6 @@ jobs:
 
       - name: Run SQLite tests with PHPUnit and generate coverage.
         if: matrix.php == '8.1'
-        continue-on-error: true
         run: vendor/bin/phpunit --group sqlite --coverage-clover=coverage.xml --colors=always --verbose
 
       - name: Run SQLite tests with PHPUnit.
