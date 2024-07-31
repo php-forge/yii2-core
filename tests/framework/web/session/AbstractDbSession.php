@@ -34,18 +34,6 @@ abstract class AbstractDbSession extends AbstractSession
         $this->dropTableSession();
     }
 
-    public function testInitializeWithConfig(): void
-    {
-        // should produce no exceptions
-        $session = new DbSession(['useCookies' => true]);
-
-        $session->set('test', 'session data');
-        $this->assertEquals('session data', $session->get('test'));
-
-        $session->destroy('test');
-        $this->assertEquals('', $session->get('test'));
-    }
-
     public function testGarbageCollection(): void
     {
         $this->session->destroy();
@@ -89,40 +77,16 @@ abstract class AbstractDbSession extends AbstractSession
         $this->session->destroy();
     }
 
-    public function testSerializedObjectSaving(): void
+    public function testInitializeWithConfig(): void
     {
-        $object = $this->buildObjectForSerialization();
-        $serializedObject = serialize($object);
-        $this->session->set('test', $serializedObject);
+        // should produce no exceptions
+        $session = new DbSession(['useCookies' => true]);
 
-        $this->assertSame($serializedObject, $this->session->get('test'));
+        $session->set('test', 'session data');
+        $this->assertEquals('session data', $session->get('test'));
 
-        $object->foo = 'modification checked';
-        $serializedObject = serialize($object);
-
-        $this->session->set('test', $serializedObject);
-
-        $this->assertSame($serializedObject, $this->session->get('test'));
-
-        $this->session->close();
-    }
-
-    public function testMigration(): void
-    {
-        $this->dropTableSession();
-
-        $history = $this->runMigrate('history');
-
-        $this->assertSame(['base'], $history);
-
-        $history = $this->runMigrate('up');
-
-        $this->assertSame(['base', 'session_init'], $history);
-
-        $history = $this->runMigrate('down');
-
-        $this->assertSame(['base'], $history);
-        $this->createTableSession();
+        $session->destroy('test');
+        $this->assertEquals('', $session->get('test'));
     }
 
     public function testInstantiate(): void
@@ -151,6 +115,59 @@ abstract class AbstractDbSession extends AbstractSession
         Yii::$app->set('sessionDb', null);
 
         ini_set('session.gc_maxlifetime', $oldTimeout);
+    }
+
+    public function testMigration(): void
+    {
+        $this->dropTableSession();
+
+        $history = $this->runMigrate('history');
+
+        $this->assertSame(['base'], $history);
+
+        $history = $this->runMigrate('up');
+
+        $this->assertSame(['base', 'session_init'], $history);
+
+        $history = $this->runMigrate('down');
+
+        $this->assertSame(['base'], $history);
+        $this->createTableSession();
+    }
+
+    public function testRegenerateIDWithNoActiveSession()
+    {
+        if ($this->session->getIsActive()) {
+            $this->session->close();
+        }
+
+        $this->session->regenerateID();
+
+        $this->assertFalse($this->session->getIsActive(), 'No debería haberse iniciado una sesión');
+
+        $count = (new Query())->from('session')->count('*', $this->session->db);
+
+        $this->assertEquals(0, $count);
+
+        $this->session->destroy();
+    }
+
+    public function testSerializedObjectSaving(): void
+    {
+        $object = $this->buildObjectForSerialization();
+        $serializedObject = serialize($object);
+        $this->session->set('test', $serializedObject);
+
+        $this->assertSame($serializedObject, $this->session->get('test'));
+
+        $object->foo = 'modification checked';
+        $serializedObject = serialize($object);
+
+        $this->session->set('test', $serializedObject);
+
+        $this->assertSame($serializedObject, $this->session->get('test'));
+
+        $this->session->close();
     }
 
     protected function buildObjectForSerialization(): object
