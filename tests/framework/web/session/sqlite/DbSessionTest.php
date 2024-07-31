@@ -19,8 +19,6 @@ class DbSessionTest extends AbstractDbSession
 {
     protected function setUp(): void
     {
-        DbSessionStub::$counter = null;
-
         $this->mockWebApplication();
 
         $this->db = SqliteConnection::getConnection();

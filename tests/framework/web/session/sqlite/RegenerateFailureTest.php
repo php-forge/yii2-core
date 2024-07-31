@@ -25,8 +25,6 @@ class RegenerateFailureTest extends TestCase
 
     protected function setUp(): void
     {
-        DbSessionStub::$counter = 0;
-
         $this->mockWebApplication();
 
         $this->db = SqliteConnection::getConnection();
@@ -49,16 +47,19 @@ class RegenerateFailureTest extends TestCase
             $this->markTestSkipped('uopz extension is required.');
         }
 
+        DbSessionStub::$counter = 0;
+
         // Mocking the session_id function
         \uopz_set_return(
             'session_id',
             function(string $id = null) {
                 if (DbSessionStub::$counter === 0) {
-                    DbSessionStub::$counter++;
+                    DbSessionStub::$counter = null;
+
                     return 'test-id';
                 }
 
-                return ''; // Return empty string as per your test case
+                return '';
             },
             true
         );
@@ -73,9 +74,7 @@ class RegenerateFailureTest extends TestCase
         $session->regenerateID();
         $session->destroy();
 
-        var_dump(Yii::getLogger()->messages);
-
-        //$this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
+        $this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
 
         $this->dropTableSession();
     }
