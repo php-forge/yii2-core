@@ -172,6 +172,26 @@ abstract class AbstractSession extends TestCase
         $_COOKIE = [];
     }
 
+    public function testIdSetWithTransSid(): void
+    {
+        $_COOKIE['PHPSESSID'] = 'test-id';
+
+        Yii::$app->request->setQueryParams(['PHPSESSID' => 'test-id']);
+
+        $this->session->setName('PHPSESSID');
+        $this->session->setUseCookies(false);
+        $this->session->setUseTransparentSessionID(true);
+
+        $this->assertTrue($this->session->getUseTransparentSessionID());
+        $this->assertTrue($this->session->getHasSessionID());
+
+        $this->session->setUseTransparentSessionID(false);
+
+        $this->assertFalse($this->session->getUseTransparentSessionID());
+
+        $_COOKIE = [];
+    }
+
     public function testInitUseStrictMode(): void
     {
         $this->session->useStrictMode = false;
