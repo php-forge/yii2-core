@@ -231,11 +231,8 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
     {
         if ($this->getIsActive()) {
             // add @ to inhibit possible warning due to race condition https://github.com/yiisoft/yii2/pull/1812
-            if (YII_DEBUG && !headers_sent()) {
-                session_regenerate_id($deleteOldSession);
-            } else {
-                @session_regenerate_id($deleteOldSession);
-            }
+            YII_DEBUG && !headers_sent()
+                ? session_regenerate_id($deleteOldSession) : @session_regenerate_id($deleteOldSession);
         }
     }
 

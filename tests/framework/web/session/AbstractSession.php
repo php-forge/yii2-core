@@ -446,6 +446,14 @@ abstract class AbstractSession extends TestCase
         $this->session->removeFlash('key');
     }
 
+    public function testSetGCProbabilityException(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('GCProbability must be a value between 0 and 100.');
+
+        $this->session->setGCProbability(101);
+    }
+
     public function testSetHasSessionId(): void
     {
         $this->session->open();
@@ -500,7 +508,7 @@ abstract class AbstractSession extends TestCase
         $this->session->setSavePath('/non-existing-directory');
     }
 
-    public function setUseCookiesWithNullValue(): void
+    public function testSetUseCookiesWithNullValue(): void
     {
         $this->session->setUseCookies(null);
 
