@@ -37,6 +37,7 @@
         "yiisoft/yii2-composer": "^2.0.10"
     },
     "require-dev": {
+        "ext-uopz": "*",
         "dms/phpunit-arraysubset-asserts": "^0.5",
         "maglnet/composer-require-checker": "^4.7",
         "phpunit/phpunit": "^9.5",

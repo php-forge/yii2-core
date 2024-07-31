@@ -30,7 +30,7 @@ jobs:
     name: PHP ${{ matrix.php }}-sqlite
 
     env:
-      EXTENSIONS: pdo, pdo_sqlite, sqlite3
+      EXTENSIONS: pdo, pdo_sqlite, sqlite3, uopz
 
     runs-on: ubuntu-latest
 

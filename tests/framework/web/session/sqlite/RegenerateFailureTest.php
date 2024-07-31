@@ -15,6 +15,7 @@ use yiiunit\TestCase;
 /**
  * Class RegenerateFailureTest.
  *
+ * @group db
  * @group sqlite
  * @group session-db-sqlite
  */
@@ -33,8 +34,31 @@ class RegenerateFailureTest extends TestCase
         parent::setUp();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        // Restore the original session_id function
+        \uopz_unset_return('session_id');
+
+    }
+
     public function testRegenerateIDWithFailure(): void
     {
+        // Mocking the session_id function
+        \uopz_set_return(
+            'session_id',
+            function(string $id = null) {
+                if (DbSessionStub::$counter === 0) {
+                    DbSessionStub::$counter++;
+                    return 'test-id';
+                }
+
+                return ''; // Return empty string as per your test case
+            },
+            true
+        );
+
         $this->dropTableSession();
         $this->createTableSession();
 
@@ -88,23 +112,4 @@ class RegenerateFailureTest extends TestCase
             (new Query())->select(['version'])->from('migration')->column(),
         );
     }
-}
-
-namespace yii\web\session;
-
-use yiiunit\framework\web\session\DbSessionStub;
-
-function session_id(string $id = null): string
-{
-    if (DbSessionStub::$counter === 0) {
-        DbSessionStub::$counter++;
-        return 'test-id';
-    }
-
-    if (DbSessionStub::$counter === 1) {
-        DbSessionStub::$counter++;
-        return '';
-    }
-
-    return \session_id($id);
 }
