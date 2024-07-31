@@ -180,6 +180,7 @@ abstract class AbstractDbSession extends AbstractSession
     {
         $object = $this->buildObjectForSerialization();
         $serializedObject = serialize($object);
+
         $this->session->set('test', $serializedObject);
 
         $this->assertSame($serializedObject, $this->session->get('test'));
@@ -190,6 +191,8 @@ abstract class AbstractDbSession extends AbstractSession
         $this->session->set('test', $serializedObject);
 
         $this->assertSame($serializedObject, $this->session->get('test'));
+
+        $this->session->close();
     }
 
     protected function buildObjectForSerialization(): object
