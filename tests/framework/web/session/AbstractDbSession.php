@@ -135,12 +135,13 @@ abstract class AbstractDbSession extends AbstractSession
         $this->createTableSession();
     }
 
-    public function testRegenerateIDWithNoActiveSession()
+    public function testRegenerateIDWithNoActiveSession(): void
     {
         if ($this->session->getIsActive()) {
             $this->session->close();
         }
 
+        $this->session->setId('');
         $this->session->regenerateID();
 
         $this->assertFalse($this->session->getIsActive(), 'No debería haberse iniciado una sesión');
@@ -148,6 +149,25 @@ abstract class AbstractDbSession extends AbstractSession
         $count = (new Query())->from('session')->count('*', $this->session->db);
 
         $this->assertEquals(0, $count);
+
+        $this->session->destroy();
+    }
+
+    public function testRegenerateIDWithDeleteSession(): void
+    {
+        $this->session->setId('old_session_id');
+        $this->session->set('data', 'data');
+        $this->session->regenerateID(true);
+
+        $count = (new Query())->from('session')->count('*', $this->session->db);
+
+        $this->assertEquals(1, $count);
+
+        $data = (new Query())->from('session')->where(['id' => session_id()])->one($this->session->db);
+
+        $this->assertNotNull($data);
+        $this->assertNotSame('old_session_id', $data['id']);
+        $this->assertSame('data|s:4:"data";', $data['data']);
 
         $this->session->destroy();
     }
