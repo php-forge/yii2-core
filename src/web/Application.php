@@ -1,15 +1,13 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\web;
 
 use Yii;
 use yii\base\InvalidRouteException;
 use yii\helpers\Url;
+use yii\web\session\Session;
 
 /**
  * Application is the base class for all web application classes.
@@ -22,9 +20,6 @@ use yii\helpers\Url;
  * @property-read Response $response The response component.
  * @property-read Session $session The session component.
  * @property-read User $user The user component.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Application extends \yii\base\Application
 {
@@ -195,7 +190,7 @@ class Application extends \yii\base\Application
         return array_merge(parent::coreComponents(), [
             'request' => ['class' => 'yii\web\Request'],
             'response' => ['class' => 'yii\web\Response'],
-            'session' => ['class' => 'yii\web\Session'],
+            'session' => ['class' => Session::class],
             'user' => ['class' => 'yii\web\User'],
             'errorHandler' => ['class' => 'yii\web\ErrorHandler'],
         ]);

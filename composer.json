@@ -39,6 +39,7 @@
     "require-dev": {
         "dms/phpunit-arraysubset-asserts": "^0.5",
         "maglnet/composer-require-checker": "^4.7",
+        "php-mock/php-mock-phpunit": "^2.10",
         "phpunit/phpunit": "^9.5",
         "yiisoft/cache-file": "^3.1"
     },

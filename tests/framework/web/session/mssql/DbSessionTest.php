@@ -1,36 +1,38 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\web\session\mssql;
+
+use PDO;
+use yiiunit\framework\web\session\AbstractDbSession;
+use yiiunit\support\MssqlConnection;
 
 /**
  * Class DbSessionTest.
  *
- * @author Dmytro Naumenko <d.naumenko.a@gmail.com>
- *
  * @group db
  * @group mssql
+ * @group session-db
  */
-class DbSessionTest extends \yiiunit\framework\web\session\AbstractDbSessionTest
+class DbSessionTest extends AbstractDbSession
 {
-    protected function getDriverNames()
+    protected function setUp(): void
     {
-        return ['mssql', 'sqlsrv', 'dblib'];
+        $this->mockWebApplication();
+
+        $this->db = MssqlConnection::getConnection();
+
+        parent::setUp();
     }
 
-    protected function buildObjectForSerialization()
+    public function testSerializedObjectSaving(): void
     {
-        $object = parent::buildObjectForSerialization();
-        unset($object->binary);
-        // Binary data produce error on insert:
-        // `An error occurred translating string for input param 1 to UCS-2`
-        // I failed to make it work either with `nvarchar(max)` or `varbinary(max)` column
-        // in Microsoft SQL server. © SilverFire TODO: fix it
+        // Data is 8-bit characters as specified in the code page of the Windows locale that is set on the system.
+        // Any multi-byte characters or characters that do not map into this code page are substituted with a
+        // single-byte question mark (?) character.
+        $this->db->getSlavePdo()->setAttribute(PDO::SQLSRV_ATTR_ENCODING, PDO::SQLSRV_ENCODING_SYSTEM);
 
-        return $object;
+        parent::testSerializedObjectSaving();
     }
 }
