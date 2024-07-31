@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\web\session;
 
+use phpmock\phpunit\PHPMock;
 use Yii;
 use yii\db\Connection;
 use yii\db\Query;
@@ -13,6 +14,8 @@ use yiiunit\framework\console\controllers\EchoMigrateController;
 
 abstract class AbstractDbSession extends AbstractSession
 {
+    use PHPMock;
+
     protected Connection $db;
 
     protected function setUp(): void
@@ -133,6 +136,24 @@ abstract class AbstractDbSession extends AbstractSession
 
         $this->assertSame(['base'], $history);
         $this->createTableSession();
+    }
+
+    public function testRegenerateIDFailure()
+    {
+        /** @var DbSession $session */
+        $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
+        $session->method('getIsActive')->willReturn(false);
+
+        $this
+            ->getFunctionMock('yii\web\session', 'session_id')
+            ->expects($this->exactly(2))
+            ->will($this->onConsecutiveCalls('old_session_id', ''));
+
+        Yii::getLogger()->flush();
+
+        $session->regenerateID();
+
+        $this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
     }
 
     public function testRegenerateIDWithNoActiveSession(): void
