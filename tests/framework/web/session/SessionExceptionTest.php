@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\web\session;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\log\Logger;
 use yii\web\session\Session;
 use yiiunit\TestCase;
@@ -67,5 +68,22 @@ class SessionExceptionTest extends TestCase
         $session->close();
 
         unset($_SESSION);
+    }
+
+    public function testSetCookieParamsFailure(): void
+    {
+        /** @var Session $session */
+        $session = $this->getMockBuilder(Session::class)->onlyMethods(['getCookieParams', 'getIsActive'])->getMock();
+        $session->method('getCookieParams')->willReturn(['test' => 'value']);
+        $session->method('getIsActive')->willReturn(false);
+
+        $this->assertSame(['test' => 'value'], $session->getCookieParams());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Please make sure cookieParams contains these elements: lifetime, path, domain, secure and httponly.'
+        );
+
+        $session->open();
     }
 }
