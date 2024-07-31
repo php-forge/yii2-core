@@ -7,9 +7,8 @@ namespace yiiunit\framework\web\session\sqlite;
 use Yii;
 use yii\db\Connection;
 use yii\db\Query;
-use yii\web\session\DbSession;
 use yiiunit\framework\console\controllers\EchoMigrateController;
-use yiiunit\framework\web\mocks\SessionId;
+use yiiunit\framework\web\session\DbSessionStub;
 use yiiunit\support\SqliteConnection;
 use yiiunit\TestCase;
 
@@ -26,6 +25,8 @@ class RegenerateFailureTest extends TestCase
 
     protected function setUp(): void
     {
+        DbSessionStub::$counter = 0;
+
         $this->mockWebApplication();
 
         $this->db = SqliteConnection::getConnection();
@@ -38,17 +39,16 @@ class RegenerateFailureTest extends TestCase
         $this->dropTableSession();
         $this->createTableSession();
 
-        SessionId::$counter = 0;
-
         Yii::getLogger()->flush();
 
         $session = new DbSessionStub(['db' => $this->db]);
 
         $session->regenerateID();
-
         $session->destroy();
 
         $this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
+
+        $this->dropTableSession();
     }
 
     protected function createTableSession(): void
@@ -89,22 +89,23 @@ class RegenerateFailureTest extends TestCase
             (new Query())->select(['version'])->from('migration')->column(),
         );
     }
-
-}
-
-class DbSessionStub extends DbSession
-{
 }
 
 namespace yii\web\session;
 
+use yiiunit\framework\web\session\DbSessionStub;
+
 function session_id(string $id = null): string
 {
-    static $counter = 0;
-
-    if ($id === null && $counter === 0) {
-        return (string) ++$counter;
+    if (DbSessionStub::$counter === 0) {
+        DbSessionStub::$counter++;
+        return 'test-id';
     }
 
-    return '';
+    if (DbSessionStub::$counter === 1) {
+        DbSessionStub::$counter++;
+        return '';
+    }
+
+    return \session_id($id);
 }
