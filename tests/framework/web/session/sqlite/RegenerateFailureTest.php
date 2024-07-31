@@ -7,8 +7,8 @@ namespace yiiunit\framework\web\session\sqlite;
 use Yii;
 use yii\db\Connection;
 use yii\db\Query;
+use yii\web\session\DbSession;
 use yiiunit\framework\console\controllers\EchoMigrateController;
-use yiiunit\framework\web\session\DbSessionStub;
 use yiiunit\support\SqliteConnection;
 use yiiunit\TestCase;
 
@@ -21,6 +21,8 @@ use yiiunit\TestCase;
  */
 class RegenerateFailureTest extends TestCase
 {
+    use \phpmock\phpunit\PHPMock;
+
     private Connection $db;
 
     protected function setUp(): void
@@ -32,51 +34,22 @@ class RegenerateFailureTest extends TestCase
         parent::setUp();
     }
 
-    protected function tearDown(): void
+    public function testRegenerateIDFailure()
     {
-        parent::tearDown();
+        /** @var DbSession $session */
+        $session = $this->getMockBuilder(DbSession::class)->onlyMethods(['getIsActive'])->getMock();
+        $session->method('getIsActive')->willReturn(false);
 
-        // Restore the original session_id function
-        \uopz_unset_return('session_id');
-
-    }
-
-    public function testRegenerateIDWithFailure(): void
-    {
-        if (!\extension_loaded('uopz')) {
-            $this->markTestSkipped('uopz extension is required.');
-        }
-
-        DbSessionStub::$counter = 0;
-
-        // Mocking the session_id function
-        \uopz_set_return(
-            'session_id',
-            function(string $id = null) {
-                if (DbSessionStub::$counter === 0) {
-                    DbSessionStub::$counter = null;
-
-                    return 'test-id';
-                }
-
-                return '';
-            },
-            true
-        );
-
-        $this->dropTableSession();
-        $this->createTableSession();
+        $this
+            ->getFunctionMock('yii\web\session', 'session_id')
+            ->expects($this->exactly(2))
+            ->will($this->onConsecutiveCalls('old_session_id', ''));
 
         Yii::getLogger()->flush();
 
-        $session = new DbSessionStub(['db' => $this->db]);
-
         $session->regenerateID();
-        $session->destroy();
 
         $this->assertStringContainsString('Failed to generate new session ID', Yii::getLogger()->messages[0][0]);
-
-        $this->dropTableSession();
     }
 
     protected function createTableSession(): void

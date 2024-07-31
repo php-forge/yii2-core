@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yiiunit\framework\web\session\sqlite;
 
 use yiiunit\framework\web\session\AbstractDbSession;
-use yiiunit\framework\web\session\DbSessionStub;
 use yiiunit\support\SqliteConnection;
 
 /**
