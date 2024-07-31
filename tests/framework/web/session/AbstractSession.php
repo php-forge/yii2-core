@@ -29,11 +29,61 @@ abstract class AbstractSession extends TestCase
         $this->destroyApplication();
     }
 
+    public function testAddFlash(): void
+    {
+        $this->session->addFlash('key', 'value');
+
+        $this->assertSame(['value'], $this->session->getFlash('key'));
+
+        $this->session->removeFlash('key');
+    }
+
+    public function testAddToExistingArrayFlash(): void
+    {
+        $this->session->addFlash('key', 'value1', false);
+        $this->session->addFlash('key', 'value2', false);
+
+        $this->assertSame(['value1', 'value2'], $this->session->getFlash('key'));
+
+        $this->session->removeFlash('key');
+
+        $this->session->destroy();
+    }
+
+    public function testAddValueToExistingNonArrayFlash(): void
+    {
+        $this->session->setFlash('testKey', 'initialValue');
+        $this->session->addFlash('testKey', 'newValue');
+
+        $result = $this->session->getFlash('testKey');
+
+        $this->assertIsArray($result);
+        $this->assertCount(2, $result);
+        $this->assertSame('initialValue', $result[0]);
+        $this->assertSame('newValue', $result[1]);
+
+        $this->session->removeFlash('testKey');
+
+        $this->session->destroy();
+    }
+
+    public function testAddWithRemoveFlash(): void
+    {
+        $this->session->addFlash('key', 'value', true);
+
+        $this->assertSame(['value'], $this->session->getFlash('key'));
+        $this->assertSame(null, $this->session->getFlash('key'));
+
+        $this->session->removeFlash('key');
+
+        $this->session->destroy();
+    }
+
     public function testCount(): void
     {
         $this->session->open();
 
-        $this->assertSame(0, $this->session->count);
+        $this->assertSame(0, $this->session->count());
 
         $this->session->set('name', 'value');
 
@@ -71,6 +121,34 @@ abstract class AbstractSession extends TestCase
         $this->session->destroy();
     }
 
+    public function testGetFlash(): void
+    {
+        $this->assertNull($this->session->getFlash('key'));
+        $this->assertFalse($this->session->get('key', false));
+    }
+
+    public function testGellAllFlash(): void
+    {
+        $this->session->addFlash('key1', 'value1');
+        $this->session->addFlash('key2', 'value2');
+
+        $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
+
+        $this->session->removeAllFlashes();
+
+        $this->session->destroy();
+    }
+
+    public function testGetWithRemoveFlash(): void
+    {
+        $this->session->addFlash('key', 'value', true);
+
+        $this->assertSame(['value'], $this->session->getFlash('key', null, true));
+        $this->assertNull($this->session->getFlash('key'));
+
+        $this->session->destroy();
+    }
+
     public function testHas(): void
     {
         $this->session->open();
@@ -80,6 +158,19 @@ abstract class AbstractSession extends TestCase
         $this->session->set('name', 'value');
 
         $this->assertTrue($this->session->has('name'));
+
+        $this->session->destroy();
+    }
+
+    public function testHasFlash(): void
+    {
+        $this->assertFalse($this->session->hasFlash('key'));
+
+        $this->session->addFlash('key', 'value');
+
+        $this->assertTrue($this->session->hasFlash('key'));
+
+        $this->session->removeFlash('key');
 
         $this->session->destroy();
     }
@@ -101,6 +192,71 @@ abstract class AbstractSession extends TestCase
         $this->session->destroy();
 
         $_COOKIE = [];
+    }
+
+    public function testInitUseStrictMode(): void
+    {
+        $this->session->useStrictMode = false;
+
+        $this->assertSame(false, $this->session->getUseStrictMode());
+
+        $this->session->useStrictMode = true;
+
+        $this->assertEquals(true, $this->session->getUseStrictMode());
+    }
+
+    public function testIterator(): void
+    {
+        $this->session->open();
+
+        $this->session->set('key1', 'value1');
+
+        $iterator = $this->session->getIterator();
+
+        $this->assertInstanceOf(\Iterator::class, $iterator);
+        $this->assertSame('key1', $iterator->key());
+        $this->assertSame('value1', $iterator->current());
+
+        $iterator->next();
+
+        $this->assertNull($iterator->key());
+        $this->assertNull($iterator->current());
+
+        $this->session->destroy();
+    }
+
+    public function testIteratorValid()
+    {
+        $iterator = $this->session->getIterator();
+
+        $this->assertFalse($iterator->valid());
+
+        $this->session->set('key1', 'value1');
+        $this->session->set('key2', 'value2');
+        $this->session->set('key3', 'value3');
+
+        $iterator = $this->session->getIterator();
+
+        $this->assertTrue($iterator->valid());
+
+        $count = 0;
+
+        while ($iterator->valid()) {
+            $count++;
+
+            $iterator->next();
+        }
+
+        $this->assertEquals(3, $count);
+        $this->assertFalse($iterator->valid());
+
+        $this->session->removeAll();
+
+        $iterator = $this->session->getIterator();
+
+        $this->assertFalse($iterator->valid());
+
+        $this->session->destroy();
     }
 
     public function testOffsetExists(): void
@@ -155,6 +311,54 @@ abstract class AbstractSession extends TestCase
         $this->session->destroy();
     }
 
+    /**
+     * Test to prove that after Session::open changing session parameters will not throw exceptions and its values will
+     * be changed as expected.
+     */
+    public function testParamsAfterSessionStart(): void
+    {
+        $this->session->open();
+
+        $this->session->setUseCookies(true);
+
+        $oldUseTransparentSession = $this->session->getUseTransparentSessionID();
+        $this->session->setUseTransparentSessionID(true);
+        $newUseTransparentSession = $this->session->getUseTransparentSessionID();
+
+        $this->assertNotSame($oldUseTransparentSession, $newUseTransparentSession);
+        $this->assertTrue($newUseTransparentSession);
+
+        $this->session->setUseTransparentSessionID(false);
+        $oldTimeout = $this->session->getTimeout();
+        $this->session->setTimeout(600);
+        $newTimeout = $this->session->getTimeout();
+
+        $this->assertNotEquals($oldTimeout, $newTimeout);
+        $this->assertSame(600, $newTimeout);
+
+        $oldUseCookies = $this->session->getUseCookies();
+
+        $this->session->setUseCookies(false);
+
+        $newUseCookies = $this->session->getUseCookies();
+
+        if (null !== $newUseCookies) {
+            $this->assertNotSame($oldUseCookies, $newUseCookies);
+            $this->assertFalse($newUseCookies);
+        }
+
+        $oldGcProbability = $this->session->getGCProbability();
+        $this->session->setGCProbability(100);
+        $newGcProbability = $this->session->getGCProbability();
+
+        $this->assertNotEquals($oldGcProbability, $newGcProbability);
+        $this->assertEquals(100, $newGcProbability);
+
+        $this->session->setGCProbability($oldGcProbability);
+
+        $this->session->destroy();
+    }
+
     public function testRegenerateID(): void
     {
         $this->session->open();
@@ -203,6 +407,33 @@ abstract class AbstractSession extends TestCase
         $this->session->destroy();
     }
 
+    public function testRemoveAllFlash(): void
+    {
+        $this->session->addFlash('key1', 'value1');
+        $this->session->addFlash('key2', 'value2');
+
+        $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
+
+        $this->session->removeAllFlashes();
+
+        $this->assertSame([], $this->session->getAllFlashes());
+
+        $this->session->destroy();
+    }
+
+    public function testRemoveFlash(): void
+    {
+        $this->session->addFlash('key', 'value');
+
+        $this->assertSame(['value'], $this->session->getFlash('key'));
+
+        $this->session->removeFlash('key');
+
+        $this->assertNull($this->session->getFlash('key'));
+
+        $this->session->destroy();
+    }
+
     /**
      * @dataProvider \yiiunit\framework\web\session\provider\SessionProvider::setCacheLimiterDataProvider
      *
@@ -231,6 +462,26 @@ abstract class AbstractSession extends TestCase
         $this->session->setCookieParams($cookieParams);
 
         $this->assertSame($cookieParams, $this->session->getCookieParams());
+
+        $this->session->destroy();
+    }
+
+    public function testSetFlash(): void
+    {
+        $this->session->setFlash('key');
+
+        $this->assertSame(['key' => true], $this->session->getAllFlashes());
+
+        $this->session->setFlash('key', 'value');
+
+        $this->assertSame(['key' => 'value'], $this->session->getAllFlashes());
+
+        $this->session->setFlash('key', 'value', true);
+
+        $this->assertSame(['key' => 'value'], $this->session->getAllFlashes());
+        $this->assertNull($this->session->getFlash('key'));
+
+        $this->session->removeFlash('key');
 
         $this->session->destroy();
     }
@@ -296,15 +547,43 @@ abstract class AbstractSession extends TestCase
         $this->session->setSavePath('/non-existing-directory');
     }
 
-    public function testInitUseStrictMode(): void
+    public function testUpdateCountersWithNonArrayFlashes(): void
     {
-        $this->session->useStrictMode = false;
+        $this->session->set('__flash', 'not an array');
 
-        $this->assertSame(false, $this->session->getUseStrictMode());
+        $result = $this->session->getAllFlashes();
 
-        $this->session->useStrictMode = true;
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
 
-        $this->assertEquals(true, $this->session->getUseStrictMode());
+        $flashes = $this->session->get('__flash');
+
+        $this->assertIsArray($flashes);
+        $this->assertArrayHasKey('__counters', $flashes);
+        $this->assertIsArray($flashes['__counters']);
+        $this->assertEmpty($flashes['__counters']);
+
+        $this->session->remove('__flash');
+
+        $this->session->destroy();
+    }
+
+    public function testUpdateCountersWithNonArrayCounters(): void
+    {
+        $this->session->set('__flash', ['__counters' => 'not an array']);
+        $this->session->addFlash('testKey', 'testValue');
+
+        $flashes = $this->session->get('__flash');
+
+        $this->assertIsArray($flashes);
+        $this->assertArrayHasKey('__counters', $flashes);
+        $this->assertIsArray($flashes['__counters']);
+        $this->assertArrayHasKey('testKey', $flashes['__counters']);
+        $this->assertEquals(-1, $flashes['__counters']['testKey']);
+
+        $this->session->remove('__flash');
+
+        $this->session->destroy();
     }
 
     public function testUseStrictMode(): void
@@ -359,223 +638,5 @@ abstract class AbstractSession extends TestCase
 
         $this->session->destroy('strict_mode_test');
 
-    }
-
-    public function testSessionIterator(): void
-    {
-        $this->session->open();
-
-        $this->session->set('key1', 'value1');
-
-        $iterator = $this->session->getIterator();
-
-        $this->assertInstanceOf(\Iterator::class, $iterator);
-        $this->assertSame('key1', $iterator->key());
-        $this->assertSame('value1', $iterator->current());
-
-        $iterator->next();
-
-        $this->assertNull($iterator->key());
-        $this->assertNull($iterator->current());
-    }
-
-    public function testAddFlash(): void
-    {
-        $this->session->addFlash('key', 'value');
-
-        $this->assertSame(['value'], $this->session->getFlash('key'));
-    }
-
-    public function testAddToExistingArrayFlash(): void
-    {
-        $this->session->addFlash('key', 'value1', false);
-        $this->session->addFlash('key', 'value2', false);
-
-        $this->assertSame(['value1', 'value2'], $this->session->getFlash('key'));
-
-        $this->session->removeFlash('key');
-    }
-
-    public function testAddValueToExistingNonArrayFlash(): void
-    {
-        $this->session->setFlash('testKey', 'initialValue');
-        $this->session->addFlash('testKey', 'newValue');
-
-        $result = $this->session->getFlash('testKey');
-
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
-        $this->assertSame('initialValue', $result[0]);
-        $this->assertSame('newValue', $result[1]);
-
-        $this->session->removeFlash('testKey');
-    }
-
-    public function testAddWithRemoveFlash(): void
-    {
-        $this->session->addFlash('key', 'value', true);
-
-        $this->assertSame(['value'], $this->session->getFlash('key'));
-        $this->assertSame(null, $this->session->getFlash('key'));
-
-    }
-
-    public function testGetFlash(): void
-    {
-        $this->assertNull($this->session->getFlash('key'));
-        $this->assertFalse($this->session->get('key', false));
-    }
-
-    public function testGellAllFlash(): void
-    {
-        $this->session->addFlash('key1', 'value1');
-        $this->session->addFlash('key2', 'value2');
-
-        $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
-
-        $this->session->removeAllFlashes();
-    }
-
-    public function testGetWithRemoveFlash(): void
-    {
-        $this->session->addFlash('key', 'value', true);
-
-        $this->assertSame(['value'], $this->session->getFlash('key', null, true));
-        $this->assertNull($this->session->getFlash('key'));
-    }
-
-    public function testHasFlash(): void
-    {
-        $this->assertFalse($this->session->hasFlash('key'));
-
-        $this->session->addFlash('key', 'value');
-
-        $this->assertTrue($this->session->hasFlash('key'));
-
-        $this->session->removeFlash('key');
-    }
-
-    /**
-     * Test to prove that after Session::open changing session parameters will not throw exceptions and its values will
-     * be changed as expected.
-     */
-    public function testParamsAfterSessionStart(): void
-    {
-        $this->session->open();
-
-        $this->session->setUseCookies(true);
-
-        $oldUseTransparentSession = $this->session->getUseTransparentSessionID();
-        $this->session->setUseTransparentSessionID(true);
-        $newUseTransparentSession = $this->session->getUseTransparentSessionID();
-
-        $this->assertNotSame($oldUseTransparentSession, $newUseTransparentSession);
-        $this->assertTrue($newUseTransparentSession);
-
-        $this->session->setUseTransparentSessionID(false);
-        $oldTimeout = $this->session->getTimeout();
-        $this->session->setTimeout(600);
-        $newTimeout = $this->session->getTimeout();
-
-        $this->assertNotEquals($oldTimeout, $newTimeout);
-        $this->assertSame(600, $newTimeout);
-
-        $oldUseCookies = $this->session->getUseCookies();
-
-        $this->session->setUseCookies(false);
-
-        $newUseCookies = $this->session->getUseCookies();
-
-        if (null !== $newUseCookies) {
-            $this->assertNotSame($oldUseCookies, $newUseCookies);
-            $this->assertFalse($newUseCookies);
-        }
-
-        $oldGcProbability = $this->session->getGCProbability();
-        $this->session->setGCProbability(100);
-        $newGcProbability = $this->session->getGCProbability();
-
-        $this->assertNotEquals($oldGcProbability, $newGcProbability);
-        $this->assertEquals(100, $newGcProbability);
-
-        $this->session->setGCProbability($oldGcProbability);
-
-        $this->session->destroy();
-    }
-
-    public function testRemoveFlash(): void
-    {
-        $this->session->addFlash('key', 'value');
-
-        $this->assertSame(['value'], $this->session->getFlash('key'));
-
-        $this->session->removeFlash('key');
-
-        $this->assertNull($this->session->getFlash('key'));
-    }
-
-    public function testRemoveAllFlash(): void
-    {
-        $this->session->addFlash('key1', 'value1');
-        $this->session->addFlash('key2', 'value2');
-
-        $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
-
-        $this->session->removeAllFlashes();
-
-        $this->assertSame([], $this->session->getAllFlashes());
-    }
-
-    public function testSetFlash(): void
-    {
-        $this->session->setFlash('key');
-
-        $this->assertSame(['key' => true], $this->session->getAllFlashes());
-
-        $this->session->setFlash('key', 'value');
-
-        $this->assertSame(['key' => 'value'], $this->session->getAllFlashes());
-
-        $this->session->setFlash('key', 'value', true);
-
-        $this->assertSame(['key' => 'value'], $this->session->getAllFlashes());
-        $this->assertNull($this->session->getFlash('key'));
-
-        $this->session->removeFlash('key');
-    }
-
-    public function testUpdateCountersWithNonArrayFlashes(): void
-    {
-        $this->session->set('__flash', 'not an array');
-
-        $result = $this->session->getAllFlashes();
-
-        $this->assertIsArray($result);
-        $this->assertEmpty($result);
-
-        $flashes = $this->session->get('__flash');
-
-        $this->assertIsArray($flashes);
-        $this->assertArrayHasKey('__counters', $flashes);
-        $this->assertIsArray($flashes['__counters']);
-        $this->assertEmpty($flashes['__counters']);
-
-        $this->session->remove('__flash');
-    }
-
-    public function testUpdateCountersWithNonArrayCounters(): void
-    {
-        $this->session->set('__flash', ['__counters' => 'not an array']);
-        $this->session->addFlash('testKey', 'testValue');
-
-        $flashes = $this->session->get('__flash');
-
-        $this->assertIsArray($flashes);
-        $this->assertArrayHasKey('__counters', $flashes);
-        $this->assertIsArray($flashes['__counters']);
-        $this->assertArrayHasKey('testKey', $flashes['__counters']);
-        $this->assertEquals(-1, $flashes['__counters']['testKey']);
-
-        $this->session->remove('__flash');
     }
 }
