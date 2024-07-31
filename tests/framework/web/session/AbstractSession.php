@@ -22,6 +22,8 @@ abstract class AbstractSession extends TestCase
 
     protected function tearDown(): void
     {
+        $this->session->destroy();
+
         $this->session = null;
 
         parent::tearDown();
@@ -46,8 +48,6 @@ abstract class AbstractSession extends TestCase
         $this->assertSame(['value1', 'value2'], $this->session->getFlash('key'));
 
         $this->session->removeFlash('key');
-
-        $this->session->destroy();
     }
 
     public function testAddValueToExistingNonArrayFlash(): void
@@ -63,8 +63,6 @@ abstract class AbstractSession extends TestCase
         $this->assertSame('newValue', $result[1]);
 
         $this->session->removeFlash('testKey');
-
-        $this->session->destroy();
     }
 
     public function testAddWithRemoveFlash(): void
@@ -75,21 +73,15 @@ abstract class AbstractSession extends TestCase
         $this->assertSame(null, $this->session->getFlash('key'));
 
         $this->session->removeFlash('key');
-
-        $this->session->destroy();
     }
 
     public function testCount(): void
     {
-        $this->session->open();
-
         $this->assertSame(0, $this->session->count());
 
         $this->session->set('name', 'value');
 
         $this->assertSame(1, $this->session->count());
-
-        $this->session->destroy();
     }
 
     public function testDestroySessionId(): void
@@ -110,15 +102,11 @@ abstract class AbstractSession extends TestCase
 
     public function testGetCount(): void
     {
-        $this->session->open();
-
         $this->assertSame(0, $this->session->getCount());
 
         $this->session->set('name', 'value');
 
         $this->assertSame(1, $this->session->getCount());
-
-        $this->session->destroy();
     }
 
     public function testGetFlash(): void
@@ -135,8 +123,6 @@ abstract class AbstractSession extends TestCase
         $this->assertSame(['key1' => ['value1'], 'key2' => ['value2']], $this->session->getAllFlashes());
 
         $this->session->removeAllFlashes();
-
-        $this->session->destroy();
     }
 
     public function testGetWithRemoveFlash(): void
@@ -146,20 +132,16 @@ abstract class AbstractSession extends TestCase
         $this->assertSame(['value'], $this->session->getFlash('key', null, true));
         $this->assertNull($this->session->getFlash('key'));
 
-        $this->session->destroy();
     }
 
     public function testHas(): void
     {
-        $this->session->open();
-
         $this->assertFalse($this->session->has('name'));
 
         $this->session->set('name', 'value');
 
         $this->assertTrue($this->session->has('name'));
 
-        $this->session->destroy();
     }
 
     public function testHasFlash(): void
@@ -171,8 +153,6 @@ abstract class AbstractSession extends TestCase
         $this->assertTrue($this->session->hasFlash('key'));
 
         $this->session->removeFlash('key');
-
-        $this->session->destroy();
     }
 
     public function testIdIsSet(): void
@@ -188,8 +168,6 @@ abstract class AbstractSession extends TestCase
         $this->session->setUseCookies(false);
 
         $this->assertFalse($this->session->getUseCookies());
-
-        $this->session->destroy();
 
         $_COOKIE = [];
     }
@@ -207,8 +185,6 @@ abstract class AbstractSession extends TestCase
 
     public function testIterator(): void
     {
-        $this->session->open();
-
         $this->session->set('key1', 'value1');
 
         $iterator = $this->session->getIterator();
@@ -221,8 +197,6 @@ abstract class AbstractSession extends TestCase
 
         $this->assertNull($iterator->key());
         $this->assertNull($iterator->current());
-
-        $this->session->destroy();
     }
 
     public function testIteratorValid()
@@ -255,8 +229,6 @@ abstract class AbstractSession extends TestCase
         $iterator = $this->session->getIterator();
 
         $this->assertFalse($iterator->valid());
-
-        $this->session->destroy();
     }
 
     public function testOffsetExists(): void
@@ -268,8 +240,6 @@ abstract class AbstractSession extends TestCase
         $this->session['name'] = 'value';
 
         $this->assertTrue(isset($this->session['name']));
-
-        $this->session->destroy();
     }
 
     public function testOffsetGet(): void
@@ -281,8 +251,6 @@ abstract class AbstractSession extends TestCase
         $this->session['name'] = 'value';
 
         $this->assertSame('value', $this->session['name']);
-
-        $this->session->destroy();
     }
 
     public function testOffsetSet(): void
@@ -292,8 +260,6 @@ abstract class AbstractSession extends TestCase
         $this->session['name'] = 'value';
 
         $this->assertSame('value', $this->session['name']);
-
-        $this->session->destroy();
     }
 
     public function testOffsetUnset(): void
@@ -307,8 +273,6 @@ abstract class AbstractSession extends TestCase
         unset($this->session['name']);
 
         $this->assertNull($this->session['name']);
-
-        $this->session->destroy();
     }
 
     /**
@@ -355,8 +319,6 @@ abstract class AbstractSession extends TestCase
         $this->assertEquals(100, $newGcProbability);
 
         $this->session->setGCProbability($oldGcProbability);
-
-        $this->session->destroy();
     }
 
     public function testRegenerateID(): void
@@ -370,14 +332,10 @@ abstract class AbstractSession extends TestCase
         $newSessionId = $this->session->getId();
 
         $this->assertNotSame($oldSessionId, $newSessionId);
-
-        $this->session->destroy();
     }
 
     public function testRemove(): void
     {
-        $this->session->open();
-
         $this->session->set('name', 'value');
 
         $this->assertSame('value', $this->session->get('name'));
@@ -385,14 +343,10 @@ abstract class AbstractSession extends TestCase
         $this->session->remove('name');
 
         $this->assertNull($this->session->get('name'));
-
-        $this->session->destroy();
     }
 
     public function testRemoveAll(): void
     {
-        $this->session->open();
-
         $this->session->set('name1', 'value1');
         $this->session->set('name2', 'value2');
 
@@ -403,8 +357,6 @@ abstract class AbstractSession extends TestCase
 
         $this->assertNull($this->session->get('name1'));
         $this->assertNull($this->session->get('name2'));
-
-        $this->session->destroy();
     }
 
     public function testRemoveAllFlash(): void
@@ -417,8 +369,6 @@ abstract class AbstractSession extends TestCase
         $this->session->removeAllFlashes();
 
         $this->assertSame([], $this->session->getAllFlashes());
-
-        $this->session->destroy();
     }
 
     public function testRemoveFlash(): void
@@ -430,8 +380,6 @@ abstract class AbstractSession extends TestCase
         $this->session->removeFlash('key');
 
         $this->assertNull($this->session->getFlash('key'));
-
-        $this->session->destroy();
     }
 
     /**
@@ -446,8 +394,6 @@ abstract class AbstractSession extends TestCase
         $this->session->setCacheLimiter($cacheLimiter);
 
         $this->assertSame($cacheLimiter, $this->session->getCacheLimiter());
-
-        $this->session->destroy();
     }
 
     /**
@@ -457,13 +403,9 @@ abstract class AbstractSession extends TestCase
      */
     public function testSetCookieParams(array $cookieParams): void
     {
-        $this->session->open();
-
         $this->session->setCookieParams($cookieParams);
 
         $this->assertSame($cookieParams, $this->session->getCookieParams());
-
-        $this->session->destroy();
     }
 
     public function testSetFlash(): void
@@ -482,8 +424,6 @@ abstract class AbstractSession extends TestCase
         $this->assertNull($this->session->getFlash('key'));
 
         $this->session->removeFlash('key');
-
-        $this->session->destroy();
     }
 
     public function testSetHasSessionId(): void
@@ -499,9 +439,6 @@ abstract class AbstractSession extends TestCase
         $this->session->setHasSessionID(true);
 
         $this->assertTrue($this->session->getHasSessionID());
-
-        $this->session->destroy();
-
     }
 
     /**
@@ -517,8 +454,6 @@ abstract class AbstractSession extends TestCase
         $this->session->setName('newName');
 
         $this->assertSame('newName', $this->session->getName());
-
-        $this->session->destroy();
     }
 
     public function testSetSavePath(): void
@@ -535,8 +470,6 @@ abstract class AbstractSession extends TestCase
         $this->session->open();
 
         $this->assertSame(dirname(__DIR__, 3) . '/runtime', $this->session->getSavePath());
-
-        $this->session->destroy();
     }
 
     public function testSetSavePathWithInvalidPath(): void
@@ -564,8 +497,6 @@ abstract class AbstractSession extends TestCase
         $this->assertEmpty($flashes['__counters']);
 
         $this->session->remove('__flash');
-
-        $this->session->destroy();
     }
 
     public function testUpdateCountersWithNonArrayCounters(): void
@@ -582,8 +513,6 @@ abstract class AbstractSession extends TestCase
         $this->assertEquals(-1, $flashes['__counters']['testKey']);
 
         $this->session->remove('__flash');
-
-        $this->session->destroy();
     }
 
     public function testUseStrictMode(): void
@@ -635,8 +564,5 @@ abstract class AbstractSession extends TestCase
         $this->assertNotEmpty($id);
         $this->assertSame($id, $this->session->getId());
         $this->assertSame('session data', $this->session->get('strict_mode_test'));
-
-        $this->session->destroy('strict_mode_test');
-
     }
 }

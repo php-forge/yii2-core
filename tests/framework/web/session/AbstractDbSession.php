@@ -42,8 +42,6 @@ abstract class AbstractDbSession extends AbstractSession
 
     public function testGarbageCollection(): void
     {
-        $this->session->destroy();
-
         $expiredSessionId = 'expired_session_id';
 
         $this->session->setId($expiredSessionId);
@@ -80,7 +78,6 @@ abstract class AbstractDbSession extends AbstractSession
         $this->assertSame('new|s:8:"new data";', $validData['data']);
 
         $this->session->setGCProbability(1);
-        $this->session->destroy();
     }
 
     public function testInitializeWithConfig(): void
@@ -155,8 +152,6 @@ abstract class AbstractDbSession extends AbstractSession
         $count = (new Query())->from('session')->count('*', $this->session->db);
 
         $this->assertEquals(0, $count);
-
-        $this->session->destroy();
     }
 
     public function testRegenerateIDWithDeleteSession(): void
@@ -179,8 +174,6 @@ abstract class AbstractDbSession extends AbstractSession
         }
 
         $this->assertSame('data|s:4:"data";', $data['data']);
-
-        $this->session->destroy();
     }
 
     public function testSerializedObjectSaving(): void
@@ -197,8 +190,6 @@ abstract class AbstractDbSession extends AbstractSession
         $this->session->set('test', $serializedObject);
 
         $this->assertSame($serializedObject, $this->session->get('test'));
-
-        $this->session->close();
     }
 
     protected function buildObjectForSerialization(): object
