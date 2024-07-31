@@ -500,6 +500,13 @@ abstract class AbstractSession extends TestCase
         $this->session->setSavePath('/non-existing-directory');
     }
 
+    public function setUseCookiesWithNullValue(): void
+    {
+        $this->session->setUseCookies(null);
+
+        $this->assertNull($this->session->getUseCookies());
+    }
+
     public function testUpdateCountersWithNonArrayFlashes(): void
     {
         $this->session->set('__flash', 'not an array');
