@@ -12,29 +12,26 @@ use yii\i18n\I18N;
 use yiiunit\framework\console\controllers\EchoMigrateController;
 use yiiunit\framework\i18n\I18NTest;
 
-/**
- * @group db
- * @group i18n
- */
 abstract class AbstractDbMessageSource extends I18NTest
 {
     protected Connection|null $db = null;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->migrateUp();
+
+        parent::setUp();
     }
 
     protected function tearDown(): void
     {
+
         $this->migrateDown();
+
+        parent::tearDown();
 
         $this->db->close();
         $this->db = null;
-
-        parent::tearDown();
     }
 
     public function testMissingTranslationEvent(): void
@@ -196,16 +193,16 @@ abstract class AbstractDbMessageSource extends I18NTest
             );
         }
 
-        ob_start();
+        //ob_start();
 
         $result = Yii::$app->runAction($route, $params);
 
-        echo 'Result is ' . $result;
+        //echo 'Result is ' . $result;
 
         if ($result !== \yii\console\ExitCode::OK) {
-            ob_end_flush();
+            //ob_end_flush();
         } else {
-            ob_end_clean();
+            //ob_end_clean();
         }
     }
 }

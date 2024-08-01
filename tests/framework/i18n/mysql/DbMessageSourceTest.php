@@ -8,7 +8,9 @@ use yiiunit\framework\i18n\AbstractDbMessageSource;
 use yiiunit\support\MysqlConnection;
 
 /**
+ * @group db
  * @group mysql
+ * @group i18n
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {

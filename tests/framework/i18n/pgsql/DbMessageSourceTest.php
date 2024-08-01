@@ -8,7 +8,9 @@ use yiiunit\framework\i18n\AbstractDbMessageSource;
 use yiiunit\support\PgsqlConnection;
 
 /**
+ * @group db
  * @group pgsql
+ * @group i18n
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {

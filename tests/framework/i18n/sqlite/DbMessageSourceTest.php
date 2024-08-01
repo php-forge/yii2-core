@@ -8,7 +8,9 @@ use yiiunit\framework\i18n\AbstractDbMessageSource;
 use yiiunit\support\SqliteConnection;
 
 /**
+ * @group db
  * @group sqlite
+ * @group i18n
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {
