@@ -28,8 +28,8 @@ final class PgsqlConnection
         return [
             '__class' => Connection::class,
             'dsn' => 'pgsql:host=localhost;dbname=yiitest;port=5432;',
-            'username' => 'root',
-            'password' => 'root',
+            'username' => 'postgres',
+            'password' => 'postgres',
         ];
     }
 }
