@@ -1,11 +1,5 @@
 /**
  * Database schema required by \yii\i18n\DbMessageSource.
- *
- * @author Dmitry Naumenko <d.naumenko.a@gmail.com>
- * @link https://www.yiiframework.com/
- * @copyright 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- * @since 2.0.7
  */
 
 drop table if exists `source_message`;
@@ -13,17 +7,19 @@ drop table if exists `message`;
 
 CREATE TABLE `source_message`
 (
-   `id`          integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+   `id`          integer NOT NULL,
    `category`    varchar(255),
    `message`     text
+   CONSTRAINT pk_source_message PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `message`
 (
-   `id`          integer NOT NULL REFERENCES `source_message` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+   `id`          integer NOT NULL,
    `language`    varchar(16) NOT NULL,
    `translation` text,
    PRIMARY KEY (`id`, `language`)
+   CONSTRAINT fk_message_source_message FOREIGN KEY (`id`) REFERENCES `source_message` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
 CREATE INDEX idx_message_language ON message (language);
