@@ -91,5 +91,6 @@ jobs:
         if: matrix.php == '8.1'
         uses: codecov/codecov-action@v4
         with:
+          disable_file_fixes: true
           file: ./coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
