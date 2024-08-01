@@ -9,7 +9,7 @@ use yii\db\Connection;
 
 final class MssqlConnection
 {
-    public static $driverName = 'mssql';
+    public static string $driverName = 'mssql';
 
     public static function getConnection(bool $fixture = false): Connection
     {

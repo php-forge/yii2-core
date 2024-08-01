@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\i18n;
 
@@ -14,56 +11,52 @@ use yii\i18n\PhpMessageSource;
 use yiiunit\TestCase;
 
 /**
- * @author Carsten Brandt <mail@cebe.cc>
- * @since 2.0
  * @group i18n
  */
 class I18NTest extends TestCase
 {
-    /**
-     * @var I18N
-     */
-    public $i18n;
+    public I18n $i18n;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->mockApplication();
+
+        if (Yii::$app === null) {
+            $this->mockApplication();
+        }
+
         $this->setI18N();
     }
 
-    protected function setI18N()
+    protected function setI18N(): void
     {
-        $this->i18n = new I18N([
-            'translations' => [
-                'test' => [
-                    'class' => $this->getMessageSourceClass(),
-                    'basePath' => '@yiiunit/data/i18n/messages',
+        $this->i18n = new I18N(
+            [
+                'translations' => [
+                    'test' => [
+                        'class' => $this->getMessageSourceClass(),
+                        'basePath' => '@yiiunit/data/i18n/messages',
+                    ],
                 ],
             ],
-        ]);
+        );
     }
 
-    private function getMessageSourceClass()
-    {
-        return PhpMessageSource::className();
-    }
-
-    public function testTranslate()
+    public function testTranslate(): void
     {
         $msg = 'The dog runs fast.';
 
         // source = target. Should be returned as is.
-        $this->assertEquals('The dog runs fast.', $this->i18n->translate('test', $msg, [], 'en-US'));
+        $this->assertSame('The dog runs fast.', $this->i18n->translate('test', $msg, [], 'en-US'));
 
         // exact match
-        $this->assertEquals('Der Hund rennt schnell.', $this->i18n->translate('test', $msg, [], 'de-DE'));
+        $this->assertSame('Der Hund rennt schnell.', $this->i18n->translate('test', $msg, [], 'de-DE'));
 
         // fallback to just language code with absent exact match
-        $this->assertEquals('Собака бегает быстро.', $this->i18n->translate('test', $msg, [], 'ru-RU'));
+        $this->assertSame('Собака бегает быстро.', $this->i18n->translate('test', $msg, [], 'ru-RU'));
 
         // fallback to just langauge code with present exact match
-        $this->assertEquals('Hallo Welt!', $this->i18n->translate('test', 'Hello world!', [], 'de-DE'));
+        $this->assertSame('Hallo Welt!', $this->i18n->translate('test', 'Hello world!', [], 'de-DE'));
     }
 
     public function testDefaultSource()
@@ -288,5 +281,10 @@ class I18NTest extends TestCase
 
         $message = 'date: {dt.test,date}';
         $this->assertEquals('date: Nov 8, 2017', $this->i18n->format($message, ['dt.test' => 1510147434], 'en'));
+    }
+
+    private function getMessageSourceClass(): string
+    {
+        return PhpMessageSource::class;
     }
 }

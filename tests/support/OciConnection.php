@@ -7,16 +7,16 @@ namespace yiiunit\support;
 use Yii;
 use yii\db\Connection;
 
-final class MysqlConnection
+final class OciConnection
 {
-    public static string $driverName = 'mysql';
+    public static string $driverName = 'oci';
 
     public static function getConnection(bool $fixture = false): Connection
     {
         Yii::$app->set('db', self::getConfig());
 
         if ($fixture) {
-            DbHelper::loadFixture(Yii::$app->getDb(), dirname(__DIR__) . '/data/mysql.sql');
+            DbHelper::loadFixture(Yii::$app->getDb(), dirname(__DIR__) . '/data/oci.sql');
         }
 
         return Yii::$app->getDb();
@@ -26,9 +26,9 @@ final class MysqlConnection
     {
         return [
             '__class' => Connection::class,
-            'dsn' => 'mysql:host=127.0.0.1;dbname=yiitest',
-            'username' => 'root',
-            'password' => '',
+            'dsn' => 'oci:dbname=localhost/XE;charset=AL32UTF8;',
+            'username' => 'system',
+            'password' => 'oracle',
         ];
     }
 }

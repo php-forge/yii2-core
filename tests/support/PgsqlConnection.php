@@ -9,7 +9,7 @@ use yii\db\Connection;
 
 final class PgsqlConnection
 {
-    public static $driverName = 'pgsql';
+    public static string $driverName = 'pgsql';
     public static string $fixture = 'pgsql.sql';
 
     public static function getConnection(bool $fixture = false): Connection
@@ -28,8 +28,8 @@ final class PgsqlConnection
         return [
             '__class' => Connection::class,
             'dsn' => 'pgsql:host=localhost;dbname=yiitest;port=5432;',
-            'username' => 'postgres',
-            'password' => 'postgres',
+            'username' => 'root',
+            'password' => 'root',
         ];
     }
 }

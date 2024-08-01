@@ -9,7 +9,7 @@ use yii\db\Connection;
 
 final class SqliteConnection
 {
-    public static $driverName = 'sqlite';
+    public static string $driverName = 'sqlite';
 
     public static function getConnection(bool $fixture = false): Connection
     {
