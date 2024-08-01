@@ -18,25 +18,16 @@ class m150207_210500_i18n_init extends Migration
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
         }
 
-        $this->createTable(
-            '{{%source_message}}',
-            [
-                'id' => $this->primaryKey(),
-                'category' => $this->string(),
-                'message' => $this->text(),
-            ],
-            $tableOptions,
-        );
+        $sourceMessageSchema = $this->sourceMessageSchema();
+        $messageSchema = $this->messageSchema();
 
-        $this->createTable(
-            '{{%message}}',
-            [
-                'id' => $this->integer()->notNull(),
-                'language' => $this->string(16)->notNull(),
-                'translation' => $this->text(),
-            ],
-            $tableOptions,
-        );
+        if ($this->db->driverName === 'sqlite') {
+            $sourceMessageSchema = $this->sourceMessageSchemaSqlite();
+            $messageSchema = $this->messageSchemaSqlite();
+        }
+
+        $this->createTable('{{%source_message}}', $sourceMessageSchema, $tableOptions);
+        $this->createTable('{{%message}}', $messageSchema, $tableOptions);
 
         $onUpdateConstraint = 'RESTRICT';
 
@@ -70,5 +61,44 @@ class m150207_210500_i18n_init extends Migration
 
         $this->dropTable('{{%message}}');
         $this->dropTable('{{%source_message}}');
+    }
+
+    private function messageSchema(): array
+    {
+        return [
+            'id' => $this->integer()->notNull(),
+            'language' => $this->string(16)->notNull(),
+            'translation' => $this->text(),
+        ];
+    }
+
+    private function messageSchemaSqlite(): array
+    {
+        return [
+            'id' => $this->integer()->notNull(),
+            'language' => $this->string(16)->notNull(),
+            'translation' => $this->text(),
+            "CONSTRAINT [[PK_message_id_language]] PRIMARY KEY ([[id]], [[language]])",
+            "CONSTRAINT [[FK_message_source_message]] FOREIGN KEY ([[id]]) REFERENCES [[source_message]] ([[id]]) ON DELETE CASCADE ON UPDATE RESTRICT",
+        ];
+    }
+
+    private function sourceMessageSchema(): array
+    {
+        return [
+            'id' => $this->primaryKey(),
+            'category' => $this->string(),
+            'message' => $this->text(),
+        ];
+    }
+
+    private function sourceMessageSchemaSqlite(): array
+    {
+        return [
+            'id' => $this->integer()->notNull(),
+            'category' => $this->string(),
+            'message' => $this->text(),
+            "CONSTRAINT [[PK_source_message_id]] PRIMARY KEY ([[id]])",
+        ];
     }
 }

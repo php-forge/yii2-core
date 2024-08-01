@@ -1,11 +1,5 @@
 /**
  * Database schema required by \yii\i18n\DbMessageSource.
- *
- * @author Dmitry Naumenko <d.naumenko.a@gmail.com>
- * @link https://www.yiiframework.com/
- * @copyright 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- * @since 2.0.7
  */
 
 if object_id('[source_message]', 'U') is not null

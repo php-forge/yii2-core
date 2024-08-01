@@ -1,13 +1,6 @@
 /**
  * Database schema required by \yii\i18n\DbMessageSource.
- *
- * @author Dmitry Naumenko <d.naumenko.a@gmail.com>
- * @link https://www.yiiframework.com/
- * @copyright 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- * @since 2.0.7
  */
-
 
 drop table if exists `source_message`;
 drop table if exists `message`;
