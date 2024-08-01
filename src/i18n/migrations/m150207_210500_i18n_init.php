@@ -64,12 +64,7 @@ class m150207_210500_i18n_init extends Migration
 
     public function down(): void
     {
-        $version = $this->db->getServerVersion();
-
-        if (
-            $this->db->driverName !== 'sqlite' &&
-            \version_compare($version, '5.7', '<') && \stripos($version, 'MariaDb') === false
-        ) {
+        if ($this->db->driverName !== 'mysql' && $this->db->driverName !== 'sqlite') {
             $this->dropPrimaryKey('pk_message_id_language', '{{%message}}');
         }
 
