@@ -268,6 +268,9 @@ class I18NTest extends TestCase
      */
     public function testIssue11429(string $sourceLanguage): void
     {
+        $this->mockApplication();
+        $this->setI18N();
+
         Yii::$app->sourceLanguage = $sourceLanguage;
 
         $logger = Yii::getLogger();
@@ -315,7 +318,7 @@ class I18NTest extends TestCase
         $this->assertSame('date: 1510147434', $this->i18n->format($message, ['dt.test' => 1510147434], 'en'));
 
         $message = 'date: {dt.test,date}';
-        
+
         $this->assertSame('date: Nov 8, 2017', $this->i18n->format($message, ['dt.test' => 1510147434], 'en'));
     }
 
