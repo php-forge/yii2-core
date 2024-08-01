@@ -36,8 +36,8 @@ class DbMessageSource extends MessageSource
     /**
      * @var Connection|array|string the DB connection object or the application component ID of the DB connection.
      *
-     * After the DbMessageSource object is created, if you want to change this property, you should only assign
-     * it with a DB connection object.
+     * After the DbMessageSource object is created, if you want to change this property, you should only assign it with
+     * a DB connection object.
      */
     public Connection|array|string $db = 'db';
     /**
@@ -74,8 +74,7 @@ class DbMessageSource extends MessageSource
      * @var bool whether to enable caching translated messages
      */
     public bool $enableCaching = false;
-
-
+    
     /**
      * Initializes the DbMessageSource component.
      * This method will initialize the [[db]] property to make sure it refers to a valid DB connection.
