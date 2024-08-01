@@ -268,9 +268,6 @@ class I18NTest extends TestCase
      */
     public function testIssue11429(string $sourceLanguage): void
     {
-        $this->mockApplication();
-        $this->setI18N();
-
         Yii::$app->sourceLanguage = $sourceLanguage;
 
         $logger = Yii::getLogger();

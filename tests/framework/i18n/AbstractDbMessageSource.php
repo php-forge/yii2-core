@@ -27,6 +27,9 @@ abstract class AbstractDbMessageSource extends I18NTest
     {
         static::migrateDown();
 
+        static::$db = null;
+        Yii::$app = null;
+
         parent::tearDownAfterClass();
     }
 
