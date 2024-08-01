@@ -14,24 +14,20 @@ use yiiunit\framework\i18n\I18NTest;
 
 abstract class AbstractDbMessageSource extends I18NTest
 {
-    protected Connection|null $db = null;
+    protected static Connection|null $db = null;
 
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        $this->migrateUp();
+        static::migrateUp();
 
-        parent::setUp();
+        parent::setUpBeforeClass();
     }
 
-    protected function tearDown(): void
+    public static function tearDownAfterClass(): void
     {
+        static::migrateDown();
 
-        $this->migrateDown();
-
-        parent::tearDown();
-
-        $this->db->close();
-        $this->db = null;
+        parent::tearDownAfterClass();
     }
 
     public function testMissingTranslationEvent(): void
@@ -99,7 +95,6 @@ abstract class AbstractDbMessageSource extends I18NTest
         Event::off(DbMessageSource::class, DbMessageSource::EVENT_MISSING_TRANSLATION);
     }
 
-
     public function testIssue11429($sourceLanguage = null): void
     {
         $this->markTestSkipped('DbMessageSource does not produce any errors when messages file is missing.');
@@ -112,20 +107,22 @@ abstract class AbstractDbMessageSource extends I18NTest
                 'translations' => [
                     'test' => [
                         'class' => DbMessageSource::class,
-                        'db' => $this->db,
+                        'db' => static::$db,
                     ],
                 ],
             ]
         );
     }
 
-    protected function migrateUp(): void
+    protected static function migrateUp(): void
     {
-        $this->runConsoleAction('migrate/up', ['migrationPath' => '@yii/i18n/migrations/', 'interactive' => false]);
+        static::runConsoleAction('migrate/up', ['migrationPath' => '@yii/i18n/migrations/', 'interactive' => false]);
 
-        $this->db->createCommand()->truncateTable('source_message');
+        $db = Yii::$app->getDb();
 
-        $this->db->createCommand()->batchInsert(
+        $db->createCommand()->truncateTable('source_message');
+
+        $db->createCommand()->batchInsert(
             'source_message',
             ['category', 'message'],
             [
@@ -137,31 +134,37 @@ abstract class AbstractDbMessageSource extends I18NTest
             ],
         )->execute();
 
-        $this->db->createCommand()->insert(
+        $db->createCommand()->insert(
             'message',
             ['id' => 1, 'language' => 'de', 'translation' => 'Hallo Welt!'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             ['id' => 2, 'language' => 'de-DE', 'translation' => 'Der Hund rennt schnell.'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             ['id' => 2, 'language' => 'en-US', 'translation' => 'The dog runs fast (en-US).'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             ['id' => 2, 'language' => 'ru', 'translation' => 'Собака бегает быстро.'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             ['id' => 3, 'language' => 'de-DE', 'translation' => 'Seine Geschwindigkeit beträgt {n} km/h.'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             ['id' => 4, 'language' => 'de-DE', 'translation' => 'Er heißt {name} und ist {n, number} km/h schnell.'],
         )->execute();
-        $this->db->createCommand()->insert(
+
+        $db->createCommand()->insert(
             'message',
             [
                 'id' => 5,
@@ -171,26 +174,24 @@ abstract class AbstractDbMessageSource extends I18NTest
         )->execute();
     }
 
-    protected function migrateDown(): void
+    protected static function migrateDown(): void
     {
-        $this->runConsoleAction('migrate/down', ['migrationPath' => '@yii/i18n/migrations/', 'interactive' => false]);
+        static::runConsoleAction('migrate/down', ['migrationPath' => '@yii/i18n/migrations/', 'interactive' => false]);
     }
 
-    protected function runConsoleAction(string $route, array $params = []): void
+    protected static function runConsoleAction(string $route, array $params = []): void
     {
         if (Yii::$app === null) {
-            new \yii\console\Application(
-                [
-                    'id' => 'Migrator',
-                    'basePath' => '@yiiunit',
-                    'controllerMap' => [
-                        'migrate' => EchoMigrateController::class,
-                    ],
-                    'components' => [
-                        'db' => $this->db,
-                    ],
+            new \yii\console\Application([
+                'id' => 'Migrator',
+                'basePath' => '@yiiunit',
+                'controllerMap' => [
+                    'migrate' => EchoMigrateController::class,
                 ],
-            );
+                'components' => [
+                    'db' => static::$db,
+                ],
+            ]);
         }
 
         ob_start();

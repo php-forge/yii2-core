@@ -14,12 +14,10 @@ use yiiunit\support\SqliteConnection;
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        $this->mockApplication();
+        static::$db = SqliteConnection::getConnection();
 
-        $this->db = SqliteConnection::getConnection();
-
-        parent::setUp();
+        parent::setUpBeforeClass();
     }
 }

@@ -14,12 +14,10 @@ use yiiunit\support\MssqlConnection;
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        $this->mockApplication();
+        static::$db = MssqlConnection::getConnection();
 
-        $this->db = MssqlConnection::getConnection();
-
-        parent::setUp();
+        parent::setUpBeforeClass();
     }
 }

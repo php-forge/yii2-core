@@ -14,12 +14,10 @@ use yiiunit\support\PgsqlConnection;
  */
 class DbMessageSourceTest extends AbstractDbMessageSource
 {
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        $this->mockApplication();
+        static::$db = PgsqlConnection::getConnection();
 
-        $this->db = PgsqlConnection::getConnection();
-
-        parent::setUp();
+        parent::setUpBeforeClass();
     }
 }
