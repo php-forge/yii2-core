@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\i18n;
 
+use Psr\SimpleCache\CacheInterface;
 use Yii;
 use yii\base\Event;
 use yii\db\Connection;
 use yii\i18n\DbMessageSource;
 use yii\i18n\I18N;
+use Yiisoft\Cache\ArrayCache;
 use yiiunit\framework\console\controllers\EchoMigrateController;
 use yiiunit\framework\i18n\I18NTest;
 
@@ -31,6 +33,16 @@ abstract class AbstractDbMessageSource extends I18NTest
         Yii::$app = null;
 
         parent::tearDownAfterClass();
+    }
+
+    public function testCachingMessages(): void
+    {
+        $this->setI18N(true);
+
+        $this->assertSame('Hello world!', $this->i18n->translate('test', 'Hello world!', [], 'en'));
+        $this->assertSame('Hello world!', $this->i18n->translate('test', 'Hello world!', [], 'en'));
+
+        $this->setI18N();
     }
 
     public function testMissingTranslationEvent(): void
@@ -103,14 +115,19 @@ abstract class AbstractDbMessageSource extends I18NTest
         $this->markTestSkipped('DbMessageSource does not produce any errors when messages file is missing.');
     }
 
-    protected function setI18N(): void
+    protected function setI18N(bool $enablePSRCache = false): void
     {
+        if ($enablePSRCache) {
+            Yii::$app->set(CacheInterface::class, new ArrayCache());
+        }
+
         $this->i18n = new I18N(
             [
                 'translations' => [
                     'test' => [
                         'class' => DbMessageSource::class,
                         'db' => static::$db,
+                        'enableCaching' => $enablePSRCache,
                     ],
                 ],
             ]

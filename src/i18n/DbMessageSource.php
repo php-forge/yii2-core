@@ -69,12 +69,12 @@ class DbMessageSource extends MessageSource
      *
      * @see enableCaching
      */
-    public int|null $cachingDuration = 0;
+    public int|null $cachingDuration = null;
     /**
      * @var bool whether to enable caching translated messages
      */
     public bool $enableCaching = false;
-    
+
     /**
      * Initializes the DbMessageSource component.
      * This method will initialize the [[db]] property to make sure it refers to a valid DB connection.
@@ -107,7 +107,7 @@ class DbMessageSource extends MessageSource
         if ($this->enableCaching) {
             $key = CacheKeyNormalizer::normalize([__CLASS__, $category, $language]);
 
-            $messages = $this->cache->get($key);
+            $messages = $this->cache->get($key, false);
 
             if ($messages === false) {
                 $messages = $this->loadMessagesFromDb($category, $language);
