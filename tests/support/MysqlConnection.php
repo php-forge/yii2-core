@@ -28,7 +28,7 @@ final class MysqlConnection
             '__class' => Connection::class,
             'dsn' => 'mysql:host=127.0.0.1;dbname=yiitest',
             'username' => 'root',
-            'password' => '',
+            'password' => 'root',
         ];
     }
 }
