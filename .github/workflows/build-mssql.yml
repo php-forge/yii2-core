@@ -45,26 +45,30 @@ jobs:
               - 8.3
 
             mssql:
-              - server:2019-latest
-              - server:2022-latest
+              - version: server:2017-latest
+                mssql-tool: /opt/mssql-tools/bin/sqlcmd
+              - version: server:2019-latest
+                mssql-tool: /opt/mssql-tools18/bin/sqlcmd -C
+              - version: server:2022-latest
+                mssql-tool: /opt/mssql-tools18/bin/sqlcmd -C
 
     services:
       mssql:
-          image: mcr.microsoft.com/mssql/${{ matrix.mssql }}
+          image: mcr.microsoft.com/mssql/${{ matrix.mssql.version }}
           env:
               SA_PASSWORD: YourStrong!Passw0rd
               ACCEPT_EULA: Y
               MSSQL_PID: Developer
           ports:
               - 1433:1433
-          options: --name=mssql --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=3
+          options: --name=mssql --health-cmd="${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Create MS SQL Database.
-        run: docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'CREATE DATABASE yiitest'
+        run: docker exec -i mssql ${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'CREATE DATABASE yiitest'
 
       - name: Install PHP with extensions.
         uses: shivammathur/setup-php@v2
