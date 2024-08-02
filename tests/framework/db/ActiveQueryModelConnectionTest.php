@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\db;
 
@@ -37,15 +34,16 @@ class ActiveQueryModelConnectionTest extends TestCase
         $command->method('queryOne')->willReturn(false);
         $connection->method('createCommand')->willReturn($command);
         $builder = $this->getMockBuilder('yii\db\QueryBuilder')->disableOriginalConstructor()->getMock();
+        $builder->method('build')->willReturn(['', []]);
         $connection->expects($this->once())->method('getQueryBuilder')->willReturn($builder);
     }
 
-    public function testEnsureModelConnectionForOne()
+    public function testEnsureModelConnectionForOne1(): void
     {
         $this->globalConnection->expects($this->never())->method('getQueryBuilder');
         $this->prepareConnectionMock($this->modelConnection);
 
-        $query = new ActiveQuery(ActiveRecord::className());
+        $query = new ActiveQuery(ActiveRecord::class);
         $query->one();
     }
 
@@ -54,7 +52,7 @@ class ActiveQueryModelConnectionTest extends TestCase
         $this->modelConnection->expects($this->never())->method('getQueryBuilder');
         $this->prepareConnectionMock($this->globalConnection);
 
-        $query = new ActiveQuery(DefaultActiveRecord::className());
+        $query = new ActiveQuery(DefaultActiveRecord::class);
         $query->one();
     }
 
@@ -63,7 +61,7 @@ class ActiveQueryModelConnectionTest extends TestCase
         $this->globalConnection->expects($this->never())->method('getQueryBuilder');
         $this->prepareConnectionMock($this->modelConnection);
 
-        $query = new ActiveQuery(ActiveRecord::className());
+        $query = new ActiveQuery(ActiveRecord::class);
         $query->all();
     }
 
@@ -72,7 +70,7 @@ class ActiveQueryModelConnectionTest extends TestCase
         $this->modelConnection->expects($this->never())->method('getQueryBuilder');
         $this->prepareConnectionMock($this->globalConnection);
 
-        $query = new ActiveQuery(DefaultActiveRecord::className());
+        $query = new ActiveQuery(DefaultActiveRecord::class);
         $query->all();
     }
 }
