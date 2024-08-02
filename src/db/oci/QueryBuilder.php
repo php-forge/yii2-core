@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\oci;
 
@@ -18,16 +15,13 @@ use yii\db\ExpressionInterface;
 
 /**
  * QueryBuilder is the query builder for Oracle databases.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
     /**
      * @var array mapping from abstract column types (keys) to physical column types (values).
      */
-    public $typeMap = [
+    public array $typeMap = [
         Schema::TYPE_PK => 'NUMBER(10) NOT NULL PRIMARY KEY',
         Schema::TYPE_UPK => 'NUMBER(10) UNSIGNED NOT NULL PRIMARY KEY',
         Schema::TYPE_BIGPK => 'NUMBER(20) NOT NULL PRIMARY KEY',
@@ -55,19 +49,26 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    protected function defaultExpressionBuilders()
+    protected function defaultExpressionBuilders(): array
     {
-        return array_merge(parent::defaultExpressionBuilders(), [
-            'yii\db\conditions\InCondition' => 'yii\db\oci\conditions\InConditionBuilder',
-            'yii\db\conditions\LikeCondition' => 'yii\db\oci\conditions\LikeConditionBuilder',
-        ]);
+        return array_merge(
+            parent::defaultExpressionBuilders(),
+            [
+                'yii\db\conditions\InCondition' => 'yii\db\oci\conditions\InConditionBuilder',
+                'yii\db\conditions\LikeCondition' => 'yii\db\oci\conditions\LikeConditionBuilder',
+            ]
+        );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function buildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
+    public function buildOrderByAndLimit(
+        string $sql,
+        array $orderBy,
+        ExpressionInterface|int|null $limit,
+        ExpressionInterface|int|null $offset,
+    ): string {
         $orderBy = $this->buildOrderBy($orderBy);
         if ($orderBy !== '') {
             $sql .= $this->separator . $orderBy;
@@ -99,9 +100,10 @@ EOD;
      *
      * @param string $table the table to be renamed. The name will be properly quoted by the method.
      * @param string $newName the new table name. The name will be properly quoted by the method.
+     *
      * @return string the SQL statement for renaming a DB table.
      */
-    public function renameTable($table, $newName)
+    public function renameTable(string $table, string $newName): string
     {
         return 'ALTER TABLE ' . $this->db->quoteTableName($table) . ' RENAME TO ' . $this->db->quoteTableName($newName);
     }
@@ -109,18 +111,28 @@ EOD;
     /**
      * Builds a SQL statement for changing the definition of a column.
      *
-     * @param string $table the table whose column is to be changed. The table name will be properly quoted by the method.
+     * @param string $table the table whose column is to be changed. The table name will be properly quoted by the
+     * method.
      * @param string $column the name of the column to be changed. The name will be properly quoted by the method.
-     * @param string $type the new column type. The [[getColumnType]] method will be invoked to convert abstract column type (if any)
-     * into the physical one. Anything that is not recognized as abstract type will be kept in the generated SQL.
-     * For example, 'string' will be turned into 'varchar(255)', while 'string not null' will become 'varchar(255) not null'.
+     * @param string $type the new column type. The [[getColumnType]] method will be invoked to convert abstract column
+     * type (if any) into the physical one. Anything that is not recognized as abstract type will be kept in the
+     * generated SQL.
+     * For example, 'string' will be turned into 'varchar(255)', while 'string not null' will become
+     * 'varchar(255) not null'.
+     *
      * @return string the SQL statement for changing the definition of a column.
      */
-    public function alterColumn($table, $column, $type)
+    public function alterColumn(string $table, string $column, string $type): string
     {
         $type = $this->getColumnType($type);
 
-        return 'ALTER TABLE ' . $this->db->quoteTableName($table) . ' MODIFY ' . $this->db->quoteColumnName($column) . ' ' . $this->getColumnType($type);
+        return
+            'ALTER TABLE ' .
+            $this->db->quoteTableName($table) .
+            ' MODIFY ' .
+            $this->db->quoteColumnName($column) .
+            ' ' .
+            $this->getColumnType($type);
     }
 
     /**
@@ -128,9 +140,10 @@ EOD;
      *
      * @param string $name the name of the index to be dropped. The name will be properly quoted by the method.
      * @param string $table the table whose index is to be dropped. The name will be properly quoted by the method.
+     *
      * @return string the SQL statement for dropping an index.
      */
-    public function dropIndex($name, $table)
+    public function dropIndex(string $name, string $table): string
     {
         return 'DROP INDEX ' . $this->db->quoteTableName($name);
     }
@@ -138,12 +151,14 @@ EOD;
     /**
      * {@inheritdoc}
      */
-    public function executeResetSequence($table, $value = null)
+    public function executeResetSequence(string $table, array|string|null $value = null): void
     {
         $tableSchema = $this->db->getTableSchema($table);
+
         if ($tableSchema === null) {
             throw new InvalidArgumentException("Unknown table: $table");
         }
+
         if ($tableSchema->sequenceName === null) {
             throw new InvalidArgumentException("There is no sequence associated with table: $table");
         }
@@ -171,16 +186,25 @@ EOD;
     /**
      * {@inheritdoc}
      */
-    public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
-    {
+    public function addForeignKey(
+        string $name,
+        string $table,
+        array|string $columns,
+        string $refTable,
+        array|string $refColumns,
+        string|null $delete = null,
+        string|null $update = null,
+    ): string {
         $sql = 'ALTER TABLE ' . $this->db->quoteTableName($table)
             . ' ADD CONSTRAINT ' . $this->db->quoteColumnName($name)
             . ' FOREIGN KEY (' . $this->buildColumns($columns) . ')'
             . ' REFERENCES ' . $this->db->quoteTableName($refTable)
             . ' (' . $this->buildColumns($refColumns) . ')';
+
         if ($delete !== null) {
             $sql .= ' ON DELETE ' . $delete;
         }
+
         if ($update !== null) {
             throw new Exception('Oracle does not support ON UPDATE clause.');
         }
@@ -193,7 +217,8 @@ EOD;
      */
     protected function prepareInsertValues($table, $columns, $params = [])
     {
-        list($names, $placeholders, $values, $params) = parent::prepareInsertValues($table, $columns, $params);
+        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($table, $columns, $params);
+
         if (!$columns instanceof Query && empty($names)) {
             $tableSchema = $this->db->getSchema()->getTableSchema($table);
             if ($tableSchema !== null) {
@@ -211,13 +236,23 @@ EOD;
      * {@inheritdoc}
      * @see https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_9016.htm#SQLRF01606
      */
-    public function upsert($table, $insertColumns, $updateColumns, &$params)
+    public function upsert(string $table, array|Query $insertColumns, array|bool $updateColumns, array &$params): string
     {
         /** @var Constraint[] $constraints */
-        list($uniqueNames, $insertNames, $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns, $constraints);
+        $constraints = [];
+
+        [$uniqueNames, $insertNames, $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+            $constraints,
+
+        );
+
         if (empty($uniqueNames)) {
             return $this->insert($table, $insertColumns, $params);
         }
+
         if ($updateNames === []) {
             // there are no columns to update
             $updateColumns = false;
@@ -225,6 +260,7 @@ EOD;
 
         $onCondition = ['or'];
         $quotedTableName = $this->db->quoteTableName($table);
+
         foreach ($constraints as $constraint) {
             $constraintCondition = ['and'];
             foreach ($constraint->columnNames as $name) {
@@ -235,8 +271,11 @@ EOD;
             }
             $onCondition[] = $constraintCondition;
         }
+
         $on = $this->buildCondition($onCondition, $params);
-        list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
+
+        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+
         if (!empty($placeholders)) {
             $usingSelectValues = [];
             foreach ($insertNames as $index => $name) {
@@ -247,19 +286,24 @@ EOD;
                 ->from('DUAL');
             list($usingValues, $params) = $this->build($usingSubQuery, $params);
         }
+
         $mergeSql = 'MERGE INTO ' . $this->db->quoteTableName($table) . ' '
             . 'USING (' . (isset($usingValues) ? $usingValues : ltrim($values, ' ')) . ') "EXCLUDED" '
             . "ON ($on)";
         $insertValues = [];
+
         foreach ($insertNames as $name) {
             $quotedName = $this->db->quoteColumnName($name);
+
             if (strrpos($quotedName, '.') === false) {
                 $quotedName = '"EXCLUDED".' . $quotedName;
             }
+
             $insertValues[] = $quotedName;
         }
-        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')'
-            . ' VALUES (' . implode(', ', $insertValues) . ')';
+
+        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')' . ' VALUES (' . implode(', ', $insertValues) . ')';
+
         if ($updateColumns === false) {
             return "$mergeSql WHEN NOT MATCHED THEN $insertSql";
         }
@@ -274,8 +318,10 @@ EOD;
                 $updateColumns[$name] = new Expression($quotedName);
             }
         }
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
+
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, $params);
         $updateSql = 'UPDATE SET ' . implode(', ', $updates);
+
         return "$mergeSql WHEN MATCHED THEN $updateSql WHEN NOT MATCHED THEN $insertSql";
     }
 
@@ -351,27 +397,24 @@ EOD;
 
     /**
      * {@inheritdoc}
-     * @since 2.0.8
      */
-    public function selectExists($rawSql)
+    public function selectExists(string $rawSql): string
     {
         return 'SELECT CASE WHEN EXISTS(' . $rawSql . ') THEN 1 ELSE 0 END FROM DUAL';
     }
 
     /**
      * {@inheritdoc}
-     * @since 2.0.8
      */
-    public function dropCommentFromColumn($table, $column)
+    public function dropCommentFromColumn(string $table, string $column): string
     {
         return 'COMMENT ON COLUMN ' . $this->db->quoteTableName($table) . '.' . $this->db->quoteColumnName($column) . " IS ''";
     }
 
     /**
      * {@inheritdoc}
-     * @since 2.0.8
      */
-    public function dropCommentFromTable($table)
+    public function dropCommentFromTable(string $table): string
     {
         return 'COMMENT ON TABLE ' . $this->db->quoteTableName($table) . " IS ''";
     }

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\db;
 
@@ -72,9 +69,10 @@ trait GetTablesAliasTestTrait
     public function testGetTableNames_isFromObject_generateException()
     {
         $query = $this->createQuery();
-        $query->from = new \stdClass();
 
-        $this->expectException('\yii\base\InvalidConfigException');
+        $this->expectException(\TypeError::class);
+
+        $query->from = new \stdClass();
 
         $query->getTablesUsedInFrom();
     }

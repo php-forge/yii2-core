@@ -53,35 +53,35 @@ class Query extends Component implements QueryInterface, ExpressionInterface
     use QueryTrait;
 
     /**
-     * @var array|null the columns being selected. For example, `['id', 'name']`.
+     * @var array the columns being selected. For example, `['id', 'name']`.
      * This is used to construct the SELECT clause in a SQL statement. If not set, it means selecting all columns.
      * @see select()
      */
-    public $select;
+    public array $select = [];
     /**
-     * @var string|null additional option that should be appended to the 'SELECT' keyword. For example,
-     * in MySQL, the option 'SQL_CALC_FOUND_ROWS' can be used.
+     * @var string|null additional option that should be appended to the 'SELECT' keyword. For example, in MySQL, the
+     * option 'SQL_CALC_FOUND_ROWS' can be used.
      */
-    public $selectOption;
+    public string|null $selectOption = null;
     /**
-     * @var bool whether to select distinct rows of data only. If this is set true,
-     * the SELECT clause would be changed to SELECT DISTINCT.
+     * @var bool whether to select distinct rows of data only. If this is set true, the SELECT clause would be changed
+     * to SELECT DISTINCT.
      */
-    public $distinct = false;
+    public bool $distinct = false;
     /**
-     * @var array|null the table(s) to be selected from. For example, `['user', 'post']`.
+     * @var array the table(s) to be selected from. For example, `['user', 'post']`.
      * This is used to construct the FROM clause in a SQL statement.
      * @see from()
      */
-    public $from;
+    public string|array|ExpressionInterface $from = [];
     /**
-     * @var array|null how to group the query results. For example, `['company', 'department']`.
+     * @var array how to group the query results. For example, `['company', 'department']`.
      * This is used to construct the GROUP BY clause in a SQL statement.
      */
-    public $groupBy;
+    public array $groupBy = [];
     /**
-     * @var array|null how to join with other tables. Each array element represents the specification
-     * of one join which has the following structure:
+     * @var array how to join with other tables. Each array element represents the specification of one join which has
+     * the following structure:
      *
      * ```php
      * [$joinType, $tableName, $joinCondition]
@@ -96,51 +96,48 @@ class Query extends Component implements QueryInterface, ExpressionInterface
      * ]
      * ```
      */
-    public $join;
+    public array $join = [];
     /**
      * @var string|array|ExpressionInterface|null the condition to be applied in the GROUP BY clause.
      * It can be either a string or an array. Please refer to [[where()]] on how to specify the condition.
      */
-    public $having;
+    public string|array|ExpressionInterface|null $having = null;
     /**
-     * @var array|null this is used to construct the UNION clause(s) in a SQL statement.
+     * @var array this is used to construct the UNION clause(s) in a SQL statement.
      * Each array element is an array of the following structure:
      *
      * - `query`: either a string or a [[Query]] object representing a query
      * - `all`: boolean, whether it should be `UNION ALL` or `UNION`
      */
-    public $union;
+    public array $union = [];
     /**
-     * @var array|null this is used to construct the WITH section in a SQL query.
+     * @var array this is used to construct the WITH section in a SQL query.
      * Each array element is an array of the following structure:
      *
      * - `query`: either a string or a [[Query]] object representing a query
      * - `alias`: string, alias of query for further usage
      * - `recursive`: boolean, whether it should be `WITH RECURSIVE` or `WITH`
      * @see withQuery()
-     * @since 2.0.35
      */
-    public $withQueries;
+    public array $withQueries = [];
     /**
-     * @var array|null list of query parameter values indexed by parameter placeholders.
+     * @var array list of query parameter values indexed by parameter placeholders.
      * For example, `[':name' => 'Dan', ':age' => 31]`.
      */
-    public $params = [];
+    public array $params = [];
     /**
      * @var int|bool|null the default number of seconds that query results can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire.
      * Use a negative number to indicate that query cache should not be used.
      * Use boolean `true` to indicate that [[Connection::queryCacheDuration]] should be used.
      * @see cache()
-     * @since 2.0.14
      */
-    public $queryCacheDuration;
+    public int|bool|null $queryCacheDuration = null;
     /**
      * @var \yii\caching\Dependency|null the dependency to be associated with the cached query result for this query
      * @see cache()
-     * @since 2.0.14
      */
-    public $queryCacheDependency;
+    public \yii\caching\Dependency|null $queryCacheDependency = null;
 
 
     /**
@@ -472,7 +469,7 @@ class Query extends Component implements QueryInterface, ExpressionInterface
             $offset = $this->offset;
 
             $this->select = [$selectExpression];
-            $this->orderBy = null;
+            $this->orderBy = [];
             $this->limit = null;
             $this->offset = null;
 
@@ -760,7 +757,7 @@ PATTERN;
      *
      * @return $this the query object itself
      */
-    public function from($tables)
+    public function from(string|array|ExpressionInterface $tables): self
     {
         if ($tables instanceof ExpressionInterface) {
             $tables = [$tables];
