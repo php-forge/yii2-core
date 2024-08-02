@@ -345,7 +345,7 @@ EOD;
      * @param array|\Generator $rows the rows to be batch inserted into the table
      * @return string the batch INSERT SQL statement
      */
-    public function batchInsert($table, $columns, $rows, &$params = [])
+    public function batchInsert(string $table, array $columns, iterable|\Generator $rows, array &$params = []): string
     {
         if (empty($rows)) {
             return '';
