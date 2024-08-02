@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }}-mssql-${{ matrix.mssql }}
+    name: PHP ${{ matrix.php }}-mssql-${{ matrix.mssql.version }}
 
     env:
       EXTENSIONS: pdo, pdo_sqlsrv
