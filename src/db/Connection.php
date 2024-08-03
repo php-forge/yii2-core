@@ -669,8 +669,8 @@ class Connection extends Component
         $this->_transaction = null;
         $this->_driverName = '';
         $this->_queryCacheInfo = [];
-        $this->_quotedTableNames = null;
-        $this->_quotedColumnNames = null;
+        $this->_quotedTableNames = [];
+        $this->_quotedColumnNames = [];
     }
 
     /**
@@ -955,6 +955,7 @@ class Connection extends Component
         if (isset($this->_quotedTableNames[$name])) {
             return $this->_quotedTableNames[$name];
         }
+
         return $this->_quotedTableNames[$name] = $this->getSchema()->quoteTableName($name);
     }
 
