@@ -667,7 +667,7 @@ class Connection extends Component
 
         $this->_schema = null;
         $this->_transaction = null;
-        $this->_driverName = null;
+        $this->_driverName = '';
         $this->_queryCacheInfo = [];
         $this->_quotedTableNames = null;
         $this->_quotedColumnNames = null;
@@ -685,7 +685,7 @@ class Connection extends Component
         $pdoClass = $this->pdoClass;
         if ($pdoClass === null) {
             $driver = null;
-            if ($this->_driverName !== null) {
+            if ($this->_driverName !== '') {
                 $driver = $this->_driverName;
             } elseif (($pos = strpos($this->dsn, ':')) !== false) {
                 $driver = strtolower(substr($this->dsn, 0, $pos));
@@ -849,15 +849,17 @@ class Connection extends Component
      * @return Schema the schema information for the database opened by this connection.
      * @throws NotSupportedException if there is no support for the current driver type
      */
-    public function getSchema()
+    public function getSchema(): Schema
     {
         if ($this->_schema !== null) {
             return $this->_schema;
         }
 
         $driver = $this->getDriverName();
+
         if (isset($this->schemaMap[$driver])) {
-            $config = !is_array($this->schemaMap[$driver]) ? ['class' => $this->schemaMap[$driver]] : $this->schemaMap[$driver];
+            $config = !is_array($this->schemaMap[$driver])
+                ? ['class' => $this->schemaMap[$driver]] : $this->schemaMap[$driver];
             $config['db'] = $this;
 
             $this->_schema = Yii::createObject($config);
@@ -1003,7 +1005,7 @@ class Connection extends Component
      */
     public function getDriverName()
     {
-        if ($this->_driverName === null) {
+        if ($this->_driverName === '') {
             if (($pos = strpos($this->dsn, ':')) !== false) {
                 $this->_driverName = strtolower(substr($this->dsn, 0, $pos));
             } else {
