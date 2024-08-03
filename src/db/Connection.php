@@ -979,11 +979,11 @@ class Connection extends Component
      *
      * @param mixed $value the value to be quoted.
      *
-     * @return string the properly quoted string.
+     * @return mixed the properly quoted value.
      *
      * @see https://www.php.net/manual/en/pdo.quote.php
      */
-    public function quoteValue(mixed $value): string
+    public function quoteValue(mixed $value): mixed
     {
         return $this->getSchema()->quoteValue($value);
     }
