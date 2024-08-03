@@ -425,11 +425,11 @@ class Connection extends Component
     /**
      * @var Connection|false the currently active master connection.
      */
-    private Connection|false $_master = false;
+    private Connection|false|null $_master = false;
     /**
      * @var Connection|false the currently active slave connection.
      */
-    private Connection|false $_slave = false;
+    private Connection|false|null $_slave = false;
     /**
      * @var array query cache parameters for the [[cache()]] calls.
      */
@@ -445,9 +445,10 @@ class Connection extends Component
 
     /**
      * Returns a value indicating whether the DB connection is established.
+     *
      * @return bool whether the DB connection is established
      */
-    public function getIsActive()
+    public function getIsActive(): bool
     {
         return $this->pdo !== null;
     }
@@ -455,16 +456,19 @@ class Connection extends Component
     /**
      * Uses query cache for the queries performed with the callable.
      *
-     * When query caching is enabled ([[enableQueryCache]] is true and [[queryCache]] refers to a valid cache),
-     * queries performed within the callable will be cached and their results will be fetched from cache if available.
+     * When query caching is enabled ([[enableQueryCache]] is true and [[queryCache]] refers to a valid cache), queries
+     * performed within the callable will be cached and their results will be fetched from cache if available.
+     *
      * For example,
      *
      * ```php
      * // The customer will be fetched from cache if available.
      * // If not, the query will be made against DB and cached for use next time.
-     * $customer = $db->cache(function (Connection $db) {
-     *     return $db->createCommand('SELECT * FROM customer WHERE id=1')->queryOne();
-     * });
+     * $customer = $db->cache(
+     *     static function (Connection $db): array {
+     *         return $db->createCommand('SELECT * FROM customer WHERE id=1')->queryOne();
+     *     }
+     * );
      * ```
      *
      * Note that query cache is only meaningful for queries that return results. For queries performed with
@@ -472,28 +476,36 @@ class Connection extends Component
      *
      * @param callable $callable a PHP callable that contains DB queries which will make use of query cache.
      * The signature of the callable is `function (Connection $db)`.
-     * @param int|null $duration the number of seconds that query results can remain valid in the cache. If this is
-     * not set, the value of [[queryCacheDuration]] will be used instead.
-     * Use 0 to indicate that the cached data will never expire.
+     * @param int|null $duration the number of seconds that query results can remain valid in the cache. If this is not
+     * set, the value of [[queryCacheDuration]] will be used instead.
+     * Use null to indicate that the cached data will never expire.
+     * Use 0 to indicate that the cached data will be invalidated immediately.
      * @param \yii\caching\Dependency|null $dependency the cache dependency associated with the cached query results.
-     * @return mixed the return result of the callable
-     * @throws \Throwable if there is any exception during query
+     *
+     * @return mixed the return result of the callable.
+     *
+     * @throws \Throwable if there is any exception during query.
+     *
      * @see enableQueryCache
      * @see queryCache
      * @see noCache()
      */
-    public function cache(callable $callable, $duration = null, $dependency = null)
+    public function cache(callable $callable, int|null $duration = null, int|null $dependency = null): mixed
     {
         $this->_queryCacheInfo[] = [$duration === null ? $this->queryCacheDuration : $duration, $dependency];
+
         try {
             $result = call_user_func($callable, $this);
             array_pop($this->_queryCacheInfo);
+
             return $result;
         } catch (\Exception $e) {
             array_pop($this->_queryCacheInfo);
+
             throw $e;
         } catch (\Throwable $e) {
             array_pop($this->_queryCacheInfo);
+
             throw $e;
         }
     }
