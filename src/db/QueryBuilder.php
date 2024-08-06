@@ -355,18 +355,17 @@ class QueryBuilder extends \yii\base\BaseObject
      */
     protected function prepareInsertValues(string $table, array|Query $columns, array $params = [])
     {
-        $schema = $this->db->getSchema();
-        $tableSchema = $schema->getTableSchema($table);
+        $tableSchema = $this->db->getTableSchema($table);
         $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
         $names = [];
         $placeholders = [];
         $values = ' DEFAULT VALUES';
 
         if ($columns instanceof Query) {
-            [$names, $values, $params] = $this->prepareInsertSelectSubQuery($columns, $schema, $params);
+            [$names, $values, $params] = $this->prepareInsertSelectSubQuery($columns, $params);
         } else {
             foreach ($columns as $name => $value) {
-                $names[] = $schema->quoteColumnName($name);
+                $names[] = $this->db->quoteColumnName($name);
                 $value = isset($columnSchemas[$name]) ? $columnSchemas[$name]->dbTypecast($value) : $value;
 
                 if ($value instanceof ExpressionInterface) {
@@ -387,7 +386,6 @@ class QueryBuilder extends \yii\base\BaseObject
      * Prepare select-subquery and field names for INSERT INTO ... SELECT SQL statement.
      *
      * @param Query $columns Object, which represents select query.
-     * @param \yii\db\Schema $schema Schema object to quote column name.
      * @param array $params the parameters to be bound to the generated SQL statement. These parameters will
      * be included in the result with the additional parameters generated during the query building process.
      *
@@ -395,7 +393,7 @@ class QueryBuilder extends \yii\base\BaseObject
      *
      * @throws InvalidArgumentException if query's select does not contain named parameters only.
      */
-    protected function prepareInsertSelectSubQuery(Query $columns, Schema $schema, array $params = []): array
+    protected function prepareInsertSelectSubQuery(Query $columns, array $params = []): array
     {
         if (!is_array($columns->select) || empty($columns->select) || in_array('*', $columns->select)) {
             throw new InvalidArgumentException('Expected select query object with enumerated (named) parameters');
@@ -407,11 +405,11 @@ class QueryBuilder extends \yii\base\BaseObject
 
         foreach ($columns->select as $title => $field) {
             if (is_string($title)) {
-                $names[] = $schema->quoteColumnName($title);
+                $names[] = $this->db->quoteColumnName($title);
             } elseif (preg_match('/^(.*?)(?i:\s+as\s+|\s+)([\w\-_\.]+)$/', $field, $matches)) {
-                $names[] = $schema->quoteColumnName($matches[2]);
+                $names[] = $this->db->quoteColumnName($matches[2]);
             } else {
-                $names[] = $schema->quoteColumnName($field);
+                $names[] = $this->db->quoteColumnName($field);
             }
         }
 
@@ -550,9 +548,9 @@ class QueryBuilder extends \yii\base\BaseObject
         array|Query $insertColumns,
         array|bool $updateColumns,
         array &$constraints = [],
-    ): array{
+    ): array {
         if ($insertColumns instanceof Query) {
-            [$insertNames] = $this->prepareInsertSelectSubQuery($insertColumns, $this->db->getSchema());
+            [$insertNames] = $this->prepareInsertSelectSubQuery($insertColumns);
         } else {
             $insertNames = array_map([$this->db, 'quoteColumnName'], array_keys($insertColumns));
         }
@@ -612,7 +610,6 @@ class QueryBuilder extends \yii\base\BaseObject
                     sort($columns, SORT_STRING);
 
                     return json_encode($columns);
-
                 },
                 $constraints
             ),
@@ -1486,7 +1483,7 @@ class QueryBuilder extends \yii\base\BaseObject
      *
      * @return array the quotation result.
      */
-    private function quoteTableNames($tables, &$params)
+    private function quoteTableNames(array $tables, array &$params): array
     {
         foreach ($tables as $i => $table) {
             if ($table instanceof Query) {

@@ -10,6 +10,7 @@ use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\caching\CacheInterface;
+use yii\db\schema\Quoter;
 
 /**
  * Connection represents a connection to a database via [PDO](https://www.php.net/manual/en/book.pdo.php).
@@ -123,6 +124,7 @@ use yii\caching\CacheInterface;
  * @property-read PDO|null $slavePdo The PDO instance for the currently active slave connection. `null` is returned if
  * no slave connection is available and `$fallbackToMaster` is false.
  * @property-read Transaction|null $transaction The currently active transaction. Null if no active transaction.
+ * @property-read Quoter $quoter The Quoter that's used to quote table and column names for use in SQL statements.
  */
 class Connection extends Component
 {
@@ -144,7 +146,7 @@ class Connection extends Component
     public const EVENT_ROLLBACK_TRANSACTION = 'rollbackTransaction';
 
     /**
-     * @var string the Data Source Name, or DSN, contains the information required to connect to the database.
+     * @var string|null the Data Source Name, or DSN, contains the information required to connect to the database.
      * Please refer to the [PHP manual](https://www.php.net/manual/en/pdo.construct.php) on the format of the DSN
      * string.
      *
@@ -153,7 +155,7 @@ class Connection extends Component
      *
      * @see charset
      */
-    public string $dsn = '';
+    public string|null $dsn = null;
     /**
      * @var string|null the username for establishing DB connection. Defaults to `null` meaning no username to use.
      */
@@ -401,6 +403,13 @@ class Connection extends Component
      * @var bool If the database connected via pdo_dblib is SyBase.
      */
     public bool $isSybase = false;
+    public array $quoterMap = [
+        'oci' => \yii\db\oci\Quoter::class,
+        'mysql' => \yii\db\mysql\Quoter::class,
+        'pgsql' => \yii\db\pgsql\Quoter::class,
+        'sqlite' => \yii\db\sqlite\Quoter::class,
+        'sqlsrv' => \yii\db\mssql\Quoter::class,
+    ];
 
     /**
      * @var array An array of [[setQueryBuilder()]] calls, holding the passed arguments.
@@ -441,6 +450,10 @@ class Connection extends Component
      * @var string[] quoted column name cache for [[quoteColumnName()]] calls
      */
     private array $_quotedColumnNames = [];
+    /**
+     * @var Quoter|null the Quoter instance.
+     */
+    private Quoter|null $_quoter = null;
 
     /**
      * Returns a value indicating whether the DB connection is established.
@@ -907,6 +920,31 @@ class Connection extends Component
         throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
     }
 
+    public function getQuoter(): Quoter
+    {
+        if ($this->_quoter === null) {
+            $driver = $this->getDriverName();
+            $schema = $this->getSchema();
+
+            if (isset($this->quoterMap[$driver])) {
+                $config = !is_array($this->quoterMap[$driver])
+                    ? ['class' => $this->quoterMap[$driver]] : $this->quoterMap[$driver];
+                $config['db'] = $this;
+
+                $this->_quoter = Yii::createObject(
+                    $config,
+                    [
+                        $schema->getTableQuoteCharacter(),
+                        $schema->getColumnQuoteCharacter(),
+                        $this->tablePrefix,
+                    ],
+                );
+            }
+        }
+
+        return $this->_quoter;
+    }
+
     /**
      * Returns the query builder for the current DB connection.
      *
@@ -974,18 +1012,22 @@ class Connection extends Component
     }
 
     /**
-     * Quotes a string value for use in a query.
-     * Note that if the parameter is not a string, it will be returned without change.
+     * Quotes a column name for use in a query.
+     * If the column name contains prefix, the prefix will also be properly quoted.
+     * If the column name is already quoted or contains special characters including '(', '[[' and '{{', then this
+     * method will do nothing.
      *
-     * @param mixed $value the value to be quoted.
+     * @param string $name column name.
      *
-     * @return mixed the properly quoted value.
-     *
-     * @see https://www.php.net/manual/en/pdo.quote.php
+     * @return string the properly quoted column name.
      */
-    public function quoteValue(mixed $value): mixed
+    public function quoteColumnName($name)
     {
-        return $this->getSchema()->quoteValue($value);
+        if (isset($this->_quotedColumnNames[$name])) {
+            return $this->_quotedColumnNames[$name];
+        }
+
+        return $this->_quotedColumnNames[$name] = $this->getQuoter()->quoteColumnName($name);
     }
 
     /**
@@ -1004,26 +1046,7 @@ class Connection extends Component
             return $this->_quotedTableNames[$name];
         }
 
-        return $this->_quotedTableNames[$name] = $this->getSchema()->quoteTableName($name);
-    }
-
-    /**
-     * Quotes a column name for use in a query.
-     * If the column name contains prefix, the prefix will also be properly quoted.
-     * If the column name is already quoted or contains special characters including '(', '[[' and '{{', then this
-     * method will do nothing.
-     *
-     * @param string $name column name.
-     *
-     * @return string the properly quoted column name.
-     */
-    public function quoteColumnName($name)
-    {
-        if (isset($this->_quotedColumnNames[$name])) {
-            return $this->_quotedColumnNames[$name];
-        }
-
-        return $this->_quotedColumnNames[$name] = $this->getSchema()->quoteColumnName($name);
+        return $this->_quotedTableNames[$name] = $this->getQuoter()->quoteTableName($name);
     }
 
     /**
@@ -1033,23 +1056,28 @@ class Connection extends Component
      * Also, the percentage character "%" at the beginning or ending of a table name will be replaced with
      * [[tablePrefix]].
      *
-     * @param string $sql the SQL to be quoted
+     * @param string $sql the SQL to be quoted.
      *
      * @return string the quoted SQL.
      */
     public function quoteSql(string $sql): string
     {
-        return preg_replace_callback(
-            '/(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])/',
-            function ($matches): string {
-                if (isset($matches[3])) {
-                    return $this->quoteColumnName($matches[3]);
-                }
+        return $this->getQuoter()->quoteSql($sql);
+    }
 
-                return str_replace('%', $this->tablePrefix, $this->quoteTableName($matches[2]));
-            },
-            $sql
-        );
+   /**
+     * Quotes a string value for use in a query.
+     * Note that if the parameter is not a string, it will be returned without change.
+     *
+     * @param mixed $value the value to be quoted.
+     *
+     * @return mixed the properly quoted value.
+     *
+     * @see https://www.php.net/manual/en/pdo.quote.php
+     */
+    public function quoteValue(mixed $value): mixed
+    {
+        return $this->getQuoter()->quoteValue($value);
     }
 
     /**
@@ -1061,7 +1089,7 @@ class Connection extends Component
     public function getDriverName()
     {
         if ($this->_driverName === '') {
-            if (($pos = strpos($this->dsn, ':')) !== false) {
+            if ($this->dsn !== null && ($pos = strpos($this->dsn, ':')) !== false) {
                 $this->_driverName = strtolower(substr($this->dsn, 0, $pos));
             } else {
                 $this->_driverName = strtolower($this->getSlavePdo(true)->getAttribute(PDO::ATTR_DRIVER_NAME));
