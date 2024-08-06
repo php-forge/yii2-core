@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace yii\db;
 
-use yii\base\InvalidArgumentException;
-use yii\db\ExpressionInterface;
-
 use function addcslashes;
 use function explode;
 use function implode;
@@ -39,61 +36,11 @@ class Quoter
     ) {
     }
 
-    public function cleanUpTableNames(array $tableNames): array
-    {
-        $cleanedUpTableNames = [];
-        $pattern = <<<PATTERN
-        ~^\s*((?:['"`\[]|{{).*?(?:['"`\]]|}})|\(.*?\)|.*?)(?:(?:\s+(?:as\s+)?)((?:['"`\[]|{{).*?(?:['"`\]]|}})|.*?))?\s*$~iux
-        PATTERN;
-
-        /** @psalm-var array<array-key, ExpressionInterface|string> $tableNames */
-        foreach ($tableNames as $alias => $tableName) {
-            if (is_string($tableName) && !is_string($alias)) {
-                if (preg_match($pattern, $tableName, $matches)) {
-                    if (isset($matches[2])) {
-                        [, $tableName, $alias] = $matches;
-                    } else {
-                        $tableName = $alias = $matches[1];
-                    }
-                }
-            }
-
-            if (!is_string($alias)) {
-                throw new InvalidArgumentException(
-                    'To use Expression in from() method, pass it in array format with alias.'
-                );
-            }
-
-            if (is_string($tableName)) {
-                $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $this->ensureNameQuoted($tableName);
-            } elseif ($tableName instanceof ExpressionInterface) {
-                $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $tableName;
-            } else {
-                throw new InvalidArgumentException(
-                    'Use ExpressionInterface without cast to string as object of tableName'
-                );
-            }
-        }
-
-        return $cleanedUpTableNames;
-    }
-
     public function getTableNameParts(string $name, bool $withColumn = false): array
     {
         $parts = explode('.', $name);
 
         return $this->unquoteParts($parts, $withColumn);
-    }
-
-    public function ensureNameQuoted(string $name): string
-    {
-        $name = str_replace(["'", '"', '`', '[', ']'], '', $name);
-
-        if ($name && !preg_match('/^{{.*}}$/', $name)) {
-            return '{{' . $name . '}}';
-        }
-
-        return $name;
     }
 
     public function ensureColumnName(string $name): string

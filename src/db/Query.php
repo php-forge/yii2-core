@@ -506,11 +506,12 @@ class Query extends Component implements QueryInterface, ExpressionInterface
     /**
      * Returns table names used in [[from]] indexed by aliases.
      * Both aliases and names are enclosed into {{ and }}.
-     * @return string[] table names indexed by aliases
-     * @throws \yii\base\InvalidConfigException
-     * @since 2.0.12
+     *
+     * @return string[] table names indexed by aliases.
+     *
+     * @throws \yii\base\InvalidConfigException.
      */
-    public function getTablesUsedInFrom()
+    public function getTablesUsedInFrom(): array
     {
         if (empty($this->from)) {
             return [];
@@ -530,67 +531,46 @@ class Query extends Component implements QueryInterface, ExpressionInterface
     }
 
     /**
-     * Clean up table names and aliases
+     * Clean up table names and aliases.
      * Both aliases and names are enclosed into {{ and }}.
-     * @param array $tableNames non-empty array
-     * @return string[] table names indexed by aliases
-     * @since 2.0.14
+     *
+     * @param array $tableNames non-empty array.
+     *
+     * @return string[] table names indexed by aliases.
      */
-    protected function cleanUpTableNames($tableNames)
+    protected function cleanUpTableNames(array $tableNames): array
     {
         $cleanedUpTableNames = [];
+        $pattern = <<<PATTERN
+        ~^\s*((?:['"`\[]|{{).*?(?:['"`\]]|}})|\(.*?\)|.*?)(?:(?:\s+(?:as\s+)?)((?:['"`\[]|{{).*?(?:['"`\]]|}})|.*?))?\s*$~iux
+        PATTERN;
+
+        /** @psalm-var array<array-key, ExpressionInterface|string> $tableNames */
         foreach ($tableNames as $alias => $tableName) {
             if (is_string($tableName) && !is_string($alias)) {
-                $pattern = <<<PATTERN
-~
-^
-\s*
-(
-(?:['"`\[]|{{)
-.*?
-(?:['"`\]]|}})
-|
-\(.*?\)
-|
-.*?
-)
-(?:
-(?:
-    \s+
-    (?:as)?
-    \s*
-)
-(
-   (?:['"`\[]|{{)
-    .*?
-    (?:['"`\]]|}})
-    |
-    .*?
-)
-)?
-\s*
-$
-~iux
-PATTERN;
                 if (preg_match($pattern, $tableName, $matches)) {
                     if (isset($matches[2])) {
-                        list(, $tableName, $alias) = $matches;
+                        [, $tableName, $alias] = $matches;
                     } else {
                         $tableName = $alias = $matches[1];
                     }
                 }
             }
 
+            if (!is_string($alias)) {
+                throw new InvalidArgumentException(
+                    'To use Expression in from() method, pass it in array format with alias.'
+                );
+            }
 
-            if ($tableName instanceof Expression) {
-                if (!is_string($alias)) {
-                    throw new InvalidArgumentException('To use Expression in from() method, pass it in array format with alias.');
-                }
-                $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $tableName;
-            } elseif ($tableName instanceof self) {
+            if (is_string($tableName)) {
+                $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $this->ensureNameQuoted($tableName);
+            } elseif ($tableName instanceof ExpressionInterface) {
                 $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $tableName;
             } else {
-                $cleanedUpTableNames[$this->ensureNameQuoted($alias)] = $this->ensureNameQuoted($tableName);
+                throw new InvalidArgumentException(
+                    'Use ExpressionInterface without cast to string as object of tableName'
+                );
             }
         }
 
@@ -598,13 +578,16 @@ PATTERN;
     }
 
     /**
-     * Ensures name is wrapped with {{ and }}
-     * @param string $name
-     * @return string
+     * Ensures name is wrapped with {{ and }}.
+     *
+     * @param string $name name to be quoted.
+     *
+     * @return string quoted name.
      */
-    private function ensureNameQuoted($name)
+    private function ensureNameQuoted(string $name): string
     {
         $name = str_replace(["'", '"', '`', '[', ']'], '', $name);
+
         if ($name && !preg_match('/^{{.*}}$/', $name)) {
             return '{{' . $name . '}}';
         }
