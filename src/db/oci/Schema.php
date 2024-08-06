@@ -36,6 +36,10 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     use ConstraintFinderTrait;
 
     /**
+     * {@inheritdoc}
+     */
+    public $columnSchemaClass = 'yii\db\oci\ColumnSchema';
+    /**
      * @var array map of DB errors and corresponding exceptions
      * If left part is found in DB error message exception class from the right part is used.
      */

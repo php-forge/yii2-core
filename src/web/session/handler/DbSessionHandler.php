@@ -46,12 +46,12 @@ class DbSessionHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function read(string $id,  mixed $defaultValue = ''): string
+    public function read(string $id, mixed $defaultValue = ''): string
     {
         $query = $this->getReadQuery($id);
         $data = $query->select(['data'])->scalar($this->db);
 
-        return $data === false ? '' : $data;
+        return $data === false ? '' : (string) $data;
     }
 
     /**

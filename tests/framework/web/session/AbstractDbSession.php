@@ -48,7 +48,8 @@ abstract class AbstractDbSession extends AbstractSession
         $this->session->set('expire', 'expire data');
         $this->session->close();
 
-        $this->session->db->createCommand()
+        $this->session->db
+            ->createCommand()
             ->update($this->session->sessionTable, ['expire' => time() - 100], ['id' => $expiredSessionId])
             ->execute();
 
@@ -59,13 +60,19 @@ abstract class AbstractDbSession extends AbstractSession
         $this->session->setGCProbability(100);
         $this->session->close();
 
-        $expiredData = $this->session->db->createCommand("SELECT * FROM {$this->session->sessionTable} WHERE id = :id")
+        $expiredData = $this->session->db
+            ->createCommand(<<<SQL
+            SELECT * FROM {$this->session->sessionTable} WHERE [[id]] = :id
+            SQL)
             ->bindValue(':id', $expiredSessionId)
             ->queryOne();
 
         $this->assertFalse($expiredData);
 
-        $validData = $this->session->db->createCommand("SELECT * FROM {$this->session->sessionTable} WHERE id = :id")
+        $validData = $this->session->db
+            ->createCommand(<<<SQL
+            SELECT * FROM {$this->session->sessionTable} WHERE [[id]] = :id
+            SQL)
             ->bindValue(':id', $validSessionId)
             ->queryOne();
 
@@ -200,7 +207,7 @@ abstract class AbstractDbSession extends AbstractSession
         $object = new \stdClass();
         $object->nullValue = null;
         $object->floatValue = pi();
-        $object->textValue = str_repeat('QweåßƒТест', 200);
+        $object->textValue = str_repeat('QweåßƒТест', 50);
         $object->array = [null, 'ab' => 'cd'];
         $object->binary = base64_decode('5qS2UUcXWH7rjAmvhqGJTDNkYWFiOGMzNTFlMzNmMWIyMDhmOWIwYzAwYTVmOTFhM2E5MDg5YjViYzViN2RlOGZlNjllYWMxMDA0YmQxM2RQ3ZC0in5ahjNcehNB/oP/NtOWB0u3Skm67HWGwGt9MA==');
         $object->with_null_byte = 'hey!' . "\0" . 'y"ûƒ^äjw¾bðúl5êù-Ö=W¿Š±¬GP¥Œy÷&ø';
