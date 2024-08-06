@@ -10,7 +10,6 @@ use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\caching\CacheInterface;
-use yii\db\schema\Quoter;
 
 /**
  * Connection represents a connection to a database via [PDO](https://www.php.net/manual/en/book.pdo.php).
