@@ -832,9 +832,8 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 
     /**
      * {@inheritdoc}
-     * @since 2.0.12
      */
-    public function getTablesUsedInFrom()
+    public function getTablesUsedInFrom(): array
     {
         if (empty($this->from)) {
             return $this->cleanUpTableNames([$this->getPrimaryTableName()]);
