@@ -99,13 +99,13 @@ abstract class Schema extends BaseObject
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected $tableQuoteCharacter = "'";
+    protected array|string $tableQuoteCharacter = "'";
     /**
      * @var string|string[] character used to quote column names.
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected $columnQuoteCharacter = '"';
+    protected array|string $columnQuoteCharacter = '"';
 
     /**
      * @var array list of ALL schema names in the database, except system schemas
@@ -872,5 +872,15 @@ abstract class Schema extends BaseObject
             $this->db->schemaCacheDuration,
             new TagDependency(['tags' => $this->getCacheTag()])
         );
+    }
+
+    public function getColumnQuoteCharacter(): array|string
+    {
+        return $this->columnQuoteCharacter;
+    }
+
+    public function getTableQuoteCharacter(): array|string
+    {
+        return $this->tableQuoteCharacter;
     }
 }
