@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db;
 
@@ -16,9 +13,7 @@ use yii\caching\Cache;
 use yii\caching\CacheInterface;
 use yii\caching\TagDependency;
 
-use function str_contains;
 use function strpos;
-use function substr;
 
 /**
  * Schema is the base class for concrete DBMS-specific schema classes.
@@ -99,13 +94,13 @@ abstract class Schema extends BaseObject
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected array|string $tableQuoteCharacter = "'";
+    protected $tableQuoteCharacter = "'";
     /**
      * @var string|string[] character used to quote column names.
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected array|string $columnQuoteCharacter = '"';
+    protected $columnQuoteCharacter = '"';
 
     /**
      * @var array list of ALL schema names in the database, except system schemas
@@ -317,7 +312,7 @@ abstract class Schema extends BaseObject
      */
     public function createQueryBuilder()
     {
-        return Yii::createObject(QueryBuilder::className(), [$this->db]);
+        return Yii::createObject(QueryBuilder::class, [$this->db]);
     }
 
     /**
@@ -332,7 +327,7 @@ abstract class Schema extends BaseObject
      */
     public function createColumnSchemaBuilder($type, $length = null)
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$type, $length]);
     }
 
     /**
@@ -450,55 +445,6 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Quotes a string value for use in a query.
-     * Note that if the parameter is not a string, it will be returned without change.
-     * @param string $str string to be quoted
-     * @return string the properly quoted string
-     * @see https://www.php.net/manual/en/function.PDO-quote.php
-     */
-    public function quoteValue($str)
-    {
-        if (!is_string($str)) {
-            return $str;
-        }
-
-        if (mb_stripos((string)$this->db->dsn, 'odbc:') === false && ($value = $this->db->getSlavePdo(true)->quote($str)) !== false) {
-            return $value;
-        }
-
-        // the driver doesn't support quote (e.g. oci)
-        return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
-    }
-
-    /**
-     * Quotes a table name for use in a query.
-     * If the table name contains schema prefix, the prefix will also be properly quoted.
-     * If the table name is already quoted or contains '(' or '{{',
-     * then this method will do nothing.
-     * @param string $name table name
-     * @return string the properly quoted table name
-     * @see quoteSimpleTableName()
-     */
-    public function quoteTableName($name)
-    {
-
-        if (strncmp($name, '(', 1) === 0 && strpos($name, ')') === strlen($name) - 1) {
-            return $name;
-        }
-        if (strpos($name, '{{') !== false) {
-            return $name;
-        }
-        if (strpos($name, '.') === false) {
-            return $this->quoteSimpleTableName($name);
-        }
-        $parts = $this->getTableNameParts($name);
-        foreach ($parts as $i => $part) {
-            $parts[$i] = $this->quoteSimpleTableName($part);
-        }
-        return implode('.', $parts);
-    }
-
-    /**
      * Splits full table name into parts
      * @param string $name
      * @return array
@@ -507,108 +453,6 @@ abstract class Schema extends BaseObject
     protected function getTableNameParts($name)
     {
         return explode('.', $name);
-    }
-
-    /**
-     * Quotes a column name for use in a query.
-     *
-     * If the column name contains prefix, the prefix will also be properly quoted.
-     * If the column name is already quoted or contains '(', '[[' or '{{', then this method will do nothing.
-     *
-     * @param string $name column name
-     *
-     * @return string the properly quoted column name
-     *
-     * @see quoteSimpleColumnName()
-     */
-    public function quoteColumnName(string $name): string
-    {
-        if (str_contains($name, '(') || str_contains($name, '[[')) {
-            return $name;
-        }
-
-        if (($pos = strrpos($name, '.')) !== false) {
-            $prefix = $this->quoteTableName(substr($name, 0, $pos)) . '.';
-            $name = substr($name, $pos + 1);
-        } else {
-            $prefix = '';
-        }
-
-        if (str_contains($name, '{{')) {
-            return $name;
-        }
-
-        return $prefix . $this->quoteSimpleColumnName($name);
-    }
-
-    /**
-     * Quotes a simple table name for use in a query.
-     * A simple table name should contain the table name only without any schema prefix.
-     * If the table name is already quoted, this method will do nothing.
-     * @param string $name table name
-     * @return string the properly quoted table name
-     */
-    public function quoteSimpleTableName($name)
-    {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
-        } else {
-            list($startingCharacter, $endingCharacter) = $this->tableQuoteCharacter;
-        }
-        return strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
-    }
-
-    /**
-     * Quotes a simple column name for use in a query.
-     * A simple column name should contain the column name only without any prefix.
-     * If the column name is already quoted or is the asterisk character '*', this method will do nothing.
-     * @param string $name column name
-     * @return string the properly quoted column name
-     */
-    public function quoteSimpleColumnName($name)
-    {
-        if (is_string($this->columnQuoteCharacter)) {
-            $startingCharacter = $endingCharacter = $this->columnQuoteCharacter;
-        } else {
-            list($startingCharacter, $endingCharacter) = $this->columnQuoteCharacter;
-        }
-        return $name === '*' || strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
-    }
-
-    /**
-     * Unquotes a simple table name.
-     * A simple table name should contain the table name only without any schema prefix.
-     * If the table name is not quoted, this method will do nothing.
-     * @param string $name table name.
-     * @return string unquoted table name.
-     * @since 2.0.14
-     */
-    public function unquoteSimpleTableName($name)
-    {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $this->tableQuoteCharacter;
-        } else {
-            $startingCharacter = $this->tableQuoteCharacter[0];
-        }
-        return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
-    }
-
-    /**
-     * Unquotes a simple column name.
-     * A simple column name should contain the column name only without any prefix.
-     * If the column name is not quoted or is the asterisk character '*', this method will do nothing.
-     * @param string $name column name.
-     * @return string unquoted column name.
-     * @since 2.0.14
-     */
-    public function unquoteSimpleColumnName($name)
-    {
-        if (is_string($this->columnQuoteCharacter)) {
-            $startingCharacter = $this->columnQuoteCharacter;
-        } else {
-            $startingCharacter = $this->columnQuoteCharacter[0];
-        }
-        return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
     }
 
     /**
@@ -627,6 +471,67 @@ abstract class Schema extends BaseObject
         }
 
         return $name;
+    }
+
+    /**
+     * Quotes a column name for use in a query.
+     *
+     * If the column name contains prefix, the prefix will also be properly quoted.
+     * If the column name is already quoted or contains '(', '[[' or '{{', then this method will do nothing.
+     *
+     * @param string $name column name
+     *
+     * @return string the properly quoted column name
+     */
+    public function quoteColumnName(string $name): string
+    {
+        return $this->db->quoteColumnName($name);
+    }
+
+    /**
+     * Quotes a simple table name for use in a query.
+     * A simple table name should contain the table name only without any schema prefix.
+     * If the table name is already quoted, this method will do nothing.
+     *
+     * @param string $name table name.
+     *
+     * @return string the properly quoted table name.
+     */
+    public function quoteSimpleTableName($name)
+    {
+        return $this->db->quoter->quoteSimpleTableName($name);
+    }
+
+    /**
+     * Quotes a table name for use in a query.
+     *
+     * If the table name contains schema prefix, the prefix will also be properly quoted.
+     * If the table name is already quoted or contains '(' or '{{',
+     * then this method will do nothing.
+     *
+     * @param string $name table name
+     *
+     * @return string the properly quoted table name
+     */
+    public function quoteTableName(string $name): string
+    {
+        return $this->db->quoteTableName($name);
+    }
+
+    /**
+     * Quotes a string value for use in a query.
+     *
+     * Note that if the parameter is not a string, it will be returned without change.
+     *
+     * @param string $str string to be quoted.
+     *
+     * @return string the properly quoted string.
+     *
+     * @see https://www.php.net/manual/en/function.PDO-quote.php
+     */
+    public function quoteValue($str)
+    {
+        return $this->db->quoter->quoteValue($str);
     }
 
     /**
