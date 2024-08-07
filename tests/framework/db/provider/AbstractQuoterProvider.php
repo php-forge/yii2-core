@@ -13,8 +13,9 @@ abstract class AbstractQuoterProvider
     {
         return [
             ['*', '*'],
-            ['(*)', '(*)'],
-            ['[[*]]', '[[*]]'],
+            ['(parentheses)', '(parentheses)'],
+            ['[[double_brackets]]', '[[double_brackets]]'],
+            ['{{curly_brackets}}', '{{curly_brackets}}'],
         ];
     }
 
@@ -61,8 +62,10 @@ abstract class AbstractQuoterProvider
     public static function simpleTableNames(): array
     {
         return [
-            ['test', 'test'],
-            ['(test)', '(test)'],
+            ['*', '*'],
+            ['(parentheses)', '(parentheses)'],
+            ['[[double_brackets]]', '[[double_brackets]]'],
+            ['{{curly_brackets}}', '{{curly_brackets}}'],
         ];
     }
 
