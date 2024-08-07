@@ -775,13 +775,13 @@ class Connection extends Component
      * Creates a command for execution.
      *
      * @param string|null $sql the SQL statement to be executed.
-     * @param array $params the parameters to be bound to the SQL statement.
+     * @param array|null $params the parameters to be bound to the SQL statement.
      *
      * @return Command the DB command.
      *
      * @throws InvalidConfigException if the DB connection is not established.
      */
-    public function createCommand(string|null $sql = null, array $params = []): Command
+    public function createCommand(string|null $sql = null, array|null $params = []): Command
     {
         $driver = $this->getDriverName();
         $config = ['class' => 'yii\db\Command'];
