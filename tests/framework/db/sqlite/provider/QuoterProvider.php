@@ -8,4 +8,14 @@ use yiiunit\framework\db\provider\AbstractQuoterProvider;
 
 final class QuoterProvider extends AbstractQuoterProvider
 {
+   /**
+     * @return string[][]
+     */
+    public static function stringValues(): array
+    {
+        return [
+            ['string', "'string'"],
+            ["It's interesting", "'It''s interesting'"],
+        ];
+    }
 }
