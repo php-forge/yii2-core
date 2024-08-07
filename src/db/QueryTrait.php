@@ -7,6 +7,7 @@
 
 namespace yii\db;
 
+use Closure;
 use yii\base\NotSupportedException;
 
 /**
@@ -21,43 +22,41 @@ use yii\base\NotSupportedException;
 trait QueryTrait
 {
     /**
-     * @var string|array|ExpressionInterface|null query condition. This refers to the WHERE clause in a SQL statement.
+     * @var array|string|ExpressionInterface|null query condition. This refers to the WHERE clause in a SQL statement.
      * For example, `['age' => 31, 'team' => 1]`.
      * @see where() for valid syntax on specifying this value.
      */
-    public $where;
+    public array|string|ExpressionInterface|null $where = null;
     /**
      * @var int|ExpressionInterface|null maximum number of records to be returned. May be an instance of [[ExpressionInterface]].
      * If not set or less than 0, it means no limit.
      */
-    public $limit;
+    public int|ExpressionInterface|null $limit = null;
     /**
      * @var int|ExpressionInterface|null zero-based offset from where the records are to be returned.
      * May be an instance of [[ExpressionInterface]]. If not set or less than 0, it means starting from the beginning.
      */
-    public $offset;
+    public int|ExpressionInterface|null $offset = null;
     /**
-     * @var array|null how to sort the query results. This is used to construct the ORDER BY clause in a SQL statement.
+     * @var array how to sort the query results. This is used to construct the ORDER BY clause in a SQL statement.
      * The array keys are the columns to be sorted by, and the array values are the corresponding sort directions which
      * can be either [SORT_ASC](https://www.php.net/manual/en/array.constants.php#constant.sort-asc)
      * or [SORT_DESC](https://www.php.net/manual/en/array.constants.php#constant.sort-desc).
      * The array may also contain [[ExpressionInterface]] objects. If that is the case, the expressions
      * will be converted into strings without any change.
      */
-    public $orderBy;
+    public array $orderBy = [];
     /**
-     * @var string|callable|null the name of the column by which the query results should be indexed by.
+     * @var Closure|string|null the name of the column by which the query results should be indexed by.
      * This can also be a callable (e.g. anonymous function) that returns the index value based on the given
      * row data. For more details, see [[indexBy()]]. This property is only used by [[QueryInterface::all()|all()]].
      */
-    public $indexBy;
+    public Closure|string|null $indexBy = null;
     /**
      * @var bool whether to emulate the actual query execution, returning empty or false results.
      * @see emulateExecution()
-     * @since 2.0.11
      */
-    public $emulateExecution = false;
-
+    public bool $emulateExecution = false;
 
     /**
      * Sets the [[indexBy]] property.

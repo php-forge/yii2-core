@@ -1258,7 +1258,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
     public function testAlias()
     {
         $query = Order::find();
-        $this->assertNull($query->from);
+        $this->assertSame([], $query->from);
 
         $query = Order::find()->alias('o');
         $this->assertEquals(['o' => Order::tableName()], $query->from);

@@ -101,10 +101,10 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         return [
             ['test', '`test`'],
             ['test.test', '`test`.`test`'],
-            ['test.test.test', '`test`.`test`.`test`'],
+            ['test.test.test', '`test`.`test`'],
             ['`test`', '`test`'],
             ['`test`.`test`', '`test`.`test`'],
-            ['test.`test`.test', '`test`.`test`.`test`'],
+            ['test.`test`.test', '`test`.`test`'],
         ];
     }
 }
