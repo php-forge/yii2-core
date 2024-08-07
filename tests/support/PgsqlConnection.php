@@ -7,7 +7,6 @@ namespace yiiunit\support;
 final class PgsqlConnection extends AbstractConnection
 {
     public static string $dsn = 'pgsql:host=localhost;dbname=yiitest;port=5432;';
-    public static string $driverName = 'pgsql';
     public static string $fixture = 'pgsql.sql';
     public static string $password = 'root';
     public static string $username = 'root';

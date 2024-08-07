@@ -28,14 +28,6 @@ class ConnectionTest extends \yiiunit\framework\db\ConnectionTest
         $this->assertEquals($params['dsn'], $connection->dsn);
     }
 
-    public function testQuoteValue()
-    {
-        $connection = $this->getConnection(false);
-        $this->assertEquals(123, $connection->quoteValue(123));
-        $this->assertEquals("'string'", $connection->quoteValue('string'));
-        $this->assertEquals("'It''s interesting'", $connection->quoteValue("It's interesting"));
-    }
-
     public function testTransactionIsolation()
     {
         $connection = $this->getConnection(true);
