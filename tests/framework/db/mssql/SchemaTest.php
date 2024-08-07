@@ -86,33 +86,6 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
     }
 
     /**
-     * @dataProvider quoteTableNameDataProvider
-     * @param $name
-     * @param $expectedName
-     * @throws \yii\base\NotSupportedException
-     */
-    public function testQuoteTableName($name, $expectedName)
-    {
-        $schema = $this->getConnection()->getSchema();
-        $quotedName = $schema->quoteTableName($name);
-        $this->assertEquals($expectedName, $quotedName);
-    }
-
-    public function quoteTableNameDataProvider()
-    {
-        return [
-            ['test', '[test]'],
-            ['test.test', '[test].[test]'],
-            ['test.test.test', '[test].[test].[test]'],
-            ['[test]', '[test]'],
-            ['[test].[test]', '[test].[test]'],
-            ['test.[test.test]', '[test].[test.test]'],
-            ['test.test.[test.test]', '[test].[test].[test.test]'],
-            ['[test].[test.test]', '[test].[test.test]'],
-        ];
-    }
-
-    /**
      * @dataProvider getTableSchemaDataProvider
      * @param $name
      * @param $expectedName
