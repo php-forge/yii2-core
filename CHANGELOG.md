@@ -16,6 +16,7 @@ Yii Core version 2 Change Log
 - Bug #40: Fix `wincache` tests in PHP `8.1`, `8.2`, `8.3` (@terabytesoftw)
 - Bug #42: Update CI workflow, run `Memcached` tests in PHP `8.1`, `8.2`, `8.3` (@terabytesoftw)
 - Bug #59: Update Oracle column `Schema::class` to handle binary data conversion (@terabytesoftw)
+- Bug #61: Add `Quoter::class` for `PostgreSQL`, `Oracle`, `SQLite`, `MSSQL`, and `MySQL` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
