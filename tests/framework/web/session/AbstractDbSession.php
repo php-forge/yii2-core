@@ -35,9 +35,13 @@ abstract class AbstractDbSession extends AbstractSession
 
     protected function tearDown(): void
     {
-        parent::tearDown();
+        if (null !== $this->session) {
+            $this->session->destroy();
+        }
 
         $this->dropTableSession();
+
+        parent::tearDown();
     }
 
     public function testGarbageCollection(): void

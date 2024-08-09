@@ -30,11 +30,14 @@ class PSRCacheSessionTest extends AbstractSession
 
     protected function tearDown(): void
     {
+        if (null !== $this->session) {
+            $this->session->destroy();
+        }
+
         $cache = Yii::$app->get(CacheInterface::class);
         $cache->clear();
 
         Yii::$app->set(CacheInterface::class, null);
-        Yii::$app->set('session', null);
 
         parent::tearDown();
     }

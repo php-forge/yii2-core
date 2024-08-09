@@ -20,17 +20,6 @@ abstract class AbstractSession extends TestCase
         $this->session = Yii::$app->getSession();
     }
 
-    protected function tearDown(): void
-    {
-        $this->session->destroy();
-
-        $this->session = null;
-
-        parent::tearDown();
-
-        $this->destroyApplication();
-    }
-
     public function testAddFlash(): void
     {
         $this->session->addFlash('key', 'value');

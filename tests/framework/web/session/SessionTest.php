@@ -22,4 +22,13 @@ final class SessionTest extends AbstractSession
 
         parent::setUp();
     }
+
+    protected function tearDown(): void
+    {
+        if (null !== $this->session) {
+            $this->session->destroy();
+        }
+
+        parent::tearDown();
+    }
 }
