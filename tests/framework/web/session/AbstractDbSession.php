@@ -35,8 +35,9 @@ abstract class AbstractDbSession extends AbstractSession
 
     protected function tearDown(): void
     {
-        $this->session->destroy();
-        $this->session = null;
+        if (null !== $this->session) {
+            $this->session->destroy();
+        }
 
         $this->dropTableSession();
 
@@ -225,12 +226,12 @@ abstract class AbstractDbSession extends AbstractSession
 
     protected function dropTableSession(): void
     {
-        //try {
+        try {
             $this->runMigrate('down', ['all']);
-        //} catch (\Exception $e) {
+        } catch (\Exception $e) {
             // Table may not exist for different reasons, but since this method
             // reverts DB changes to make next test pass, this exception is skipped.
-        //}
+        }
     }
 
     protected function runMigrate($action, $params = []): array
