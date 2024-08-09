@@ -22,10 +22,6 @@ abstract class AbstractSession extends TestCase
 
     protected function tearDown(): void
     {
-        $this->session->destroy();
-
-        $this->session = null;
-
         parent::tearDown();
 
         $this->destroyApplication();
