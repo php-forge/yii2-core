@@ -18,6 +18,7 @@ Yii Core version 2 Change Log
 - Bug #59: Update Oracle column `Schema::class` to handle binary data conversion (@terabytesoftw)
 - Bug #61: Add `Quoter::class` for `PostgreSQL`, `Oracle`, `SQLite`, `MSSQL`, and `MySQL` (@terabytesoftw)
 - Bug #62: Refactor tearDown method in session classes for clean table `session` (@terabytesoftw)
+- Bug #63: Refactor `Connection::class` to remove unnecessary code in `getQuoter()` method (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

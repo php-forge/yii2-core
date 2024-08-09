@@ -923,7 +923,6 @@ class Connection extends Component
             if (isset($this->quoterMap[$driver])) {
                 $config = !is_array($this->quoterMap[$driver])
                     ? ['class' => $this->quoterMap[$driver]] : $this->quoterMap[$driver];
-                $config['db'] = $this;
 
                 $this->_quoter = Yii::createObject(
                     $config,
