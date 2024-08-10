@@ -1,31 +1,32 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mssql;
 
+use yii\db\Expression;
+use yii\db\PdoValue;
+
+use function bin2hex;
+use function is_string;
+use function substr;
+
 /**
  * Class ColumnSchema for MSSQL database
- *
- * @since 2.0.23
  */
 class ColumnSchema extends \yii\db\ColumnSchema
 {
     /**
-     * @var bool whether this column is a computed column
-     * @since 2.0.39
+     * @var bool whether this column is a computed column.
      */
     public $isComputed;
 
-
     /**
-     * Prepares default value and converts it according to [[phpType]]
-     * @param mixed $value default value
-     * @return mixed converted value
-     * @since 2.0.24
+     * Prepares default value and converts it according to [[phpType]].
+     *
+     * @param mixed $value default value.
+     *
+     * @return mixed converted value.
      */
     public function defaultPhpTypecast($value)
     {
@@ -35,5 +36,20 @@ class ColumnSchema extends \yii\db\ColumnSchema
         }
 
         return parent::phpTypecast($value);
+    }
+
+    public function dbTypecast(mixed $value): mixed
+    {
+        if ($this->type === Schema::TYPE_BINARY && $this->dbType === 'varbinary') {
+            if ($value instanceof PdoValue && is_string($value->getValue())) {
+                $value = (string) $value->getValue();
+            }
+
+            if (is_string($value)) {
+                return new Expression('CONVERT(VARBINARY(MAX), ' . ('0x' . bin2hex($value)) . ')');
+            }
+        }
+
+        return parent::dbTypecast($value);
     }
 }
