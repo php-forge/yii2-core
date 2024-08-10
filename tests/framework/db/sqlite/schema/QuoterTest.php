@@ -2,26 +2,23 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\db\sqlite;
+namespace yiiunit\framework\db\sqlite\schema;
 
-use yii\db\Connection;
-use yiiunit\framework\db\AbstractQuoter;
 use yiiunit\support\SqliteConnection;
-
-use function array_reverse;
 
 /**
  * @group db
  * @group sqlite
+ * @group schema
  * @group quoter
  */
-final class QuoterTest extends AbstractQuoter
+final class QuoterTest extends \yiiunit\framework\db\schema\AbstractQuoter
 {
-    protected string $driverName = 'sqlite';
-
-    public function getConnection(bool $fixture = false): Connection
+    protected function setUp(): void
     {
-        return SqliteConnection::getConnection($fixture);
+        parent::setUp();
+
+        $this->db = SqliteConnection::getConnection();
     }
 
     /**
@@ -29,9 +26,7 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testEnsureColumnName(string $columnName, string $expected): void
     {
-        $db = $this->getConnection();
-
-        $this->assertSame($expected, $db->getQuoter()->ensureColumnName($columnName));
+        parent::testEnsureColumnName($columnName, $expected);
     }
 
     /**
@@ -39,9 +34,7 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testGetTableNameParts(string $tableName, string ...$expected): void
     {
-        $db = $this->getConnection();
-
-        $this->assertSame($expected, array_reverse($db->getQuoter()->getTableNameParts($tableName)));
+        parent::testGetTableNameParts($tableName, ...$expected);
     }
 
     /**
@@ -49,9 +42,7 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testQuoteColumnName(string $columnName, string $expected): void
     {
-        $db = $this->getConnection();
-
-        $this->assertSame($expected, $db->quoteColumnName($columnName));
+        parent::testQuoteColumnName($columnName, $expected);
     }
 
     /**
@@ -62,16 +53,7 @@ final class QuoterTest extends AbstractQuoter
         string $expectedQuotedColumnName,
         string $expectedUnQuotedColumnName
     ): void {
-        $db = $this->getConnection();
-
-        $quoter = $db->getQuoter();
-        $quoted = $quoter->quoteSimpleColumnName($columnName);
-
-        $this->assertSame($expectedQuotedColumnName, $quoted);
-
-        $unQuoted = $quoter->unquoteSimpleColumnName($quoted);
-
-        $this->assertSame($expectedUnQuotedColumnName, $unQuoted);
+        parent::testQuoteSimpleColumnName($columnName, $expectedQuotedColumnName, $expectedUnQuotedColumnName);
     }
 
     /**
@@ -81,9 +63,7 @@ final class QuoterTest extends AbstractQuoter
         string $columnName,
         string $expected
     ): void {
-        $quoter = $this->getConnection()->getQuoter();
-
-        $this->assertSame($expected, $quoter->quoteSimpleColumnName($columnName));
+        parent::testQuoteSimpleColumnNameWithStartingCharacterEndingCharacterEquals($columnName, $expected);
     }
 
     /**
@@ -93,9 +73,7 @@ final class QuoterTest extends AbstractQuoter
         string $tableName,
         string $expected
     ): void {
-        $quoter = $this->getConnection()->getQuoter();
-
-        $this->assertSame($expected, $quoter->quoteSimpleTableName($tableName));
+        parent::testQuoteSimpleTableNameWithStartingCharacterEndingCharacterEquals($tableName, $expected);
     }
 
     /**
@@ -103,16 +81,7 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testQuoteTableName(string $tableName, string $expected): void
     {
-        $db = $this->getConnection();
-
-        $quoter = $db->getQuoter();
-        $unQuoted = $quoter->unquoteSimpleTableName($quoter->quoteSimpleTableName($tableName));
-
-        $this->assertSame($expected, $unQuoted);
-
-        $unQuoted = $quoter->unquoteSimpleTableName($quoter->quoteTableName($tableName));
-
-        $this->assertSame($expected, $unQuoted);
+        parent::testQuoteTableName($tableName, $expected);
     }
 
     /**
@@ -120,9 +89,7 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testQuoteTableNameWithSchema(string $tableNamewithSchema, string $expected): void
     {
-        $quoter = $this->getConnection()->getQuoter();
-
-        $this->assertSame($expected, $quoter->quoteTableName($tableNamewithSchema));
+        parent::testQuoteTableNameWithSchema($tableNamewithSchema, $expected);
     }
 
     /**
@@ -130,8 +97,6 @@ final class QuoterTest extends AbstractQuoter
      */
     public function testQuoteValue(string $value, string $expected): void
     {
-        $quoter = $this->getConnection()->getQuoter();
-
-        $this->assertSame($expected, $quoter->quoteValue($value));
+        parent::testQuoteValue($value, $expected);
     }
 }
