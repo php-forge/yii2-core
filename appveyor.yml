@@ -2,9 +2,6 @@ build: false
 
 version: dev-{build}
 
-platform:
-  - x64
-
 image:
   - Visual Studio 2015
 
@@ -12,7 +9,7 @@ clone_folder: C:\projects\yii2
 
 environment:
   matrix:
-    - php: 8.1
+    - php_ver: 8.1.20
 
 cache:
   - '%APPDATA%\Composer'
@@ -24,44 +21,27 @@ init:
   - SET PATH=C:\tools\php;%PATH%
 
 install:
-  # Upgrade to 0.10.16-beta to benefit from a bugfix for
-  # https://github.com/chocolatey/choco/issues/1843
-  - ps: choco upgrade chocolatey --pre
-  - ps: |
-      # Check if installation is cached
-      if (!(Test-Path c:\tools\php)) {
-        appveyor-retry choco install --params '""/InstallDir:C:\tools\php""' --ignore-checksums -y php --version ((choco search php --exact --all-versions -r | select-string -pattern $env:php | sort { [version]($_ -split '\|' | select -last 1) } -Descending | Select-Object -first 1) -replace '[php|]','')
-        # Set PHP environment items that are always needed
-        Add-Content php.ini "`n date.timezone=UTC"
-        Add-Content php.ini "`n extension_dir=ext"
-        Add-Content php.ini "`n memory_limit=1G"
-        Add-Content php.ini "`n extension=php_openssl.dll"
-        Add-Content php.ini "`n extension=php_mbstring.dll"
-        Add-Content php.ini "`n extension=php_fileinfo.dll"
-        Add-Content php.ini "`n extension=php_gd.dll"
-        Add-Content php.ini "`n extension=php_curl.dll"
+  - ps: Set-Service wuauserv -StartupType Manual
+  - IF NOT EXIST C:\tools\php (choco install --yes --allow-empty-checksums php --version %php_ver% --params '/InstallDir:C:\tools\php')
+  - cd C:\tools\php
+  - copy php.ini-production php.ini
+  - echo date.timezone="UTC" >> php.ini
+  - echo memory_limit=512M >> php.ini
+  - echo extension_dir=ext >> php.ini
+  - echo extension=php_curl.dll >> php.ini
+  - echo extension=php_fileinfo.dll >> php.ini
+  - echo extension=php_gd.dll >> php.ini
+  - echo extension=php_intl.dll >> php.ini
+  - echo extension=php_mbstring.dll >> php.ini
+  - echo extension=php_openssl.dll >> php.ini
 
-        $DLLVersion = "5.10.0"
-        cd c:\tools\php\ext
-        $source = "https://windows.php.net/downloads/pecl/releases/sqlsrv/$($DLLVersion)/php_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip"
-        $destination = "c:\tools\php\ext\php_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip"
-        Invoke-WebRequest $source -OutFile $destination
-        7z x -y php_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip > $null
-        $source = "https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/$($DLLVersion)/php_pdo_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip"
-        $destination = "c:\tools\php\ext\php_pdo_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip"
-        Invoke-WebRequest $source -OutFile $destination
-        7z x -y php_pdo_sqlsrv-$($DLLVersion)-$($env:php)-nts-vs16-x64.zip > $null
-        $DLLVersion = (Invoke-WebRequest "https://pecl.php.net/rest/r/pcov/stable.txt").Content
-        Invoke-WebRequest https://windows.php.net/downloads/pecl/releases/pcov/$($DLLVersion)/php_pcov-$($DLLVersion)-$($env:php)-nts-vs16-$($env:platform).zip -OutFile pcov.zip
-        7z x -y pcov.zip > $null
-        Remove-Item c:\tools\php\* -include .zip
-        cd c:\tools\php
-        Add-Content php.ini "`nextension=php_sqlsrv.dll"
-        Add-Content php.ini "`nextension=php_pdo_sqlsrv.dll"
-        Add-Content php.ini "`nextension=php_pcov.dll"
-        Add-Content php.ini "`n"
-      }
-  - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.7/composer.phar)
+  # install pdo_sqlsrv https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
+  - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
+  - 7z x php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip -ophp_pdo_sqlsrv
+  - copy php_pdo_sqlsrv\php_pdo_sqlsrv.dll ext\php_pdo_sqlsrv.dll
+  - echo extension=php_pdo_sqlsrv.dll >> php.ini
+
+  - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
 before_test:
   - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
@@ -73,7 +53,6 @@ before_test:
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
-  - php C:\tools\composer.phar self-update
   - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
 
 test_script:
