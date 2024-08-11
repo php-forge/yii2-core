@@ -81,7 +81,8 @@ before_test:
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
-  - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
+  - appveyor-retry composer self-update
+  - appveyor-retry composer install --no-progress --prefer-dist
 
 test_script:
   - cd C:\projects\yii2
