@@ -44,13 +44,13 @@ install:
 
   # install pdo_sqlsrv
   - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
-  - 7z x php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip -ophp_pdo_sqlsrv
+  - 7z x php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip -o php_pdo_sqlsrv -y
   - copy php_pdo_sqlsrv\php_pdo_sqlsrv.dll ext\php_pdo_sqlsrv.dll
   - echo extension=php_pdo_sqlsrv.dll >> php.ini
 
   # install pcov
   - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pcov/1.0.11/php_pcov-1.0.11-8.1-nts-vs16-x64.zip
-  - 7z x php_pcov-1.0.11-8.1-nts-vs16-x64.zip -ophp_pcov
+  - 7z x php_pcov-1.0.11-8.1-nts-vs16-x64.zip -o php_pcov -y
   - copy php_pcov\php_pcov.dll ext\php_pcov.dll
   - echo extension=php_pcov.dll >> php.ini
 
