@@ -3,7 +3,7 @@ version: dev-{build}
 clone_folder: C:\projects\yii2
 
 services:
-  - mssql2008r2sp2
+  - mssql2012sp1
 
 environment:
     matrix:
@@ -34,7 +34,7 @@ install:
     - echo extension=php_mbstring.dll >> php.ini
     - echo extension=php_openssl.dll >> php.ini
     - echo extension=php_pdo_sqlite.dll >> php.ini
-    - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.5.8/composer.phar)
+    - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
 before_test:
     - cd C:\projects\yii2
