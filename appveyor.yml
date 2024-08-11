@@ -2,6 +2,9 @@ build: false
 
 version: dev-{build}
 
+image:
+  - Visual Studio 2015
+
 clone_folder: C:\projects\yii2
 
 environment:
