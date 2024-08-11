@@ -60,16 +60,8 @@ install:
         Add-Content php.ini "`nextension=php_pdo_sqlsrv.dll"
         Add-Content php.ini "`nextension=php_pcov.dll"
         Add-Content php.ini "`n"
-
-        # download Composer
-        if (!(Test-Path C:\tools\composer)) {
-          New-Item -path c:\tools -name composer -itemtype directory
-        }
-        if (!(Test-Path c:\tools\composer\composer.phar)) {
-          appveyor-retry appveyor DownloadFile https://getcomposer.org/composer.phar -Filename C:\tools\composer\composer.phar
-          Set-Content -path 'C:\tools\composer\composer.bat' -Value ('@php C:\tools\composer\composer.phar %*')
-        }
       }
+  - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.7/composer.phar)
 
 before_test:
   - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
@@ -81,8 +73,8 @@ before_test:
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
-  - appveyor-retry composer self-update
-  - appveyor-retry composer install --no-progress --prefer-dist
+  - php C:\tools\composer.phar self-update
+  - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
 
 test_script:
   - cd C:\projects\yii2
