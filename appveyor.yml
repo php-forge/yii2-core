@@ -34,7 +34,14 @@ install:
   - echo extension=php_intl.dll >> php.ini
   - echo extension=php_mbstring.dll >> php.ini
   - echo extension=php_openssl.dll >> php.ini
-  - echo extension=php_pdo_sqlsrv.dll >> php.ini
+
+  # install pdo_sqlsrv
+  - ps: |
+      $phpVersion = (php -r "echo PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;")
+      Invoke-WebRequest -Uri "https://github.com/microsoft/msphpsql/releases/download/v5.12.0/Windows_5.12.0RTW.zip" -OutFile "pdo_sqlsrv.zip"
+      Expand-Archive -Path "pdo_sqlsrv.zip" -DestinationPath "C:\tools\php\ext"
+  - echo extension=pdo_sqlsrv >> php.ini
+
   - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
 before_test:
