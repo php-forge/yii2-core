@@ -18,7 +18,6 @@
         "ext-filter": "*",
         "ext-gd": "*",
         "ext-iconv": "*",
-        "ext-imagick": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
