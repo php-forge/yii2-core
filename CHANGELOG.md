@@ -20,6 +20,7 @@ Yii Core version 2 Change Log
 - Bug #62: Refactor tearDown method in session classes for clean table `session` (@terabytesoftw)
 - Bug #63: Refactor `Connection::class` to remove unnecessary code in `getQuoter()` method (@terabytesoftw)
 - Bug #64: Refactor `MessageController.php` to use `createCommand()` instead of `schema->insert()` for inserting new messages (@terabytesoftw)
+- Bug #65: Update Oracle `ColumnSchema::class` to handle binary data conversion (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
