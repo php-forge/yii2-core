@@ -78,4 +78,4 @@ test_script:
 
   # upload coverage report
   - appveyor DownloadFile https://codecov.io/bash -FileName codecov.sh
-  - bash codecov.sh -f clover.xml
+  - bash codecov.sh -f coverage.xml
