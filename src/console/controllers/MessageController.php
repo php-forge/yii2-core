@@ -389,7 +389,9 @@ EOD;
         foreach ($new as $category => $msgs) {
             foreach ($msgs as $msg) {
                 $insertCount++;
-                $db->schema->insert($sourceMessageTable, ['category' => $category, 'message' => $msg]);
+                $db->createCommand()
+                    ->insert($sourceMessageTable, ['category' => $category, 'message' => $msg])
+                    ->execute();
             }
         }
 
