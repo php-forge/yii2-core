@@ -34,7 +34,7 @@ install:
   - echo extension=php_intl.dll >> php.ini
   - echo extension=php_mbstring.dll >> php.ini
   - echo extension=php_openssl.dll >> php.ini
-  - echo extension=php_pdo_dblib.dll >> php.ini
+  - echo extension=php_pdo_sqlsrv.dll >> php.ini
   - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
 before_test:
@@ -51,4 +51,4 @@ before_test:
 
 test_script:
   - cd C:\projects\yii2
-  - vendor\bin\phpunit --exclude-group mssql
+  - vendor\bin\phpunit --group mssql
