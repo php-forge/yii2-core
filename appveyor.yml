@@ -31,18 +31,24 @@ install:
   - echo extension=php_curl.dll >> php.ini
   - echo extension=php_fileinfo.dll >> php.ini
   - echo extension=php_gd.dll >> php.ini
-  - echo extension=php_gd2.dll >> php.ini
   - echo extension=php_intl.dll >> php.ini
   - echo extension=php_mbstring.dll >> php.ini
   - echo extension=php_openssl.dll >> php.ini
-  - echo extension=php_pdo_sqlite.dll >> php.ini
+  - echo extension=php_pdo_dblib.dll >> php.ini
   - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
-  - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
 
 before_test:
+  - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
+
+  # setup SQL Server 2008
+  - ps: |
+      Start-Service "MSSQL$SQL2008R2SP2"
+      Start-Service "SQLBrowser"
+  - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
+  - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
   - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
 
 test_script:
   - cd C:\projects\yii2
-  - vendor\bin\phpunit --exclude-group db,wincache
+  - vendor\bin\phpunit --exclude-group mssql
