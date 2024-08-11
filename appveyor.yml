@@ -35,7 +35,7 @@ install:
   - echo extension=php_mbstring.dll >> php.ini
   - echo extension=php_openssl.dll >> php.ini
 
-  # install pdo_sqlsrv https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
+  # install pdo_sqlsrv
   - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
   - 7z x php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip -ophp_pdo_sqlsrv
   - copy php_pdo_sqlsrv\php_pdo_sqlsrv.dll ext\php_pdo_sqlsrv.dll
@@ -53,7 +53,7 @@ before_test:
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
-  - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
+  - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi --ignore-platform-reqs
 
 test_script:
   - cd C:\projects\yii2
