@@ -9,7 +9,8 @@ clone_folder: C:\projects\yii2
 
 environment:
   matrix:
-    - php_ver: 8.1.20
+    - php: 8.1.20
+      sql-instance: SQL2008R2SP2
 
 cache:
   - '%APPDATA%\Composer'
@@ -22,7 +23,7 @@ init:
 
 install:
   - ps: Set-Service wuauserv -StartupType Manual
-  - IF NOT EXIST C:\tools\php (choco install --yes --allow-empty-checksums php --version %php_ver% --params '/InstallDir:C:\tools\php')
+  - IF NOT EXIST C:\tools\php (choco install --yes --allow-empty-checksums php --version %php% --params '/InstallDir:C:\tools\php')
   - cd C:\tools\php
   - copy php.ini-production php.ini
   - echo date.timezone="UTC" >> php.ini
@@ -49,12 +50,16 @@ install:
 
   - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
+  # update composer
+  - php C:\tools\composer.phar self-update
+
 before_test:
   - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
 
   # setup SQL Server 2008
   - ps: |
-      Start-Service "MSSQL`$SQL2008R2SP2"
+      $instanceName = $env:sql-instance
+      Start-Service "MSSQL`$$instanceName"
       Start-Service "SQLBrowser"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
