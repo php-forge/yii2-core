@@ -42,8 +42,8 @@ before_test:
 
   # setup SQL Server 2008
   - ps: |
-    Start-Service "MSSQL`$SQL2008R2SP2"
-    Start-Service "SQLBrowser"
+      Start-Service "MSSQL`$SQL2008R2SP2"
+      Start-Service "SQLBrowser"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
   - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
   - cd C:\projects\yii2
