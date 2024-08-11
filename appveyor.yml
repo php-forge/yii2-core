@@ -1,0 +1,50 @@
+build: false
+version: dev-{build}
+clone_folder: C:\projects\yii2
+
+environment:
+    matrix:
+      - php_ver: 8.1
+
+services:
+  - mssql2008r2sp2
+
+cache:
+    - '%APPDATA%\Composer'
+    - '%LOCALAPPDATA%\Composer'
+    - C:\tools\php -> .appveyor.yml
+    - C:\tools\composer.phar -> .appveyor.yml
+
+init:
+    - SET PATH=C:\tools\php;%PATH%
+
+install:
+    - ps: Set-Service wuauserv -StartupType Manual
+    - IF NOT EXIST C:\tools\php (choco install --yes --allow-empty-checksums php --version %php_ver% --params '/InstallDir:C:\tools\php')
+    - cd C:\tools\php
+    - copy php.ini-production php.ini
+    - echo date.timezone="UTC" >> php.ini
+    - echo memory_limit=512M >> php.ini
+    - echo extension_dir=ext >> php.ini
+    - echo extension=curl >> php.ini
+    - echo extension=fileinfo >> php.ini
+    - echo extension=gd >> php.ini
+    - echo extension=intl >> php.ini
+    - echo extension=mbstring >> php.ini
+    - echo extension=openssl >> php.ini
+    - echo extension=pdo_sqlite >> php.ini
+    - echo extension=sqlite3 >> php.ini
+    - appveyor DownloadFile https://github.com/microsoft/msphpsql/releases/download/v5.10.1/Windows-8.1.zip
+    - 7z x Windows-8.1.zip -oC:\tools\php\ext -y
+    - echo extension=php_pdo_sqlsrv_81_nts.dll >> php.ini
+    - echo extension=php_sqlsrv_81_nts.dll >> php.ini
+    - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/latest-stable/composer.phar)
+
+before_test:
+    - cd C:\projects\yii2
+    - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi
+    - sqlcmd -S "(local)\SQL2008R2SP2" -U sa -P YourStrong!Passw0rd -Q "CREATE DATABASE yiitest"
+
+test_script:
+    - cd C:\projects\yii2
+    - vendor\bin\phpunit --group mssql --exclude-group mysql,pgsql,sqlite,db,oci,wincache
