@@ -41,6 +41,12 @@ install:
   - copy php_pdo_sqlsrv\php_pdo_sqlsrv.dll ext\php_pdo_sqlsrv.dll
   - echo extension=php_pdo_sqlsrv.dll >> php.ini
 
+  # install pcov
+  - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pcov/1.0.11/php_pcov-1.0.11-8.1-nts-vs16-x64.zip
+  - 7z x php_pcov-1.0.11-8.1-nts-vs16-x64.zip -ophp_pcov
+  - copy php_pcov\php_pcov.dll ext\php_pcov.dll
+  - echo extension=php_pcov.dll >> php.ini
+
   - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
 
 before_test:
@@ -57,4 +63,8 @@ before_test:
 
 test_script:
   - cd C:\projects\yii2
-  - vendor\bin\phpunit --group mssql
+  - vendor\bin\phpunit --group mssql --coverage-clover=coverage.xml
+
+  # upload coverage report
+  - appveyor DownloadFile https://codecov.io/bash
+  - bash codecov.sh -f coverage.xml
