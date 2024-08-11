@@ -33,7 +33,7 @@ $config = [
         'sqlsrv' => [
             'dsn' => 'sqlsrv:Server=127.0.0.1,1433;Database=yiitest',
             'username' => 'SA',
-            'password' => 'YourStrong!Passw0rd',
+            'password' => 'Password12!',
             'fixture' => __DIR__ . '/mssql.sql',
         ],
         'pgsql' => [
