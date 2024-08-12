@@ -783,7 +783,6 @@ SQL;
         return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
     }
 
-
     /**
      * Retrieving inserted data from a primary key request of type uniqueidentifier (for SQL Server 2005 or later)
      * {@inheritdoc}
