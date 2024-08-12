@@ -79,5 +79,5 @@ test_script:
   - vendor\bin\phpunit --group mssql --coverage-clover=coverage.xml
 
   # upload coverage to codecov
-  - appveyor DownloadFile https://cli.codecov.io/latest/windows/codecov.exe
-  - codecov --verbose upload-process --fail-on-error -f coverage.xml
+  - appveyor DownloadFile https://codecov.io/bash -FileName codecov.sh
+  - bash codecov.sh -f coverage.xml
