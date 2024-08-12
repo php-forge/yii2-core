@@ -56,19 +56,19 @@ jobs:
       mssql:
           image: mcr.microsoft.com/mssql/${{ matrix.mssql.version }}
           env:
-              SA_PASSWORD: YourStrong!Passw0rd
+              SA_PASSWORD: Password12!
               ACCEPT_EULA: Y
               MSSQL_PID: Developer
           ports:
               - 1433:1433
-          options: --name=mssql --health-cmd="${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=3
+          options: --name=mssql --health-cmd="${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'Password12!' -Q 'SELECT 1'" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Create MS SQL Database.
-        run: docker exec -i mssql ${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'CREATE DATABASE yiitest'
+        run: docker exec -i mssql ${{ matrix.mssql.mssql-tool }} -S localhost -U SA -P 'Password12!' -Q 'CREATE DATABASE yiitest'
 
       - name: Install PHP with extensions.
         uses: shivammathur/setup-php@v2

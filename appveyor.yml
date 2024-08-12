@@ -1,0 +1,83 @@
+build: false
+
+version: dev-{build}
+
+image:
+  - Visual Studio 2015
+
+clone_folder: C:\projects\yii2
+
+environment:
+  matrix:
+    - php: 8.1.20
+      sqlinstance: SQL2008R2SP2
+    - php: 8.1.20
+      sqlinstance: SQL2012SP1
+    - php: 8.1.20
+      sqlinstance: SQL2014
+    - php: 8.1.20
+      sqlinstance: SQL2016
+
+cache:
+  - '%APPDATA%\Composer'
+  - '%LOCALAPPDATA%\Composer'
+  - C:\tools\php -> .appveyor.yml
+  - C:\tools\composer.phar -> .appveyor.yml
+
+init:
+  - SET PATH=C:\tools\php;%PATH%
+
+install:
+  - ps: Set-Service wuauserv -StartupType Manual
+  - IF NOT EXIST C:\tools\php (choco install --yes --allow-empty-checksums php --version %php% --params '/InstallDir:C:\tools\php')
+  - cd C:\tools\php
+  - copy php.ini-production php.ini
+  - echo date.timezone="UTC" >> php.ini
+  - echo memory_limit=512M >> php.ini
+  - echo extension_dir=ext >> php.ini
+  - echo extension=php_curl.dll >> php.ini
+  - echo extension=php_fileinfo.dll >> php.ini
+  - echo extension=php_gd.dll >> php.ini
+  - echo extension=php_intl.dll >> php.ini
+  - echo extension=php_mbstring.dll >> php.ini
+  - echo extension=php_openssl.dll >> php.ini
+
+  # install pdo_sqlsrv
+  - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pdo_sqlsrv/5.12.0/php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip
+  - 7z x php_pdo_sqlsrv-5.12.0-8.1-nts-vs16-x64.zip -ophp_pdo_sqlsrv -y
+  - copy php_pdo_sqlsrv\php_pdo_sqlsrv.dll ext\php_pdo_sqlsrv.dll
+  - echo extension=php_pdo_sqlsrv.dll >> php.ini
+
+  # install pcov
+  - appveyor DownloadFile https://downloads.php.net/~windows/pecl/releases/pcov/1.0.11/php_pcov-1.0.11-8.1-nts-vs16-x64.zip
+  - 7z x php_pcov-1.0.11-8.1-nts-vs16-x64.zip -ophp_pcov -y
+  - copy php_pcov\php_pcov.dll ext\php_pcov.dll
+  - echo extension=php_pcov.dll >> php.ini
+
+  - IF NOT EXIST C:\tools\composer.phar (cd C:\tools && appveyor DownloadFile https://getcomposer.org/download/2.7.0/composer.phar)
+
+  # update composer
+  - php C:\tools\composer.phar self-update
+
+before_test:
+  - ps: Get-Service | Where-Object { $_.DisplayName -like 'SQL Server*' }
+
+  # setup SQL Server 2008
+  - ps: |
+      $instanceName = $env:sqlinstance
+      Start-Service "MSSQL`$$instanceName"
+      Start-Service "SQLBrowser"
+  - sqlcmd -S "(local)\%SQLINSTANCE%" -Q "Use [master]; CREATE DATABASE yiitest;"
+  - sqlcmd -S "(local)\%SQLINSTANCE%" -h -1 -Q "set nocount on; Select @@version"
+  - cd C:\projects\yii2
+  - php C:\tools\composer.phar update --no-interaction --no-progress --prefer-stable --no-ansi --ignore-platform-reqs
+
+test_script:
+  - cd C:\projects\yii2
+
+  # run tests
+  - vendor\bin\phpunit --group mssql --coverage-clover=coverage.xml
+
+  # upload coverage to codecov
+  - appveyor DownloadFile https://codecov.io/bash -FileName codecov.sh
+  - bash codecov.sh -f coverage.xml

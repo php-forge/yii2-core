@@ -375,7 +375,6 @@ SQL;
      */
     protected function loadColumnSchema($info)
     {
-        $isVersion2017orLater = version_compare($this->db->getSchema()->getServerVersion(), '14', '>=');
         $column = $this->createColumnSchema();
 
         $column->name = $info['column_name'];
@@ -395,7 +394,7 @@ SQL;
                 $column->type = $this->typeMap[$type];
             }
 
-            if ($isVersion2017orLater && $type === 'bit') {
+            if ($type === 'bit') {
                 $column->type = 'boolean';
             }
 
@@ -407,16 +406,8 @@ SQL;
                     $column->scale = (int) $values[1];
                 }
 
-                if ($isVersion2017orLater === false) {
-                    if ($column->size === 1 && ($type === 'tinyint' || $type === 'bit')) {
-                        $column->type = 'boolean';
-                    } elseif ($type === 'bit') {
-                        if ($column->size > 32) {
-                            $column->type = 'bigint';
-                        } elseif ($column->size === 32) {
-                            $column->type = 'integer';
-                        }
-                    }
+                if ($column->size === 1 && $type === 'tinyint') {
+                    $column->type = 'boolean';
                 }
             }
         }
@@ -426,6 +417,7 @@ SQL;
         if ($info['column_default'] === '(NULL)') {
             $info['column_default'] = null;
         }
+
         if (!$column->isPrimaryKey && ($column->type !== 'timestamp' || $info['column_default'] !== 'CURRENT_TIMESTAMP')) {
             $column->defaultValue = $column->defaultPhpTypecast($info['column_default']);
         }
@@ -784,6 +776,14 @@ SQL;
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function createColumnSchemaBuilder($type, $length = null)
+    {
+        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+    }
+
+    /**
      * Retrieving inserted data from a primary key request of type uniqueidentifier (for SQL Server 2005 or later)
      * {@inheritdoc}
      */
@@ -815,13 +815,4 @@ SQL;
 
         return $result;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createColumnSchemaBuilder($type, $length = null)
-    {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
-    }
-
 }
