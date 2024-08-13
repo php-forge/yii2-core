@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mysql;
 
@@ -14,6 +11,7 @@ use yii\caching\DbCache;
 use yii\db\Exception;
 use yii\db\Expression;
 use yii\db\Query;
+use yii\db\QueryInterface;
 
 /**
  * QueryBuilder is the query builder for MySQL databases.
@@ -235,10 +233,15 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    protected function prepareInsertValues($table, $columns, $params = [])
+    protected function prepareInsertValues(string $table, QueryInterface|array $columns, array $params = []): array
     {
-        list($names, $placeholders, $values, $params) = parent::prepareInsertValues($table, $columns, $params);
-        if (!$columns instanceof Query && empty($names)) {
+        /**
+         * @psalm-var array $names
+         * @psalm-var array $placeholders
+         */
+        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($table, $columns, $params);
+
+        if (!$columns instanceof QueryInterface && empty($names)) {
             $tableSchema = $this->db->getSchema()->getTableSchema($table);
             if ($tableSchema !== null) {
                 if (!empty($tableSchema->primaryKey)) {
@@ -260,30 +263,46 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
+     *
      * @see https://downloads.mysql.com/docs/refman-5.1-en.pdf
      */
-    public function upsert($table, $insertColumns, $updateColumns, &$params)
-    {
+    public function upsert(
+        string $table,
+        QueryInterface|array $insertColumns,
+        bool|array $updateColumns,
+        array &$params
+    ): string {
         $insertSql = $this->insert($table, $insertColumns, $params);
-        list($uniqueNames, , $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns);
+
+        /** @psalm-var array $uniqueNames */
+        [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+        );
+
         if (empty($uniqueNames)) {
             return $insertSql;
-        }
-        if ($updateNames === []) {
-            // there are no columns to update
-            $updateColumns = false;
         }
 
         if ($updateColumns === true) {
             $updateColumns = [];
+            /** @psalm-var string $name */
             foreach ($updateNames as $name) {
                 $updateColumns[$name] = new Expression('VALUES(' . $this->db->quoteColumnName($name) . ')');
             }
-        } elseif ($updateColumns === false) {
-            $name = $this->db->quoteColumnName(reset($uniqueNames));
-            $updateColumns = [$name => new Expression($this->db->quoteTableName($table) . '.' . $name)];
         }
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
+
+        if (empty($updateColumns)) {
+            return str_replace('INSERT INTO', 'INSERT IGNORE INTO', $insertSql);
+        }
+
+        /**
+         *  @psalm-var array<array-key, string> $updates
+         *  @psalm-var array<string, ExpressionInterface|string> $updateColumns
+         */
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, $params);
+
         return $insertSql . ' ON DUPLICATE KEY UPDATE ' . implode(', ', $updates);
     }
 
@@ -339,6 +358,13 @@ class QueryBuilder extends \yii\db\QueryBuilder
         return $this->addCommentOnTable($table, '');
     }
 
+    /**
+     * @throws NotSupportedException if this method is called. This method is not supported by MySQL.
+     */
+    public function insertWithReturningPks(string $table, QueryInterface|array $columns, array &$params = []): string
+    {
+        throw new NotSupportedException(__METHOD__ . ' is not supported by Mysql.');
+    }
 
     /**
      * Gets column definition.

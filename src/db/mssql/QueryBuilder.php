@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mssql;
 
@@ -11,13 +8,12 @@ use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\Constraint;
 use yii\db\Expression;
+use yii\db\ExpressionInterface;
+use yii\db\QueryInterface;
 use yii\db\TableSchema;
 
 /**
  * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
- *
- * @author Timur Ruziev <resurtm@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -63,14 +59,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function buildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
+    public function buildOrderByAndLimit(
+        string $sql,
+        array|null $orderBy,
+        ExpressionInterface|int|null $limit,
+        ExpressionInterface|int|null $offset,
+    ): string {
         if (!$this->hasOffset($offset) && !$this->hasLimit($limit)) {
             $orderBy = $this->buildOrderBy($orderBy);
             return $orderBy === '' ? $sql : $sql . $this->separator . $orderBy;
         }
 
-        if (version_compare($this->db->getSchema()->getServerVersion(), '11', '<')) {
+        if ($this->isLegacyVersion()) {
             return $this->oldBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
         }
 
@@ -79,26 +79,39 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2012 or newer.
+     *
      * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify this parameter.
+     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify
+     * this parameter.
      * @param int $limit the limit number. See [[\yii\db\Query::limit]] for more details.
      * @param int $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
+     *
+     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any).
      */
     protected function newBuildOrderByAndLimit($sql, $orderBy, $limit, $offset)
     {
         $orderBy = $this->buildOrderBy($orderBy);
+
         if ($orderBy === '') {
-            // ORDER BY clause is required when FETCH and OFFSET are in the SQL
+            // ORDER BY clause is required when FETCH and OFFSET are in the SQL.
             $orderBy = 'ORDER BY (SELECT NULL)';
         }
+
         $sql .= $this->separator . $orderBy;
 
-        // http://technet.microsoft.com/en-us/library/gg699618.aspx
-        $offset = $this->hasOffset($offset) ? $offset : '0';
-        $sql .= $this->separator . "OFFSET $offset ROWS";
+        /**
+         * @link http://technet.microsoft.com/en-us/library/gg699618.aspx
+         */
+        $offsetString = $this->hasOffset($offset) ?
+            ($offset instanceof ExpressionInterface ? $this->buildExpression($offset) : (string)$offset) : '0';
+
+
+        $sql .= $this->separator . 'OFFSET ' . $offsetString . ' ROWS';
+
         if ($this->hasLimit($limit)) {
-            $sql .= $this->separator . "FETCH NEXT $limit ROWS ONLY";
+            $sql .= $this->separator . 'FETCH NEXT ' .
+                ($limit instanceof ExpressionInterface
+                    ? $this->buildExpression($limit) : (string) $limit) . ' ROWS ONLY';
         }
 
         return $sql;
@@ -106,30 +119,44 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2005 to 2008.
-     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify this parameter.
-     * @param int|Expression $limit the limit number. See [[\yii\db\Query::limit]] for more details.
+     *
+     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET).
+     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify
+     * this parameter.
+     * @param int|ExpressionInterface $limit the limit number. See [[\yii\db\Query::limit]] for more details.
      * @param int $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
+     *
+     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any).
      */
-    protected function oldBuildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
+    protected function oldBuildOrderByAndLimit(
+        string $sql,
+        array $orderBy,
+        int|ExpressionInterface $limit,
+        int $offset,
+    ): string {
         $orderBy = $this->buildOrderBy($orderBy);
+
         if ($orderBy === '') {
             // ROW_NUMBER() requires an ORDER BY clause
             $orderBy = 'ORDER BY (SELECT NULL)';
         }
 
-        $sql = preg_replace('/^([\s(])*SELECT(\s+DISTINCT)?(?!\s*TOP\s*\()/i', "\\1SELECT\\2 rowNum = ROW_NUMBER() over ($orderBy),", $sql);
+        $sql = preg_replace(
+            '/^([\s(])*SELECT(\s+DISTINCT)?(?!\s*TOP\s*\()/i',
+            "\\1SELECT\\2 rowNum = ROW_NUMBER() over ($orderBy),",
+            $sql,
+        );
 
         if ($this->hasLimit($limit)) {
-            if ($limit instanceof Expression) {
+            if ($limit instanceof ExpressionInterface) {
                 $limit = '(' . (string)$limit . ')';
             }
+
             $sql = "SELECT TOP $limit * FROM ($sql) sub";
         } else {
             $sql = "SELECT * FROM ($sql) sub";
         }
+
         if ($this->hasOffset($offset)) {
             $sql .= $this->separator . "WHERE rowNum > $offset";
         }
@@ -287,17 +314,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
      /**
-      * Builds a SQL command for adding or updating a comment to a table or a column. The command built will check if a comment
-      * already exists. If so, it will be updated, otherwise, it will be added.
+      * Builds a SQL command for adding or updating a comment to a table or a column. The command built will check if a
+      * comment already exists. If so, it will be updated, otherwise, it will be added.
       *
       * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
       * @param string $table the table to be commented or whose column is to be commented. The table name will be
       * properly quoted by the method.
       * @param string|null $column optional. The name of the column to be commented. If empty, the command will add the
       * comment to the table instead. The column name will be properly quoted by the method.
+
       * @return string the SQL statement for adding a comment.
+
       * @throws InvalidArgumentException if the table does not exist.
-      * @since 2.0.24
       */
     protected function buildAddCommentSql($comment, $table, $column = null)
     {
@@ -461,128 +489,151 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
-     * Added OUTPUT construction for getting inserted data (for SQL Server 2005 or later)
-     * OUTPUT clause - The OUTPUT clause is new to SQL Server 2005 and has the ability to access
-     * the INSERTED and DELETED tables as is the case with a trigger.
      */
-    public function insert($table, $columns, &$params)
+    public function insertWithReturningPks(string $table, QueryInterface|array $columns, array &$params = []): string
     {
-        $columns = $this->normalizeTableRowData($table, $columns, $params);
+        $tableSchema = $this->db->getTableSchema($table);
+        $primaryKeys = $tableSchema->primaryKey ?? [];
 
-        $version2005orLater = version_compare($this->db->getSchema()->getServerVersion(), '9', '>=');
-
-        list($names, $placeholders, $values, $params) = $this->prepareInsertValues($table, $columns, $params);
-        $cols = [];
-        $outputColumns = [];
-        if ($version2005orLater) {
-            /* @var $schema TableSchema */
-            $schema = $this->db->getTableSchema($table);
-            foreach ($schema->columns as $column) {
-                if ($column->isComputed) {
-                    continue;
-                }
-
-                $dbType = $column->dbType;
-                if (in_array($dbType, ['char', 'varchar', 'nchar', 'nvarchar', 'binary', 'varbinary'])) {
-                    $dbType .= '(MAX)';
-                }
-                if ($column->dbType === Schema::TYPE_TIMESTAMP) {
-                    $dbType = $column->allowNull ? 'varbinary(8)' : 'binary(8)';
-                }
-
-                $quoteColumnName = $this->db->quoteColumnName($column->name);
-                $cols[] = $quoteColumnName . ' ' . $dbType . ' ' . ($column->allowNull ? 'NULL' : '');
-                $outputColumns[] = 'INSERTED.' . $quoteColumnName;
-            }
+        if (empty($primaryKeys)) {
+            return $this->insert($table, $columns, $params);
         }
 
-        $countColumns = count($outputColumns);
+        $createdCols = [];
+        $insertedCols = [];
+        $returnColumns = array_intersect_key($tableSchema?->columns ?? [], array_flip($primaryKeys));
+
+        foreach ($returnColumns as $returnColumn) {
+            $dbType = $returnColumn->dbType;
+
+            if (in_array($dbType, ['char', 'varchar', 'nchar', 'nvarchar', 'binary', 'varbinary'], true)) {
+                $dbType .= '(MAX)';
+            } elseif ($dbType === 'timestamp') {
+                $dbType = $returnColumn->allowNull ? 'varbinary(8)' : 'binary(8)';
+            }
+
+            $quotedName = $this->db->quoteColumnName($returnColumn->name);
+            $createdCols[] = $quotedName . ' ' . (string) $dbType . ' ' . ($returnColumn->allowNull ? 'NULL' : '');
+
+            $insertedCols[] = 'INSERTED.' . $quotedName;
+        }
+
+        [$names, $placeholders, $values, $params] = $this->prepareInsertValues($table, $columns, $params);
 
         $sql = 'INSERT INTO ' . $this->db->quoteTableName($table)
             . (!empty($names) ? ' (' . implode(', ', $names) . ')' : '')
-            . (($version2005orLater && $countColumns) ? ' OUTPUT ' . implode(',', $outputColumns) . ' INTO @temporary_inserted' : '')
-            . (!empty($placeholders) ? ' VALUES (' . implode(', ', $placeholders) . ')' : $values);
+            . ' OUTPUT ' . implode(',', $insertedCols) . ' INTO @temporary_inserted'
+            . (!empty($placeholders) ? ' VALUES (' . implode(', ', $placeholders) . ')' : ' ' . $values);
 
-        if ($version2005orLater && $countColumns) {
-            $sql = 'SET NOCOUNT ON;DECLARE @temporary_inserted TABLE (' . implode(', ', $cols) . ');' . $sql .
-                ';SELECT * FROM @temporary_inserted';
-        }
-
-        return $sql;
+        return 'SET NOCOUNT ON;DECLARE @temporary_inserted TABLE (' . implode(', ', $createdCols) . ');'
+            . $sql . ';SELECT * FROM @temporary_inserted;';
     }
 
     /**
      * {@inheritdoc}
+     *
      * @see https://docs.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql
      * @see https://weblogs.sqlteam.com/dang/2009/01/31/upsert-race-condition-with-merge/
      */
-    public function upsert($table, $insertColumns, $updateColumns, &$params)
-    {
-        $insertColumns = $this->normalizeTableRowData($table, $insertColumns, $params);
+    public function upsert(
+        string $table,
+        QueryInterface|array $insertColumns,
+        bool|array $updateColumns,
+        array &$params = []
+    ): string {
+        /** @psalm-var Constraint[] $constraints */
+        $constraints = [];
 
-        /** @var Constraint[] $constraints */
-        list($uniqueNames, $insertNames, $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns, $constraints);
+        /** @psalm-var string[] $insertNames */
+        [$uniqueNames, $insertNames, $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+            $constraints
+        );
+
         if (empty($uniqueNames)) {
             return $this->insert($table, $insertColumns, $params);
-        }
-        if ($updateNames === []) {
-            // there are no columns to update
-            $updateColumns = false;
         }
 
         $onCondition = ['or'];
         $quotedTableName = $this->db->quoteTableName($table);
+
         foreach ($constraints as $constraint) {
             $constraintCondition = ['and'];
-            foreach ($constraint->columnNames as $name) {
-                $quotedName = $this->db->quoteColumnName($name);
-                $constraintCondition[] = "$quotedTableName.$quotedName=[EXCLUDED].$quotedName";
+
+            $columnNames = $constraint->columnNames ?? [];
+
+            if (is_array($columnNames)) {
+                /** @psalm-var string[] $columnNames */
+                foreach ($columnNames as $name) {
+                    $quotedName = $this->db->quoteColumnName($name);
+                    $constraintCondition[] = "$quotedTableName.$quotedName=[EXCLUDED].$quotedName";
+                }
             }
+
             $onCondition[] = $constraintCondition;
         }
+
         $on = $this->buildCondition($onCondition, $params);
-        list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
 
-        /**
-         * Fix number of select query params for old MSSQL version that does not support offset correctly.
-         * @see QueryBuilder::oldBuildOrderByAndLimit
-         */
-        $insertNamesUsing = $insertNames;
-        if (strstr($values, 'rowNum = ROW_NUMBER()') !== false) {
-            $insertNamesUsing = array_merge(['[rowNum]'], $insertNames);
-        }
+        /** @psalm-var string[] $placeholders */
+        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
 
-        $mergeSql = 'MERGE ' . $this->db->quoteTableName($table) . ' WITH (HOLDLOCK) '
-            . 'USING (' . (!empty($placeholders) ? 'VALUES (' . implode(', ', $placeholders) . ')' : ltrim($values, ' ')) . ') AS [EXCLUDED] (' . implode(', ', $insertNamesUsing) . ') '
-            . "ON ($on)";
+        $mergeSql = 'MERGE '
+            . $this->db->quoteTableName($table)
+            . ' WITH (HOLDLOCK) '
+            . 'USING (' . (!empty($placeholders)
+            ? 'VALUES (' . implode(', ', $placeholders) . ')'
+            : ltrim((string) $values, ' ')) . ') AS [EXCLUDED] (' . implode(', ', $insertNames) . ') ' . "ON ($on)";
+
         $insertValues = [];
+
         foreach ($insertNames as $name) {
             $quotedName = $this->db->quoteColumnName($name);
+
             if (strrpos($quotedName, '.') === false) {
                 $quotedName = '[EXCLUDED].' . $quotedName;
             }
+
             $insertValues[] = $quotedName;
         }
-        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')'
-            . ' VALUES (' . implode(', ', $insertValues) . ')';
+
+        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')' . ' VALUES (' . implode(', ', $insertValues) . ')';
+
+        if ($updateNames === []) {
+            /** there are no columns to update */
+            $updateColumns = false;
+        }
+
         if ($updateColumns === false) {
             return "$mergeSql WHEN NOT MATCHED THEN $insertSql;";
         }
 
         if ($updateColumns === true) {
             $updateColumns = [];
+
+            /** @psalm-var string[] $updateNames */
             foreach ($updateNames as $name) {
                 $quotedName = $this->db->quoteColumnName($name);
                 if (strrpos($quotedName, '.') === false) {
                     $quotedName = '[EXCLUDED].' . $quotedName;
                 }
+
                 $updateColumns[$name] = new Expression($quotedName);
             }
         }
-        $updateColumns = $this->normalizeTableRowData($table, $updateColumns, $params);
 
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
+        /**
+         * @var array $params
+         *
+         * @psalm-var string[] $updates
+         * @psalm-var array<string, ExpressionInterface|string> $updateColumns
+         */
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, $params);
+
         $updateSql = 'UPDATE SET ' . implode(', ', $updates);
+
         return "$mergeSql WHEN MATCHED THEN $updateSql WHEN NOT MATCHED THEN $insertSql;";
     }
 
@@ -605,6 +656,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $columnType = preg_replace('/ first$/i', '', $columnType);
 
         return $columnType;
+    }
+
+    public function isLegacyVersion(): bool
+    {
+        return version_compare($this->db->getSchema()->getServerVersion(), '11', '<');
     }
 
     /**

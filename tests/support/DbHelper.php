@@ -36,7 +36,7 @@ final class DbHelper
 
         foreach ($lines as $line) {
             if (trim($line) !== '') {
-                $db->getPDO()?->exec($line);
+                $db->pdo?->exec($line);
             }
         }
     }

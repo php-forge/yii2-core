@@ -782,37 +782,4 @@ SQL;
     {
         return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
     }
-
-    /**
-     * Retrieving inserted data from a primary key request of type uniqueidentifier (for SQL Server 2005 or later)
-     * {@inheritdoc}
-     */
-    public function insert($table, $columns)
-    {
-        $command = $this->db->createCommand()->insert($table, $columns);
-        if (!$command->execute()) {
-            return false;
-        }
-
-        $isVersion2005orLater = version_compare($this->db->getSchema()->getServerVersion(), '9', '>=');
-        $inserted = $isVersion2005orLater ? $command->pdoStatement->fetch() : [];
-
-        $tableSchema = $this->getTableSchema($table);
-        $result = [];
-        foreach ($tableSchema->primaryKey as $name) {
-            // @see https://github.com/yiisoft/yii2/issues/13828 & https://github.com/yiisoft/yii2/issues/17474
-            if (isset($inserted[$name])) {
-                $result[$name] = $inserted[$name];
-            } elseif ($tableSchema->columns[$name]->autoIncrement) {
-                // for a version earlier than 2005
-                $result[$name] = $this->getLastInsertID($tableSchema->sequenceName);
-            } elseif (isset($columns[$name])) {
-                $result[$name] = $columns[$name];
-            } else {
-                $result[$name] = $tableSchema->columns[$name]->defaultValue;
-            }
-        }
-
-        return $result;
-    }
 }

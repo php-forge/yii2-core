@@ -154,23 +154,4 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
 
         return $columns;
     }
-
-    public function testGetPrimaryKey()
-    {
-        $db = $this->getConnection();
-
-        if ($db->getSchema()->getTableSchema('testPKTable') !== null) {
-            $db->createCommand()->dropTable('testPKTable')->execute();
-        }
-
-        $db->createCommand()->createTable(
-            'testPKTable',
-            ['id' => Schema::TYPE_PK, 'bar' => Schema::TYPE_INTEGER]
-        )->execute();
-
-        $insertResult = $db->getSchema()->insert('testPKTable', ['bar' => 1]);
-        $selectResult = $db->createCommand('select [id] from [testPKTable] where [bar]=1')->queryOne();
-
-        $this->assertEquals($selectResult['id'], $insertResult['id']);
-    }
 }

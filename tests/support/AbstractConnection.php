@@ -7,6 +7,8 @@ namespace yiiunit\support;
 use Yii;
 use yii\db\Connection;
 
+use function dirname;
+
 abstract class AbstractConnection
 {
     public static string $dsn = '';
@@ -15,18 +17,27 @@ abstract class AbstractConnection
     public static string $password = '';
     public static string $username = '';
 
-    public static function getConnection(bool $fixture = false): Connection
-    {
-        $connection = new Connection(
-            [
-                'dsn' => static::$dsn,
-                'username' => static::$username,
-                'password' => static::$password,
-            ]
-        );
+    public static function getConnection(
+        bool $fixture = false,
+        string|null $fixturePath = null,
+        bool $enableSchemaCache = false,
+    ): Connection {
+        $config = [
+            'dsn' => static::$dsn,
+            'username' => static::$username,
+            'password' => static::$password,
+        ];
+
+        if ($enableSchemaCache === false) {
+            $config['schemaCache'] = null;
+        }
+
+        $connection = new Connection($config);
 
         if ($fixture) {
-            DbHelper::loadFixture($connection, dirname(__DIR__) . '/data/' . static::$fixture);
+            $fixturePath ??= dirname(__DIR__) . '/data/' . static::$fixture;
+
+            DbHelper::loadFixture($connection, $fixturePath);
         }
 
         if (Yii::$app !== null) {

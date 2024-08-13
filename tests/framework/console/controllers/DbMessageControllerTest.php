@@ -132,15 +132,21 @@ class DbMessageControllerTest extends BaseMessageControllerTest
         static::$db->createCommand()->truncateTable('source_message')->execute();
         static::$db->createCommand()->checkIntegrity(true, '', 'message')->execute();
         foreach ($messages as $source => $translation) {
-            $lastPk = static::$db->schema->insert('source_message', [
-                'category' => $category,
-                'message' => $source,
-            ]);
-            static::$db->createCommand()->insert('message', [
-                'id' => $lastPk['id'],
-                'language' => $this->language,
-                'translation' => $translation,
-            ])->execute();
+            $lastPk = static::$db->createCommand()->insertWithReturningPks(
+                'source_message',
+                [
+                    'category' => $category,
+                    'message' => $source,
+                ],
+            );
+            static::$db->createCommand()->insert(
+                'message',
+                [
+                    'id' => $lastPk['id'],
+                    'language' => $this->language,
+                    'translation' => $translation,
+                ],
+            )->execute();
         }
     }
 

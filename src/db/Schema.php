@@ -418,33 +418,6 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Executes the INSERT command, returning primary key values.
-     * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column data (name => value) to be inserted into the table.
-     * @return array|false primary key values or false if the command fails
-     * @since 2.0.4
-     */
-    public function insert($table, $columns)
-    {
-        $command = $this->db->createCommand()->insert($table, $columns);
-        if (!$command->execute()) {
-            return false;
-        }
-        $tableSchema = $this->getTableSchema($table);
-        $result = [];
-        foreach ($tableSchema->primaryKey as $name) {
-            if ($tableSchema->columns[$name]->autoIncrement) {
-                $result[$name] = $this->getLastInsertID($tableSchema->sequenceName);
-                break;
-            }
-
-            $result[$name] = isset($columns[$name]) ? $columns[$name] : $tableSchema->columns[$name]->defaultValue;
-        }
-
-        return $result;
-    }
-
-    /**
      * Splits full table name into parts
      * @param string $name
      * @return array

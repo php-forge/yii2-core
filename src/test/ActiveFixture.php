@@ -82,8 +82,11 @@ class ActiveFixture extends BaseActiveFixture
         $this->data = [];
         $table = $this->getTableSchema();
         foreach ($this->getData() as $alias => $row) {
-            $primaryKeys = $this->db->schema->insert($table->fullName, $row);
-            $this->data[$alias] = array_merge($row, $primaryKeys);
+            $primaryKeys = $this->db->createCommand()->insertWithReturningPks($table->fullName, $row);
+
+            if (is_array($primaryKeys)) {
+                $this->data[$alias] = array_merge($row, $primaryKeys);
+            }
         }
     }
 
