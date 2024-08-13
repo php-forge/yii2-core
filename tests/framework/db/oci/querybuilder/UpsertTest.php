@@ -7,6 +7,12 @@ namespace yiiunit\framework\db\oci\querybuilder;
 use yii\db\QueryInterface;
 use yiiunit\support\OciConnection;
 
+/**
+ * @group db
+ * @group oci
+ * @group querybuilder
+ * @group upsert
+ */
 final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert
 {
     public function setup(): void
