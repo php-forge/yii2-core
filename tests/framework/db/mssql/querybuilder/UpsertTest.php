@@ -35,7 +35,7 @@ final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert
         array $expectedParams,
         string $expectedSQLLegacyVersion = '',
     ): void {
-        if ($this->db->getQueryBuilder()->isLegacyVersion()) {
+        if ($this->db->getQueryBuilder()->isLegacyVersion() && $expectedSQLLegacyVersion !== '') {
             $expectedSQL = $expectedSQLLegacyVersion;
         }
 
