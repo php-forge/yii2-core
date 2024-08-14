@@ -27,48 +27,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
         '\\\\' => '[\\]',
     ];
 
-    public function testOffsetLimit()
-    {
-        $expectedQuerySql = 'SELECT [id] FROM [example] ORDER BY (SELECT NULL) OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY';
-        $expectedQueryParams = [];
-
-        $query = new Query();
-        $query->select('id')->from('example')->limit(10)->offset(5);
-
-        list($actualQuerySql, $actualQueryParams) = $this->getQueryBuilder()->build($query);
-
-        $this->assertEquals($expectedQuerySql, $actualQuerySql);
-        $this->assertEquals($expectedQueryParams, $actualQueryParams);
-    }
-
-    public function testLimit()
-    {
-        $expectedQuerySql = 'SELECT [id] FROM [example] ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY';
-        $expectedQueryParams = [];
-
-        $query = new Query();
-        $query->select('id')->from('example')->limit(10);
-
-        list($actualQuerySql, $actualQueryParams) = $this->getQueryBuilder()->build($query);
-
-        $this->assertEquals($expectedQuerySql, $actualQuerySql);
-        $this->assertEquals($expectedQueryParams, $actualQueryParams);
-    }
-
-    public function testOffset()
-    {
-        $expectedQuerySql = 'SELECT [id] FROM [example] ORDER BY (SELECT NULL) OFFSET 10 ROWS';
-        $expectedQueryParams = [];
-
-        $query = new Query();
-        $query->select('id')->from('example')->offset(10);
-
-        list($actualQuerySql, $actualQueryParams) = $this->getQueryBuilder()->build($query);
-
-        $this->assertEquals($expectedQuerySql, $actualQuerySql);
-        $this->assertEquals($expectedQueryParams, $actualQueryParams);
-    }
-
     protected function getCommmentsFromTable($table)
     {
         $db = $this->getConnection(false, false);

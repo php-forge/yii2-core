@@ -600,17 +600,24 @@ class ActiveRecord extends BaseActiveRecord
         if (!$this->beforeSave(true)) {
             return false;
         }
+
         $values = $this->getDirtyAttributes($attributes);
-        if (($primaryKeys = static::getDb()->schema->insert(static::tableName(), $values)) === false) {
+        $primaryKeys = static::getDb()->createCommand()->insertWithReturningPks(static::tableName(), $values);
+
+        if ($primaryKeys === false) {
             return false;
         }
-        foreach ($primaryKeys as $name => $value) {
-            $id = static::getTableSchema()->columns[$name]->phpTypecast($value);
-            $this->setAttribute($name, $id);
-            $values[$name] = $id;
+
+        if (is_array($primaryKeys)) {
+            foreach ($primaryKeys as $name => $value) {
+                $id = static::getTableSchema()->columns[$name]->phpTypecast($value);
+                $this->setAttribute($name, $id);
+                $values[$name] = $id;
+            }
         }
 
         $changedAttributes = array_fill_keys(array_keys($values), null);
+
         $this->setOldAttributes($values);
         $this->afterSave(true, $changedAttributes);
 

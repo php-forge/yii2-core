@@ -1,15 +1,13 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\pgsql;
 
 use yii\db\ArrayExpression;
 use yii\db\ExpressionInterface;
 use yii\db\JsonExpression;
+use yii\db\PdoValue;
 
 /**
  * Class ColumnSchema for PostgreSQL database.
@@ -26,7 +24,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
      * @var string name of associated sequence if column is auto-incremental
      * @since 2.0.29
      */
-    public $sequenceName;
+    public $sequenceName = null;
 
 
     /**
@@ -50,6 +48,10 @@ class ColumnSchema extends \yii\db\ColumnSchema
             return new JsonExpression($value, $this->dbType);
         }
 
+        if (is_string($value) && $this->type === Schema::TYPE_BINARY) {
+            return new PdoValue($value, \PDO::PARAM_LOB);
+        }
+
         return $this->typecast($value);
     }
 
@@ -59,7 +61,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
     public function phpTypecast($value)
     {
         if ($this->dimension > 0) {
-            if (!is_array($value)) {
+            if (!is_array($value) && (is_string($value) || $value === null)) {
                 $value = $this->getArrayParser()->parse($value);
             }
 
@@ -91,17 +93,16 @@ class ColumnSchema extends \yii\db\ColumnSchema
 
         switch ($this->type) {
             case Schema::TYPE_BOOLEAN:
-                switch (strtolower($value)) {
-                    case 't':
-                    case 'true':
-                        return true;
-                    case 'f':
-                    case 'false':
-                        return false;
-                }
-                return (bool) $value;
+                /** @psalm-var mixed $value */
+                $value = is_string($value) ? strtolower($value) : $value;
+
+                return match ($value) {
+                    't', 'true' => true,
+                    'f', 'false' => false,
+                    default => (bool)$value,
+                };
             case Schema::TYPE_JSON:
-                return json_decode($value, true);
+                return json_decode((string) $value, true, 512, JSON_THROW_ON_ERROR);
         }
 
         return parent::phpTypecast($value);

@@ -1,18 +1,13 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\pgsql;
 
 use yii\base\InvalidArgumentException;
-use yii\db\Constraint;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
-use yii\db\Query;
-use yii\db\PdoValue;
+use yii\db\QueryInterface;
 use yii\helpers\StringHelper;
 
 /**
@@ -255,7 +250,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         // https://github.com/yiisoft/yii2/issues/4492
         // https://www.postgresql.org/docs/9.1/sql-altertable.html
-        if (preg_match('/^(DROP|SET|RESET)\s+/i', $type)) {
+        if (preg_match('/^(DROP|SET|RESET)\s+/i', (string) $type)) {
             return "ALTER TABLE {$tableName} ALTER COLUMN {$columnName} {$type}";
         }
 
@@ -298,49 +293,58 @@ class QueryBuilder extends \yii\db\QueryBuilder
         return 'ALTER TABLE ' . $tableName . ' ' . implode(', ', $multiAlterStatement);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function insert($table, $columns, &$params)
+    public function insertWithReturningPks(string $table, QueryInterface|array $columns, array &$params = []): string
     {
-        return parent::insert($table, $this->normalizeTableRowData($table, $columns), $params);
+        $tableSchema = $this->db->getTableSchema($table);
+
+        $returnColumns = [];
+
+        if ($tableSchema !== null) {
+            $returnColumns = $tableSchema->primaryKey ?? [];
+        }
+
+        $sql = $this->insert($table, $columns, $params);
+
+        if (empty($returnColumns)) {
+            return $sql;
+        }
+
+        $returning = [];
+
+        foreach ($returnColumns as $name) {
+            $returning[] = $this->db->quoteColumnName($name);
+        }
+
+        return $sql . ' RETURNING ' . implode(', ', $returning);
     }
 
     /**
      * {@inheritdoc}
+     *
      * @see https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT
      * @see https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql/8702291#8702291
      */
-    public function upsert($table, $insertColumns, $updateColumns, &$params)
-    {
-        $insertColumns = $this->normalizeTableRowData($table, $insertColumns);
-        if (!is_bool($updateColumns)) {
-            $updateColumns = $this->normalizeTableRowData($table, $updateColumns);
-        }
-        if (version_compare($this->db->getServerVersion(), '9.5', '<')) {
-            return $this->oldUpsert($table, $insertColumns, $updateColumns, $params);
-        }
-
-        return $this->newUpsert($table, $insertColumns, $updateColumns, $params);
-    }
-
-    /**
-     * [[upsert()]] implementation for PostgreSQL 9.5 or higher.
-     * @param string $table
-     * @param array|Query $insertColumns
-     * @param array|bool $updateColumns
-     * @param array $params
-     * @return string
-     */
-    private function newUpsert($table, $insertColumns, $updateColumns, &$params)
-    {
+    public function upsert(
+        string $table,
+        QueryInterface|array $insertColumns,
+        $updateColumns,
+        array &$params = []
+    ): string {
         $insertSql = $this->insert($table, $insertColumns, $params);
-        list($uniqueNames, , $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns);
+
+        /** @psalm-var array $uniqueNames */
+        [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+        );
+
         if (empty($uniqueNames)) {
             return $insertSql;
         }
+
         if ($updateNames === []) {
-            // there are no columns to update
+            /** there are no columns to update */
             $updateColumns = false;
         }
 
@@ -350,139 +354,24 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         if ($updateColumns === true) {
             $updateColumns = [];
+
+            /** @psalm-var string $name */
             foreach ($updateNames as $name) {
-                $updateColumns[$name] = new Expression('EXCLUDED.' . $this->db->quoteColumnName($name));
-            }
-        }
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
-        return $insertSql . ' ON CONFLICT (' . implode(', ', $uniqueNames) . ') DO UPDATE SET ' . implode(', ', $updates);
-    }
-
-    /**
-     * [[upsert()]] implementation for PostgreSQL older than 9.5.
-     * @param string $table
-     * @param array|Query $insertColumns
-     * @param array|bool $updateColumns
-     * @param array $params
-     * @return string
-     */
-    private function oldUpsert($table, $insertColumns, $updateColumns, &$params)
-    {
-        /** @var Constraint[] $constraints */
-        list($uniqueNames, $insertNames, $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns, $constraints);
-        if (empty($uniqueNames)) {
-            return $this->insert($table, $insertColumns, $params);
-        }
-        if ($updateNames === []) {
-            // there are no columns to update
-            $updateColumns = false;
-        }
-
-        /** @var Schema $schema */
-        $schema = $this->db->getSchema();
-        if (!$insertColumns instanceof Query) {
-            $tableSchema = $schema->getTableSchema($table);
-            $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
-            foreach ($insertColumns as $name => $value) {
-                // NULLs and numeric values must be type hinted in order to be used in SET assigments
-                // NVM, let's cast them all
-                if (isset($columnSchemas[$name])) {
-                    $phName = self::PARAM_PREFIX . count($params);
-                    $params[$phName] = $value;
-                    $insertColumns[$name] = new Expression("CAST($phName AS {$columnSchemas[$name]->dbType})");
-                }
-            }
-        }
-        list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
-        $updateCondition = ['or'];
-        $insertCondition = ['or'];
-        $quotedTableName = $schema->quoteTableName($table);
-        foreach ($constraints as $constraint) {
-            $constraintUpdateCondition = ['and'];
-            $constraintInsertCondition = ['and'];
-            foreach ($constraint->columnNames as $name) {
-                $quotedName = $schema->quoteColumnName($name);
-                $constraintUpdateCondition[] = "$quotedTableName.$quotedName=\"EXCLUDED\".$quotedName";
-                $constraintInsertCondition[] = "\"upsert\".$quotedName=\"EXCLUDED\".$quotedName";
-            }
-            $updateCondition[] = $constraintUpdateCondition;
-            $insertCondition[] = $constraintInsertCondition;
-        }
-        $withSql = 'WITH "EXCLUDED" (' . implode(', ', $insertNames)
-            . ') AS (' . (!empty($placeholders) ? 'VALUES (' . implode(', ', $placeholders) . ')' : ltrim($values, ' ')) . ')';
-        if ($updateColumns === false) {
-            $selectSubQuery = (new Query())
-                ->select(new Expression('1'))
-                ->from($table)
-                ->where($updateCondition);
-            $insertSelectSubQuery = (new Query())
-                ->select($insertNames)
-                ->from('EXCLUDED')
-                ->where(['not exists', $selectSubQuery]);
-            $insertSql = $this->insert($table, $insertSelectSubQuery, $params);
-            return "$withSql $insertSql";
-        }
-
-        if ($updateColumns === true) {
-            $updateColumns = [];
-            foreach ($updateNames as $name) {
-                $quotedName = $this->db->quoteColumnName($name);
-                if (strrpos($quotedName, '.') === false) {
-                    $quotedName = '"EXCLUDED".' . $quotedName;
-                }
-                $updateColumns[$name] = new Expression($quotedName);
-            }
-        }
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
-        $updateSql = 'UPDATE ' . $this->db->quoteTableName($table) . ' SET ' . implode(', ', $updates)
-            . ' FROM "EXCLUDED" ' . $this->buildWhere($updateCondition, $params)
-            . ' RETURNING ' . $this->db->quoteTableName($table) . '.*';
-        $selectUpsertSubQuery = (new Query())
-            ->select(new Expression('1'))
-            ->from('upsert')
-            ->where($insertCondition);
-        $insertSelectSubQuery = (new Query())
-            ->select($insertNames)
-            ->from('EXCLUDED')
-            ->where(['not exists', $selectUpsertSubQuery]);
-        $insertSql = $this->insert($table, $insertSelectSubQuery, $params);
-        return "$withSql, \"upsert\" AS ($updateSql) $insertSql";
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function update($table, $columns, $condition, &$params)
-    {
-        return parent::update($table, $this->normalizeTableRowData($table, $columns), $condition, $params);
-    }
-
-    /**
-     * Normalizes data to be saved into the table, performing extra preparations and type converting, if necessary.
-     *
-     * @param string $table the table that data will be saved into.
-     * @param array|Query $columns the column data (name => value) to be saved into the table or instance
-     * of [[yii\db\Query|Query]] to perform INSERT INTO ... SELECT SQL statement.
-     * Passing of [[yii\db\Query|Query]] is available since version 2.0.11.
-     * @return array|Query normalized columns
-     * @since 2.0.9
-     */
-    private function normalizeTableRowData($table, $columns)
-    {
-        if ($columns instanceof Query) {
-            return $columns;
-        }
-
-        if (($tableSchema = $this->db->getSchema()->getTableSchema($table)) !== null) {
-            $columnSchemas = $tableSchema->columns;
-            foreach ($columns as $name => $value) {
-                if (isset($columnSchemas[$name]) && $columnSchemas[$name]->type === Schema::TYPE_BINARY && is_string($value)) {
-                    $columns[$name] = new PdoValue($value, \PDO::PARAM_LOB); // explicitly setup PDO param type for binary column
-                }
+                $updateColumns[$name] = new Expression(
+                    'EXCLUDED.' . $this->db->quoteColumnName($name)
+                );
             }
         }
 
-        return $columns;
+        /**
+         * @psalm-var array $updateColumns
+         * @psalm-var string[] $uniqueNames
+         * @psalm-var string[] $updates
+         */
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, $params);
+
+        return $insertSql
+            . ' ON CONFLICT (' . implode(', ', $uniqueNames) . ') DO UPDATE SET ' . implode(', ', $updates);
     }
 
     /**

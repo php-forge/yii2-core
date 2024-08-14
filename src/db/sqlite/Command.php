@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\sqlite;
 
@@ -39,6 +36,43 @@ class Command extends \yii\db\Command
             $result = parent::execute();
         }
         $this->setSql($sql)->bindValues($params);
+        return $result;
+    }
+
+    public function insertWithReturningPks(string $table, array $columns): array|bool|int
+    {
+        $params = [];
+        $result = [];
+
+        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
+        $this->setSql($sql)->bindValues($params);
+
+        $result = $this->execute();
+
+        if ($result === false) {
+            return false;
+        }
+
+        $tableSchema = $this->db->getTableSchema($table);
+        $tablePrimaryKeys = $tableSchema->primaryKey ?? [];
+
+        if (empty($tablePrimaryKeys)) {
+            return $result;
+        }
+
+        $result = [];
+
+        foreach ($tablePrimaryKeys as $name) {
+            if ($tableSchema->getColumn($name)?->autoIncrement) {
+                $result[$name] = $this->db->getLastInsertID((string) $tableSchema->sequenceName);
+
+                continue;
+            }
+
+            /** @psalm-var mixed */
+            $result[$name] = $columns[$name] ?? $tableSchema->getColumn($name)?->defaultValue;
+        }
+
         return $result;
     }
 

@@ -1,26 +1,20 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\oci;
 
+use PDO;
 use yii\base\InvalidArgumentException;
 use yii\db\Connection;
-use yii\db\Constraint;
 use yii\db\Exception;
 use yii\db\Expression;
-use yii\db\Query;
 use yii\helpers\StringHelper;
 use yii\db\ExpressionInterface;
+use yii\db\QueryInterface;
 
 /**
  * QueryBuilder is the query builder for Oracle databases.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -66,32 +60,40 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function buildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
-        $orderBy = $this->buildOrderBy($orderBy);
-        if ($orderBy !== '') {
-            $sql .= $this->separator . $orderBy;
+    public function buildOrderByAndLimit(
+        string $sql,
+        array|null $orderBy,
+        ExpressionInterface|int|null $limit,
+        ExpressionInterface|int|null $offset,
+    ): string {
+        $orderByString = $this->buildOrderBy($orderBy);
+
+        if ($orderByString !== '') {
+            $sql .= $this->separator . $orderByString;
         }
 
         $filters = [];
+
         if ($this->hasOffset($offset)) {
-            $filters[] = 'rowNumId > ' . $offset;
+            $filters[] = 'rowNumId > ' .
+                ($offset instanceof ExpressionInterface ? $this->buildExpression($offset) : (string)$offset);
         }
+
         if ($this->hasLimit($limit)) {
-            $filters[] = 'rownum <= ' . $limit;
+            $filters[] = 'rownum <= ' .
+                ($limit instanceof ExpressionInterface ? $this->buildExpression($limit) : (string)$limit);
         }
+
         if (empty($filters)) {
             return $sql;
         }
 
         $filter = implode(' AND ', $filters);
-        return <<<EOD
-WITH USER_SQL AS ($sql),
-    PAGINATION AS (SELECT USER_SQL.*, rownum as rowNumId FROM USER_SQL)
-SELECT *
-FROM PAGINATION
-WHERE $filter
-EOD;
+
+        return <<<SQL
+        WITH USER_SQL AS ($sql), PAGINATION AS (SELECT USER_SQL.*, rownum as rowNumId FROM USER_SQL)
+        SELECT * FROM PAGINATION WHERE $filter
+        SQL;
     }
 
     /**
@@ -191,91 +193,139 @@ EOD;
     /**
      * {@inheritdoc}
      */
-    protected function prepareInsertValues($table, $columns, $params = [])
+    protected function prepareInsertValues(string $table, array|QueryInterface $columns, array $params = []): array
     {
-        list($names, $placeholders, $values, $params) = parent::prepareInsertValues($table, $columns, $params);
-        if (!$columns instanceof Query && empty($names)) {
-            $tableSchema = $this->db->getSchema()->getTableSchema($table);
+        /**
+         * @var array $names
+         * @var array $placeholders
+         */
+        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($table, $columns, $params);
+
+        if (!$columns instanceof QueryInterface && empty($names)) {
+            $tableSchema = $this->db->getTableSchema($table);
+
             if ($tableSchema !== null) {
-                $columns = !empty($tableSchema->primaryKey) ? $tableSchema->primaryKey : [reset($tableSchema->columns)->name];
+                $tableColumns = $tableSchema->columns ?? [];
+                $columns = !empty($tableSchema->primaryKey) ? $tableSchema->primaryKey : [reset($tableColumns)->name];
+
                 foreach ($columns as $name) {
+                    /** @psalm-var mixed */
                     $names[] = $this->db->quoteColumnName($name);
                     $placeholders[] = 'DEFAULT';
                 }
             }
         }
+
         return [$names, $placeholders, $values, $params];
     }
 
     /**
      * {@inheritdoc}
+     *
      * @see https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_9016.htm#SQLRF01606
      */
-    public function upsert($table, $insertColumns, $updateColumns, &$params)
-    {
-        /** @var Constraint[] $constraints */
-        list($uniqueNames, $insertNames, $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns, $constraints);
+    public function upsert(
+        string $table,
+        array|QueryInterface $insertColumns,
+        array|bool $updateColumns,
+        array &$params,
+    ): string {
+        $usingValues = null;
+        $constraints = [];
+
+        [$uniqueNames, $insertNames, $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+            $constraints,
+        );
+
         if (empty($uniqueNames)) {
             return $this->insert($table, $insertColumns, $params);
         }
+
         if ($updateNames === []) {
-            // there are no columns to update
+            /** there are no columns to update */
             $updateColumns = false;
         }
 
         $onCondition = ['or'];
         $quotedTableName = $this->db->quoteTableName($table);
+
         foreach ($constraints as $constraint) {
+            $columnNames = $constraint->columnNames ?? [];
             $constraintCondition = ['and'];
-            foreach ($constraint->columnNames as $name) {
-                if ($name !== null) {
+
+            /** @psalm-var string[] $columnNames */
+            foreach ($columnNames as $name) {
+                if (null !== $name) {
                     $quotedName = $this->db->quoteColumnName($name);
                     $constraintCondition[] = "$quotedTableName.$quotedName=\"EXCLUDED\".$quotedName";
                 }
             }
+
             $onCondition[] = $constraintCondition;
         }
+
         $on = $this->buildCondition($onCondition, $params);
-        list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
+
+        /** @psalm-var string[] $placeholders */
+        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+
         if (!empty($placeholders)) {
             $usingSelectValues = [];
+            /** @psalm-var string[] $insertNames */
             foreach ($insertNames as $index => $name) {
                 $usingSelectValues[$name] = new Expression($placeholders[$index]);
             }
-            $usingSubQuery = (new Query())
-                ->select($usingSelectValues)
-                ->from('DUAL');
-            list($usingValues, $params) = $this->build($usingSubQuery, $params);
+
+            /** @psalm-var array $params */
+            $usingValues = $this->buildSelect($usingSelectValues, $params) . ' ' . $this->buildFrom(['DUAL'], $params);
         }
-        $mergeSql = 'MERGE INTO ' . $this->db->quoteTableName($table) . ' '
-            . 'USING (' . (isset($usingValues) ? $usingValues : ltrim($values, ' ')) . ') "EXCLUDED" '
-            . "ON ($on)";
+
         $insertValues = [];
+        $mergeSql = 'MERGE INTO '
+            . $this->db->quoteTableName($table)
+            . ' '
+            . 'USING (' . ($usingValues ?? ltrim((string) $values, ' '))
+            . ') "EXCLUDED" '
+            . "ON ($on)";
+
+        /** @psalm-var string[] $insertNames */
         foreach ($insertNames as $name) {
             $quotedName = $this->db->quoteColumnName($name);
+
             if (strrpos($quotedName, '.') === false) {
                 $quotedName = '"EXCLUDED".' . $quotedName;
             }
+
             $insertValues[] = $quotedName;
         }
-        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')'
-            . ' VALUES (' . implode(', ', $insertValues) . ')';
+
+        $insertSql = 'INSERT (' . implode(', ', $insertNames) . ')' . ' VALUES (' . implode(', ', $insertValues) . ')';
+
         if ($updateColumns === false) {
             return "$mergeSql WHEN NOT MATCHED THEN $insertSql";
         }
 
         if ($updateColumns === true) {
             $updateColumns = [];
+            /** @psalm-var string[] $updateNames */
             foreach ($updateNames as $name) {
                 $quotedName = $this->db->quoteColumnName($name);
+
                 if (strrpos($quotedName, '.') === false) {
                     $quotedName = '"EXCLUDED".' . $quotedName;
                 }
+
                 $updateColumns[$name] = new Expression($quotedName);
             }
         }
-        list($updates, $params) = $this->prepareUpdateSets($table, $updateColumns, $params);
+
+        /** @psalm-var string[] $updates */
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, (array) $params);
         $updateSql = 'UPDATE SET ' . implode(', ', $updates);
+
         return "$mergeSql WHEN MATCHED THEN $updateSql WHEN NOT MATCHED THEN $insertSql";
     }
 
@@ -374,5 +424,45 @@ EOD;
     public function dropCommentFromTable($table)
     {
         return 'COMMENT ON TABLE ' . $this->db->quoteTableName($table) . " IS ''";
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function insertWithReturningPks(
+        string $table,
+        QueryInterface|array $columns,
+        array &$params = [],
+        array &$returnParams = [],
+    ): string {
+        $tableSchema = $this->db->getTableSchema($table);
+
+        $primaryKeys = $tableSchema->primaryKey ?? [];
+
+        $sql = $this->insert($table, $columns, $params);
+
+        if (empty($primaryKeys)) {
+            return $sql;
+        }
+
+        $columnSchemas = $tableSchema?->columns ?? [];
+        $returnColumns = array_intersect_key($columnSchemas, array_flip($primaryKeys));
+
+        $returning = [];
+
+        foreach ($returnColumns as $returnColumn) {
+            $phName = static::PARAM_PREFIX . (count($params) + count($returnParams));
+
+            $returnParams[$phName] = [
+                'column' => $returnColumn->name,
+                'value' => '',
+                'dataType' => $returnColumn->phpType === Schema::TYPE_STRING ? PDO::PARAM_STR : PDO::PARAM_INT,
+                'size' => $returnColumn->size ?? $returnColumn->size - 1,
+            ];
+
+            $returning[] = $this->db->quoteColumnName($returnColumn->name);
+        }
+
+        return $sql . ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));
     }
 }

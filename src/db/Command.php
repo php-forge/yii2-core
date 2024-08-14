@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db;
 
@@ -50,9 +47,6 @@ use yii\base\NotSupportedException;
  * @property string $rawSql The raw SQL with parameter values inserted into the corresponding placeholders in
  * [[sql]].
  * @property string $sql The SQL statement to be executed.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Command extends Component
 {
@@ -488,6 +482,27 @@ class Command extends Component
         $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
 
         return $this->setSql($sql)->bindValues($params);
+    }
+
+    public function insertWithReturningPks(string $table, array $columns): array|bool|int
+    {
+        $params = [];
+
+        $sql = $this->db->getQueryBuilder()->insertWithReturningPks($table, $columns, $params);
+
+        $this->setSql($sql)->bindValues($params);
+
+        if (str_starts_with($sql, 'INSERT INTO') && $this->db->driverName === 'sqlsrv') {
+            return $this->execute();
+        }
+
+        if (!str_contains($sql, 'RETURNING') && $this->db->driverName === 'pgsql') {
+            return $this->execute();
+        }
+
+        $result = $this->queryInternal('fetch');
+
+        return is_array($result) ? $result : false;
     }
 
     /**

@@ -22,6 +22,7 @@ Yii Core version 2 Change Log
 - Bug #64: Refactor `MessageController.php` to use `createCommand()` instead of `schema->insert()` for inserting new messages (@terabytesoftw)
 - Bug #65: Update Oracle `ColumnSchema::class` to handle binary data conversion (@terabytesoftw)
 - Bug #68: Fix `Boolean` type for `MSSQL 2008`, `MSSQL 2012`, `MSSQL 2014`, `MSSQL 2016` (@terabytesoftw)
+- Bug #69: Refactor `insert()`, `insertWithReturningPk()` and `upsert()` in `MSSQL`, `MYSQL`, `OCI`, `PGSQL` and `SQLITE` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

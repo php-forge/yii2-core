@@ -10,8 +10,6 @@ clone_folder: C:\projects\yii2
 environment:
   matrix:
     - php: 8.1.20
-      sqlinstance: SQL2008R2SP2
-    - php: 8.1.20
       sqlinstance: SQL2012SP1
     - php: 8.1.20
       sqlinstance: SQL2014

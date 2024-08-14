@@ -297,8 +297,8 @@ class Connection extends Component
      */
     public array $commandMap = [
         'pgsql' => \yii\db\Command::class, // PostgresSQL
-        'mysqli' => \yii\db\Command::class, // MySQL
-        'mysql' => \yii\db\Command::class, // MySQL
+        'mysqli' => \yii\db\mysql\Command::class, // MySQL
+        'mysql' => \yii\db\mysql\Command::class, // MySQL
         'sqlite' => \yii\db\sqlite\Command::class, // sqlite 3
         'sqlite2' => \yii\db\sqlite\Command::class, // sqlite 2
         'sqlsrv' => \yii\db\Command::class, // newer MSSQL driver on MS Windows hosts
