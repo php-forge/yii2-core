@@ -42,12 +42,6 @@ final class BuildTest extends \yiiunit\TestCase
 
         $qb = $this->db->getQueryBuilder();
 
-        if ($qb->isLegacyVersion()) {
-            $expectedQuery = <<<SQL
-            SELECT TOP 10 * FROM (SELECT rowNum = ROW_NUMBER() over (ORDER BY (SELECT NULL)), [id] FROM [example]) sub WHERE rowNum > 5
-            SQL;
-        }
-
         $query = new Query();
         $query->select('id')->from('example')->limit(10)->offset(5);
         [$actualQuery, $actualQueryParams] = $this->db->getQueryBuilder()->build($query);
@@ -64,12 +58,6 @@ final class BuildTest extends \yiiunit\TestCase
         SQL;
 
         $qb = $this->db->getQueryBuilder();
-
-        if ($qb->isLegacyVersion()) {
-            $expectedQuery = <<<SQL
-            SELECT TOP 10 * FROM (SELECT rowNum = ROW_NUMBER() over (ORDER BY (SELECT NULL)), [id] FROM [example]) sub
-            SQL;
-        }
 
         $query = new Query();
         $query->select('id')->from('example')->limit(10);
@@ -91,12 +79,6 @@ final class BuildTest extends \yiiunit\TestCase
         $query->select('id')->from('example')->offset(10);
 
         $qb = $this->db->getQueryBuilder();
-
-        if ($qb->isLegacyVersion()) {
-            $expectedQuery = <<<SQL
-            SELECT * FROM (SELECT rowNum = ROW_NUMBER() over (ORDER BY (SELECT NULL)), [id] FROM [example]) sub WHERE rowNum > 10
-            SQL;
-        }
 
         [$actualQuery, $actualQueryParams] = $qb->build($query);
 

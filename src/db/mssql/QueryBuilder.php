@@ -6,11 +6,9 @@ namespace yii\db\mssql;
 
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
-use yii\db\Constraint;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
-use yii\db\TableSchema;
 
 /**
  * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
@@ -70,10 +68,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
             return $orderBy === '' ? $sql : $sql . $this->separator . $orderBy;
         }
 
-        if ($this->isLegacyVersion()) {
-            return $this->oldBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
-        }
-
         return $this->newBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
     }
 
@@ -116,53 +110,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $sql .= $this->separator . 'FETCH NEXT ' .
                 ($limit instanceof ExpressionInterface
                     ? $this->buildExpression($limit) : (string) $limit) . ' ROWS ONLY';
-        }
-
-        return $sql;
-    }
-
-    /**
-     * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2005 to 2008.
-     *
-     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET).
-     * @param array|null $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to
-     * specify this parameter.
-     * @param int|null|ExpressionInterface $limit the limit number. See [[\yii\db\Query::limit]] for more details.
-     * @param int|null|ExpressionInterface $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     *
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any).
-     */
-    protected function oldBuildOrderByAndLimit(
-        string $sql,
-        array|null $orderBy,
-        ExpressionInterface|int|null $limit,
-        ExpressionInterface|int|null $offset,
-    ): string {
-        $orderBy = $this->buildOrderBy($orderBy);
-
-        if ($orderBy === '') {
-            // ROW_NUMBER() requires an ORDER BY clause
-            $orderBy = 'ORDER BY (SELECT NULL)';
-        }
-
-        $sql = preg_replace(
-            '/^([\s(])*SELECT(\s+DISTINCT)?(?!\s*TOP\s*\()/i',
-            "\\1SELECT\\2 rowNum = ROW_NUMBER() over ($orderBy),",
-            $sql,
-        );
-
-        if ($this->hasLimit($limit)) {
-            if ($limit instanceof ExpressionInterface) {
-                $limit = '(' . (string)$limit . ')';
-            }
-
-            $sql = "SELECT TOP $limit * FROM ($sql) sub";
-        } else {
-            $sql = "SELECT * FROM ($sql) sub";
-        }
-
-        if ($this->hasOffset($offset)) {
-            $sql .= $this->separator . "WHERE rowNum > $offset";
         }
 
         return $sql;
@@ -545,7 +492,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         bool|array $updateColumns,
         array &$params = []
     ): string {
-        /** @psalm-var Constraint[] $constraints */
+        /** @psalm-var \yii\db\Constraint[] $constraints */
         $constraints = [];
 
         /** @psalm-var string[] $insertNames */
@@ -660,11 +607,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $columnType = preg_replace('/ first$/i', '', $columnType);
 
         return $columnType;
-    }
-
-    public function isLegacyVersion(): bool
-    {
-        return version_compare($this->db->getSchema()->getServerVersion(), '11', '<');
     }
 
     /**

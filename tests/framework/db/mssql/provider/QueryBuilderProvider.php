@@ -143,9 +143,6 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 3 => <<<SQL
                 MERGE [T_upsert] WITH (HOLDLOCK) USING (SELECT [email], 2 AS [status] FROM [customer] WHERE [name]=:qp0 ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY) AS [EXCLUDED] ([email], [status]) ON ([T_upsert].[email]=[EXCLUDED].[email]) WHEN MATCHED THEN UPDATE SET [status]=[EXCLUDED].[status] WHEN NOT MATCHED THEN INSERT ([email], [status]) VALUES ([EXCLUDED].[email], [EXCLUDED].[status]);
                 SQL,
-                5 => <<<SQL
-                MERGE [T_upsert] WITH (HOLDLOCK) USING (SELECT TOP 1 * FROM (SELECT rowNum = ROW_NUMBER() over (ORDER BY (SELECT NULL)), [email], 2 AS [status] FROM [customer] WHERE [name]=:qp0) sub) AS [EXCLUDED] ([email], [status]) ON ([T_upsert].[email]=[EXCLUDED].[email]) WHEN MATCHED THEN UPDATE SET [status]=[EXCLUDED].[status] WHEN NOT MATCHED THEN INSERT ([email], [status]) VALUES ([EXCLUDED].[email], [EXCLUDED].[status]);
-                SQL,
             ],
             'query with update part' => [
                 3 => <<<SQL
@@ -158,9 +155,6 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
             'query without update part' => [
                 3 => <<<SQL
                 MERGE [T_upsert] WITH (HOLDLOCK) USING (SELECT [email], 2 AS [status] FROM [customer] WHERE [name]=:qp0 ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY) AS [EXCLUDED] ([email], [status]) ON ([T_upsert].[email]=[EXCLUDED].[email]) WHEN NOT MATCHED THEN INSERT ([email], [status]) VALUES ([EXCLUDED].[email], [EXCLUDED].[status]);
-                SQL,
-                5 => <<<SQL
-                MERGE [T_upsert] WITH (HOLDLOCK) USING (SELECT TOP 1 * FROM (SELECT rowNum = ROW_NUMBER() over (ORDER BY (SELECT NULL)), [email], 2 AS [status] FROM [customer] WHERE [name]=:qp0) sub) AS [EXCLUDED] ([email], [status]) ON ([T_upsert].[email]=[EXCLUDED].[email]) WHEN NOT MATCHED THEN INSERT ([email], [status]) VALUES ([EXCLUDED].[email], [EXCLUDED].[status]);
                 SQL,
             ],
             'values and expressions' => [
