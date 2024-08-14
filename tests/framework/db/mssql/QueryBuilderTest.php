@@ -9,6 +9,7 @@ namespace yiiunit\framework\db\mssql;
 
 use yii\db\Expression;
 use yii\db\Query;
+use yii\db\QueryInterface;
 use yiiunit\data\base\TraversableObject;
 
 /**
@@ -419,10 +420,13 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
                 3 => 'MERGE [T_upsert_1] WITH (HOLDLOCK) USING (VALUES (:qp0)) AS [EXCLUDED] ([a]) ON ([T_upsert_1].[a]=[EXCLUDED].[a]) WHEN NOT MATCHED THEN INSERT ([a]) VALUES ([EXCLUDED].[a]);',
             ],
         ];
+
         $newData = parent::upsertProvider();
+
         foreach ($concreteData as $testName => $data) {
             $newData[$testName] = array_replace($newData[$testName], $data);
         }
+
         return $newData;
     }
 
@@ -816,5 +820,35 @@ ALTER TABLE [foo1] DROP COLUMN [bar]";
         $data[] = ['[table name with spaces]', '[[table name with spaces]]'];
 
         return $data;
+    }
+
+    /**
+     * @dataProvider upsertProvider
+     */
+    public function testUpsertExecute(
+        string $table,
+        array|QueryInterface $insertColumns,
+        array|bool $updateColumns
+    ): void {
+        $actualParams = [];
+
+        $db = $this->getConnection();
+        $qb = $db->getQueryBuilder();
+
+        $actualSQL = $qb->upsert($table, $insertColumns, $updateColumns, $actualParams);
+
+        $countQuery = (new Query())->from($table)->select('count(*)');
+        $rowCountBefore = (int) $countQuery->createCommand($db)->queryScalar();
+        $command = $db->createCommand($actualSQL, $actualParams);
+
+        $this->assertEquals(1, $command->execute());
+
+        $rowCountAfter = (int) $countQuery->createCommand($db)->queryScalar();
+
+        $this->assertEquals(1, $rowCountAfter - $rowCountBefore);
+
+        $command = $db->createCommand($actualSQL, $actualParams);
+
+        $command->execute();
     }
 }
