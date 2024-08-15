@@ -42,7 +42,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_MONEY => 'decimal(19,4)',
     ];
 
-
     /**
      * {@inheritdoc}
      */
@@ -63,32 +62,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         ExpressionInterface|int|null $limit,
         ExpressionInterface|int|null $offset,
     ): string {
+        $orderBy = $this->buildOrderBy($orderBy);
+
         if (!$this->hasOffset($offset) && !$this->hasLimit($limit)) {
-            $orderBy = $this->buildOrderBy($orderBy);
             return $orderBy === '' ? $sql : $sql . $this->separator . $orderBy;
         }
-
-        return $this->newBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
-    }
-
-    /**
-     * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2012 or newer.
-     *
-     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array|null $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to
-     * specify this parameter.
-     * @param int|null|ExpressionInterface $limit the limit number. See [[\yii\db\Query::limit]] for more details.
-     * @param int|null|ExpressionInterface $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     *
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any).
-     */
-    protected function newBuildOrderByAndLimit(
-        string $sql,
-        array|null $orderBy,
-        ExpressionInterface|int|null $limit,
-        ExpressionInterface|int|null $offset,
-    ): string {
-        $orderBy = $this->buildOrderBy($orderBy);
 
         if ($orderBy === '') {
             // ORDER BY clause is required when FETCH and OFFSET are in the SQL.
@@ -102,7 +80,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
          */
         $offsetString = $this->hasOffset($offset) ?
             ($offset instanceof ExpressionInterface ? $this->buildExpression($offset) : (string)$offset) : '0';
-
 
         $sql .= $this->separator . 'OFFSET ' . $offsetString . ' ROWS';
 
