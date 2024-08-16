@@ -50,7 +50,7 @@ final class BuildTest extends \yiiunit\TestCase
         $this->assertSame($expectedQueryParams, $actualQueryParams);
     }
 
-    public function testBuildOrderByAndLimitWithLimit()
+    public function testBuildOrderByAndLimitWithLimit(): void
     {
         $expectedQueryParams = [];
         $expectedQuery = <<<SQL
@@ -68,7 +68,7 @@ final class BuildTest extends \yiiunit\TestCase
         $this->assertEquals($expectedQueryParams, $actualQueryParams);
     }
 
-    public function testBuildOrderByAndLimitWithOffset()
+    public function testBuildOrderByAndLimitWithOffset(): void
     {
         $expectedQueryParams = [];
         $expectedQuery = <<<SQL
