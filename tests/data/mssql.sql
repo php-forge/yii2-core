@@ -128,7 +128,6 @@ CREATE TABLE [dbo].[null_values] (
 );
 
 CREATE TABLE [dbo].[negative_default_values] (
-  [tinyint_col] [tinyint] DEFAULT -123,
   [smallint_col] [smallint] DEFAULT -123,
   [int_col] [int] DEFAULT -123,
   [bigint_col] [bigint] DEFAULT -123,
