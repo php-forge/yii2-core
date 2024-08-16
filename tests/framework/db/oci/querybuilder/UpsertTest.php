@@ -19,7 +19,7 @@ final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert
     {
         parent::setUp();
 
-        $this->db = OciConnection::getConnection(true, dirname(__DIR__) . '/fixture/upsert.sql');
+        $this->db = OciConnection::getConnection(true);
     }
 
     /**

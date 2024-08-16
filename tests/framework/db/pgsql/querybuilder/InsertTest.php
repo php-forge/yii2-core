@@ -19,7 +19,7 @@ final class InsertTest extends \yiiunit\framework\db\querybuilder\AbstractInsert
     {
         parent::setUp();
 
-        $this->db = PgsqlConnection::getConnection(true, dirname(__DIR__) . '/fixture/insert.sql');
+        $this->db = PgsqlConnection::getConnection(true);
     }
 
     /**

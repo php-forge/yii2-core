@@ -22,7 +22,7 @@ final class BuildTest extends \yiiunit\TestCase
     {
         parent::setUp();
 
-        $this->db = MssqlConnection::getConnection(false);
+        $this->db = MssqlConnection::getConnection();
     }
 
     public function tearDown(): void

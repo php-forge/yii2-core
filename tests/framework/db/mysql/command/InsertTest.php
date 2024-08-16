@@ -18,6 +18,6 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
     {
         parent::setUp();
 
-        $this->db = MysqlConnection::getConnection(true, dirname(__DIR__) . '/fixture/insert.sql');
+        $this->db = MysqlConnection::getConnection(true);
     }
 }
