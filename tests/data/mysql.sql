@@ -33,6 +33,7 @@ DROP TABLE IF EXISTS `T_constraints_2` CASCADE;
 DROP TABLE IF EXISTS `T_constraints_1` CASCADE;
 DROP TABLE IF EXISTS `T_upsert` CASCADE;
 DROP TABLE IF EXISTS `T_upsert_1`;
+DROP TABLE IF EXISTS `T_upsert_varbinary` CASCADE;
 
 CREATE TABLE `constraints`
 (
@@ -127,7 +128,6 @@ CREATE TABLE null_values (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `negative_default_values` (
-  `tinyint_col` tinyint default '-123',
   `smallint_col` smallint default '-123',
   `int_col` integer default '-123',
   `bigint_col` bigint default '-123',
@@ -389,7 +389,7 @@ ENGINE = 'InnoDB' DEFAULT CHARSET = 'utf8';
 CREATE TABLE `T_upsert`
 (
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `ts` INT NULL,
+    `ts` BIGINT NULL,
     `email` VARCHAR(128) NOT NULL UNIQUE,
     `recovery_email` VARCHAR(128) NULL,
     `address` TEXT NULL,
@@ -404,3 +404,10 @@ CREATE TABLE `T_upsert_1` (
   `a` int(11) NOT NULL,
   PRIMARY KEY (`a`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `T_upsert_varbinary`
+(
+    `id` INT NOT NULL,
+    `blob_col` blob,
+    UNIQUE (`id`)
+);

@@ -32,6 +32,8 @@ BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_constraints_3"'; EXCEPTION WHEN OTHERS TH
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_constraints_2"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;--
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_constraints_1"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;--
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_upsert"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;--
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_upsert_1"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;--
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE "T_upsert_varbinary"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;--
 
 BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE "profile_SEQ"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;--
 BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE "customer_SEQ"'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;--
@@ -145,7 +147,6 @@ CREATE TABLE "null_values" (
 CREATE SEQUENCE "null_values_SEQ";
 
 CREATE TABLE "negative_default_values" (
-    "tinyint_col" number(3) default -123,
     "smallint_col" smallint default -123,
     "int_col" integer default -123,
     "bigint_col" integer default -123,
@@ -264,7 +265,6 @@ CREATE TABLE "T_constraints_2"
     CONSTRAINT "CN_constraints_2_multi" UNIQUE ("C_index_2_1", "C_index_2_2"),
     CONSTRAINT "CN_pk" PRIMARY KEY ("C_id_1", "C_id_2")
 );
-
 CREATE INDEX "CN_constraints_2_single" ON "T_constraints_2" ("C_index_1");
 
 CREATE TABLE "T_constraints_3"
@@ -296,6 +296,18 @@ CREATE TABLE "T_upsert"
     CONSTRAINT "CN_T_upsert_multi" UNIQUE ("email", "recovery_email")
 );
 CREATE SEQUENCE "T_upsert_SEQ";
+
+CREATE TABLE "T_upsert_1"
+(
+    "a" INT NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE "T_upsert_varbinary"
+(
+    "id" integer not null,
+    "blob_col" blob,
+    CONSTRAINT "T_upsert_varbinary_PK" PRIMARY KEY ("id") ENABLE
+);
 
 /**
  * (Postgres-)Database Schema for validator tests

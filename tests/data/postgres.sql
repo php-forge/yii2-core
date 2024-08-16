@@ -35,6 +35,7 @@ DROP TABLE IF EXISTS "T_constraints_2";
 DROP TABLE IF EXISTS "T_constraints_1";
 DROP TABLE IF EXISTS "T_upsert";
 DROP TABLE IF EXISTS "T_upsert_1";
+DROP TABLE IF EXISTS "T_upsert_varbinary";
 
 DROP SCHEMA IF EXISTS "schema1" CASCADE;
 DROP SCHEMA IF EXISTS "schema2" CASCADE;
@@ -161,7 +162,6 @@ CREATE TABLE "bool_values" (
 );
 
 CREATE TABLE "negative_default_values" (
-  tinyint_col smallint default '-123',
   smallint_col smallint default '-123',
   int_col integer default '-123',
   bigint_col bigint default '-123',
@@ -410,7 +410,7 @@ CREATE TABLE "T_constraints_4"
 CREATE TABLE "T_upsert"
 (
     "id" SERIAL NOT NULL PRIMARY KEY,
-    "ts" INT NULL,
+    "ts" BIGINT NULL,
     "email" VARCHAR(128) NOT NULL UNIQUE,
     "recovery_email" VARCHAR(128) NULL,
     "address" TEXT NULL,
@@ -423,6 +423,13 @@ CREATE TABLE "T_upsert"
 CREATE TABLE "T_upsert_1"
 (
     "a" INT NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE "T_upsert_varbinary"
+(
+    "id" INT NOT NULL,
+    "blob_col" BYTEA,
+    UNIQUE ("id")
 );
 
 CREATE TYPE "schema2"."my_type" AS enum('VAL1', 'VAL2', 'VAL3');

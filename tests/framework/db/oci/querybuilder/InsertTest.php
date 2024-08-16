@@ -19,7 +19,7 @@ final class InsertTest extends \yiiunit\framework\db\querybuilder\AbstractInsert
     {
         parent::setUp();
 
-        $this->db = OciConnection::getConnection(true, dirname(__DIR__) . '/fixture/insert.sql');
+        $this->db = OciConnection::getConnection(true);
     }
 
     /**

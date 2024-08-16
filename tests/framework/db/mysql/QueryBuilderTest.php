@@ -401,6 +401,6 @@ MySqlStatement;
 
         // non-primary key columns should have DEFAULT as value
         $sql = $command->insert('negative_default_values', [])->getRawSql();
-        $this->assertEquals("INSERT INTO `negative_default_values` (`tinyint_col`) VALUES (DEFAULT)", $sql);
+        $this->assertEquals("INSERT INTO `negative_default_values` (`smallint_col`) VALUES (DEFAULT)", $sql);
     }
 }
