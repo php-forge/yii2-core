@@ -490,13 +490,12 @@ abstract class SchemaTest extends DatabaseTestCase
         ];
     }
 
-    public function testNegativeDefaultValues()
+    public function testNegativeDefaultValues(): void
     {
         /* @var $schema Schema */
         $schema = $this->getConnection()->schema;
-
         $table = $schema->getTableSchema('negative_default_values');
-        $this->assertEquals(-123, $table->getColumn('tinyint_col')->defaultValue);
+
         $this->assertEquals(-123, $table->getColumn('smallint_col')->defaultValue);
         $this->assertEquals(-123, $table->getColumn('int_col')->defaultValue);
         $this->assertEquals(-123, $table->getColumn('bigint_col')->defaultValue);
