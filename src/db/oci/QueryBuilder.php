@@ -272,7 +272,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $on = $this->buildCondition($onCondition, $params);
 
         /** @psalm-var string[] $placeholders */
-        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+        [, $placeholders, $values, $params] = $this->prepareInsertValues(
+            $this->db->getTableSchema($table),
+            $insertColumns,
+            $params,
+        );
 
         if (!empty($placeholders)) {
             $usingSelectValues = [];

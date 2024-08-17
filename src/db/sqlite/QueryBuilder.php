@@ -94,7 +94,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         /** @psalm-var string[] $placeholders */
-        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+        [, $placeholders, $values, $params] = $this->prepareInsertValues(
+            $this->db->getTableSchema($table),
+            $insertColumns,
+            $params,
+        );
 
         $insertSql = 'INSERT OR IGNORE INTO '
             . $this->db->quoteTableName($table)
