@@ -25,6 +25,7 @@ Yii Core version 2 Change Log
 - Bug #69: Refactor `insert()`, `insertWithReturningPk()` and `upsert()` in `MSSQL`, `MYSQL`, `OCI`, `PGSQL` and `SQLITE` (@terabytesoftw)
 - Bug #71: Remove unnecessary method `newBuildOrderByAndLimit()` in `QueryBuilder::class` for `MSSQL` (@terabytesoftw)
 - Bug #72: Add type hint in method in BuildTest.php for `MSSQL` (@terabytesoftw)
+- Bug #75: Refactor `prepareInsertValues()` method in `QueryBuilder::class` to accept `TableSchema` object (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

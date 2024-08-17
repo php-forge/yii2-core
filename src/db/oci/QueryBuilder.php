@@ -12,6 +12,7 @@ use yii\db\Expression;
 use yii\helpers\StringHelper;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
+use yii\db\TableSchema;
 
 /**
  * QueryBuilder is the query builder for Oracle databases.
@@ -193,17 +194,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    protected function prepareInsertValues(string $table, array|QueryInterface $columns, array $params = []): array
-    {
+    protected function prepareInsertValues(
+        TableSchema|null $tableSchema,
+        array|QueryInterface $columns,
+        array $params = []
+    ): array {
         /**
          * @var array $names
          * @var array $placeholders
          */
-        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($table, $columns, $params);
+        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($tableSchema, $columns, $params);
 
         if (!$columns instanceof QueryInterface && empty($names)) {
-            $tableSchema = $this->db->getTableSchema($table);
-
             if ($tableSchema !== null) {
                 $tableColumns = $tableSchema->columns ?? [];
                 $columns = !empty($tableSchema->primaryKey) ? $tableSchema->primaryKey : [reset($tableColumns)->name];
@@ -270,7 +272,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $on = $this->buildCondition($onCondition, $params);
 
         /** @psalm-var string[] $placeholders */
-        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+        [, $placeholders, $values, $params] = $this->prepareInsertValues(
+            $this->db->getTableSchema($table),
+            $insertColumns,
+            $params,
+        );
 
         if (!empty($placeholders)) {
             $usingSelectValues = [];

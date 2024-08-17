@@ -10,8 +10,8 @@ use yii\caching\CacheInterface;
 use yii\caching\DbCache;
 use yii\db\Exception;
 use yii\db\Expression;
-use yii\db\Query;
 use yii\db\QueryInterface;
+use yii\db\TableSchema;
 
 /**
  * QueryBuilder is the query builder for MySQL databases.
@@ -233,16 +233,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    protected function prepareInsertValues(string $table, QueryInterface|array $columns, array $params = []): array
-    {
+    protected function prepareInsertValues(
+        TableSchema|null $tableSchema,
+        QueryInterface|array $columns,
+        array $params = []
+    ): array {
         /**
          * @psalm-var array $names
          * @psalm-var array $placeholders
          */
-        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($table, $columns, $params);
+        [$names, $placeholders, $values, $params] = parent::prepareInsertValues($tableSchema, $columns, $params);
 
         if (!$columns instanceof QueryInterface && empty($names)) {
-            $tableSchema = $this->db->getSchema()->getTableSchema($table);
             if ($tableSchema !== null) {
                 if (!empty($tableSchema->primaryKey)) {
                     $columns = $tableSchema->primaryKey;
@@ -258,6 +260,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 }
             }
         }
+
         return [$names, $placeholders, $values, $params];
     }
 

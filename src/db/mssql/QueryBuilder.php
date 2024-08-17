@@ -446,7 +446,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $insertedCols[] = 'INSERTED.' . $quotedName;
         }
 
-        [$names, $placeholders, $values, $params] = $this->prepareInsertValues($table, $columns, $params);
+        [$names, $placeholders, $values, $params] = $this->prepareInsertValues($tableSchema, $columns, $params);
 
         $sql = 'INSERT INTO ' . $this->db->quoteTableName($table)
             . (!empty($names) ? ' (' . implode(', ', $names) . ')' : '')
@@ -506,7 +506,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $on = $this->buildCondition($onCondition, $params);
 
         /** @psalm-var string[] $placeholders */
-        [, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
+        [, $placeholders, $values, $params] = $this->prepareInsertValues(
+            $this->db->getTableSchema($table),
+            $insertColumns,
+            $params,
+        );
 
         $mergeSql = 'MERGE '
             . $this->db->quoteTableName($table)
