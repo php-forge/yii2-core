@@ -142,7 +142,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
      */
     protected function buildAfterString(): string
     {
-        return $this->after !== null ? ' AFTER ' . $this->after : '';
+        return $this->after !== null ? ' AFTER ' . $this->db->quoteColumnName($this->after) : '';
     }
 
     /**
