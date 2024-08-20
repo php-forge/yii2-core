@@ -31,9 +31,9 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     public const TYPE_JSONB = 'jsonb';
 
     /**
-     * @var string the default schema used for the current session.
+     * @var string|null the default schema used for the current session.
      */
-    public string $defaultSchema = 'public';
+    public string|null $defaultSchema = 'public';
 
     /**
      * {@inheritdoc}

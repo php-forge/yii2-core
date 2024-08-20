@@ -29,9 +29,9 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     public array|string $columnSchemaClass = 'yii\db\mssql\ColumnSchema';
 
     /**
-     * @var string the default schema used for the current session.
+     * @var string|null the default schema used for the current session.
      */
-    public string $defaultSchema = 'dbo';
+    public string|null $defaultSchema = 'dbo';
 
     /**
      * @var array mapping from physical column types (keys) to abstract column types (values)
