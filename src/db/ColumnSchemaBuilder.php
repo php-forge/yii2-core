@@ -115,9 +115,9 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected Connection $db;
 
     /**
-     * @var string comment value of the column.
+     * @var string|null comment value of the column.
      */
-    public string $comment = '';
+    public string|null $comment = null;
 
     /**
      * @var array mapping of abstract column types (keys) to type categories (values).
@@ -228,7 +228,11 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function defaultValue(mixed $default): static
     {
-        $this->default = $default ?? $this->null();
+        if ($default === null) {
+            $this->null();
+        }
+
+        $this->default = $default;
 
         return $this;
     }
@@ -319,13 +323,9 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      *
      * @return static Instance of the column schema builder.
      */
-    public function append(string $sql, Connection|null $db = null): static
+    public function append(string $sql): static
     {
-        if ($db !== null) {
-            $sql = $db->quoteSql($sql);
-        }
-
-        $this->append = $sql;
+        $this->append = $this->db->quoteSql($sql);
 
         return $this;
     }
@@ -411,12 +411,15 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     protected function buildDefaultValue(): string|null
     {
-        return match ($this->default) {
+        if ($this->default === null) {
+            return $this->isNotNull === false ? 'NULL' : null;
+        }
+
+        return match (gettype($this->default)) {
             // ensure type cast always has . as decimal separator in all locales
             'double' => StringHelper::floatToString($this->default),
             'boolean' => $this->default ? 'TRUE' : 'FALSE',
             'integer', 'object' => (string) $this->default,
-            null => $this->isNotNull === false ? 'NULL' : null,
             default => "'{$this->default}'",
         };
     }
