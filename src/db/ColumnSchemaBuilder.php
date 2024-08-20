@@ -115,9 +115,14 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected Connection $db;
 
     /**
+     * @var string comment value of the column.
+     */
+    public string $comment = '';
+
+    /**
      * @var array mapping of abstract column types (keys) to type categories (values).
      */
-    public array $typeCategoryMap = [
+    public static array $typeCategoryMap = [
         Schema::TYPE_AUTO => self::CATEGORY_AUTO,
         Schema::TYPE_BIGAUTO => self::CATEGORY_BIGAUTO,
         Schema::TYPE_PK => self::CATEGORY_PK,
@@ -142,11 +147,6 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
         Schema::TYPE_BOOLEAN => self::CATEGORY_NUMERIC,
         Schema::TYPE_MONEY => self::CATEGORY_NUMERIC,
     ];
-
-    /**
-     * @var string comment value of the column.
-     */
-    public string $comment = '';
 
     /**
      * Create a column schema builder instance giving the type and value precision.
@@ -349,7 +349,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function getCategoryMap(): array
     {
-        return $this->typeCategoryMap;
+        return static::$typeCategoryMap;
     }
 
     /**
@@ -357,7 +357,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function setCategoryMap(array $categoryMap): void
     {
-        $this->typeCategoryMap = $categoryMap;
+        static::$typeCategoryMap = $categoryMap;
     }
 
     /**
