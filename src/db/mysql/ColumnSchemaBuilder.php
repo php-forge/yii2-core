@@ -160,7 +160,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
      */
     protected function buildCommentString(): string
     {
-        return $this->comment !== '' ? ' COMMENT ' . $this->comment : '';
+        return $this->comment !== null ? ' COMMENT ' . $this->comment : '';
     }
 
     /**
