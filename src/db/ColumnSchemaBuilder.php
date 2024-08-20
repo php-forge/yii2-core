@@ -154,7 +154,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      * @param string $type type of the column. See [[$type]].
      * @param array|int|string|null $length length or precision of the column. See [[$length]].
      * @param Connection|null $db the current database connection. See [[$db]].
-     * @param array $config name-value pairs that will be used to initialize the object properties
+     * @param array $config name-value pairs that will be used to initialize the object properties.
      */
     public function __construct(
         Connection $db,
@@ -246,8 +246,6 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function comment(string $comment): static
     {
-        $comment = $this->db->quoteValue($comment);
-
         $this->comment = $comment;
 
         return $this;
@@ -281,7 +279,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function after(string $after): static
     {
-        $this->after = $this->db->quoteColumnName($after);
+        $this->after = $after;
 
         return $this;
     }
@@ -324,7 +322,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     public function append(string $sql): static
     {
-        $this->append = $this->db->quoteSql($sql);
+        $this->append = $sql;
 
         return $this;
     }
