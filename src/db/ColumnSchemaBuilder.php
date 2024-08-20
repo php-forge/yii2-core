@@ -260,6 +260,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
         $this->type = match ($this->type) {
             Schema::TYPE_PK => Schema::TYPE_UPK,
             Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
+            default => $this->type,
         };
 
         $this->isUnsigned = true;
