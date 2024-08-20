@@ -80,9 +80,9 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected bool $isUnique = false;
 
     /**
-     * @var string the `CHECK` constraint for the column.
+     * @var string|null the `CHECK` constraint for the column.
      */
-    protected string $check = '';
+    protected string|null $check = null;
 
     /**
      * @var mixed default value of the column.
@@ -241,7 +241,6 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      * Specifies the comment for column.
      *
      * @param string $comment the comment.
-     * @param Connection|null $db the database connection. If db is not null, the comment will be quoted using db.
      *
      * @return static Instance of the column schema builder.
      */
@@ -447,7 +446,7 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      */
     protected function buildCheckString(): string
     {
-        return $this->check !== '' ? " CHECK ({$this->check})" : '';
+        return $this->check !== null ? " CHECK ({$this->check})" : '';
     }
 
     /**

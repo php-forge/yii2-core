@@ -11,6 +11,7 @@ use yiiunit\support\MysqlConnection;
  * @group db
  * @group mysql
  * @group querybuilder
+ * @group column-schema-builder
  * @group column-type
  */
 final class ColumnTypeTest extends \yiiunit\framework\db\querybuilder\AbstractColumnType

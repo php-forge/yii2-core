@@ -199,6 +199,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
             '{append}' => $this->buildAppendString(),
             '{identity}' => $this->buildIdentityString(),
         ];
+
         return strtr($format, $placeholderValues);
     }
 

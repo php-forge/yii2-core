@@ -11,6 +11,7 @@ use yiiunit\support\MssqlConnection;
  * @group db
  * @group mssql
  * @group querybuilder
+ * @group column-schema-builder
  * @group column-type
  */
 final class ColumnTypeTest extends \yiiunit\framework\db\querybuilder\AbstractColumnType
