@@ -142,9 +142,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
      */
     protected function buildAfterString(): string
     {
-        return $this->after !== '' ?
-            ' AFTER ' . $this->after :
-            '';
+        return $this->after !== null ? ' AFTER ' . $this->after : '';
     }
 
     /**
@@ -160,7 +158,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
      */
     protected function buildCommentString(): string
     {
-        return $this->comment !== null ? ' COMMENT ' . $this->comment : '';
+        return $this->comment !== null ? ' COMMENT ' . $this->db->quoteValue($this->comment) : '';
     }
 
     /**

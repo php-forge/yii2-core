@@ -100,9 +100,9 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected bool $isUnsigned = false;
 
     /**
-     * @var string the column after which this column will be added.
+     * @var string|null the column after which this column will be added.
      */
-    protected string $after = '';
+    protected string|null $after = null;
 
     /**
      * @var bool whether this column is to be inserted at the beginning of the table.
