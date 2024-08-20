@@ -20,7 +20,7 @@ abstract class ColumnSchemaBuilderTest extends DatabaseTestCase
      */
     public function getColumnSchemaBuilder($type, $length = null)
     {
-        return new ColumnSchemaBuilder($type, $length, $this->getConnection());
+        return new ColumnSchemaBuilder($this->getConnection(), $type, $length);
     }
 
     /**

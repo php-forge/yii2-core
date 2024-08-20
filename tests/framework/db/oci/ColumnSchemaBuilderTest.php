@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\db\oci;
 
@@ -12,21 +9,18 @@ use yii\db\Schema;
 
 /**
  * ColumnSchemaBuilderTest tests ColumnSchemaBuilder for Oracle.
+ *
  * @group db
  * @group oci
+ * @group column-schema-builder
  */
 class ColumnSchemaBuilderTest extends \yiiunit\framework\db\ColumnSchemaBuilderTest
 {
     public $driverName = 'oci';
 
-    /**
-     * @param string $type
-     * @param int $length
-     * @return ColumnSchemaBuilder
-     */
-    public function getColumnSchemaBuilder($type, $length = null)
+    public function getColumnSchemaBuilder($type, $length = null): ColumnSchemaBuilder
     {
-        return new ColumnSchemaBuilder($type, $length, $this->getConnection());
+        return new ColumnSchemaBuilder($this->getConnection(), $type, $length);
     }
 
     /**
