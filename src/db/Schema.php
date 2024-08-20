@@ -166,9 +166,9 @@ abstract class Schema extends BaseObject
     public Connection|null $db = null;
 
     /**
-     * @var string the default schema name used for the current session.
+     * @var string|null the default schema name used for the current session.
      */
-    public string $defaultSchema = '';
+    public string|null $defaultSchema = null;
 
     /**
      * @var array map of DB errors and corresponding exceptions.
