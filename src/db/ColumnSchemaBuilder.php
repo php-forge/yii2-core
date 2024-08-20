@@ -489,9 +489,9 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     /**
      * Returns the category of the column type.
      *
-     * @return string a string containing the column type category name.
+     * @return string|null a string containing the column type category name.
      */
-    protected function getTypeCategory(): string
+    protected function getTypeCategory(): string|null
     {
         return isset($this->categoryMap[$this->type]) ? $this->categoryMap[$this->type] : null;
     }
