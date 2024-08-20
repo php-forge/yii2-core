@@ -423,7 +423,7 @@ abstract class Schema extends BaseObject
      */
     public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length, $this->db]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 
     /**
