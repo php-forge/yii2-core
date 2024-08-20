@@ -15,9 +15,6 @@ use yii\db\TableSchema;
 
 /**
  * QueryBuilder is the query builder for MySQL databases.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -25,10 +22,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @var array mapping from abstract column types (keys) to physical column types (values).
      */
     public $typeMap = [
-        Schema::TYPE_PK => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-        Schema::TYPE_UPK => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+        // auto-incremental
+        Schema::TYPE_AUTO => 'int(11) AUTO_INCREMENT',
+        Schema::TYPE_BIGAUTO => 'bigint(20) AUTO_INCREMENT',
+
+        // auto-incremental primary key
         Schema::TYPE_BIGPK => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+        Schema::TYPE_PK => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+
+        // auto-incremental unsigned primary key
         Schema::TYPE_UBIGPK => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+        Schema::TYPE_UPK => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+
         Schema::TYPE_CHAR => 'char(1)',
         Schema::TYPE_STRING => 'varchar(255)',
         Schema::TYPE_TEXT => 'text',

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\pgsql;
 
@@ -21,33 +18,34 @@ use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
 /**
- * Schema is the class for retrieving metadata from a PostgreSQL database
- * (version 9.x and above).
- *
- * @author Gevik Babakhani <gevikb@gmail.com>
- * @since 2.0
+ * Schema is the class for retrieving metadata from a PostgreSQL database (version 9.x and above).
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
     use ViewFinderTrait;
     use ConstraintFinderTrait;
 
-    const TYPE_JSONB = 'jsonb';
+    /**
+     * Define the abstract column type as `jsonb`.
+     */
+    public const TYPE_JSONB = 'jsonb';
 
     /**
      * @var string the default schema used for the current session.
      */
-    public $defaultSchema = 'public';
+    public string $defaultSchema = 'public';
+
     /**
      * {@inheritdoc}
      */
-    public $columnSchemaClass = 'yii\db\pgsql\ColumnSchema';
+    public array|string $columnSchemaClass = 'yii\db\pgsql\ColumnSchema';
+
     /**
-     * @var array mapping from physical column types (keys) to abstract
-     * column types (values)
+     * @var array mapping from physical column types (keys) to abstract column types (values).
+     *
      * @see https://www.postgresql.org/docs/current/datatype.html#DATATYPE-TABLE
      */
-    public $typeMap = [
+    public array $typeMap = [
         'bit' => self::TYPE_INTEGER,
         'bit varying' => self::TYPE_INTEGER,
         'varbit' => self::TYPE_INTEGER,
@@ -130,7 +128,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      */
     protected array|string $tableQuoteCharacter = '"';
-
 
     /**
      * {@inheritdoc}
