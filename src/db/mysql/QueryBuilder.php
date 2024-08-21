@@ -26,11 +26,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_AUTO => 'int(11) AUTO_INCREMENT',
         Schema::TYPE_BIGAUTO => 'bigint(20) AUTO_INCREMENT',
 
-        // auto-incremental primary key
+        // primary key
         Schema::TYPE_BIGPK => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
         Schema::TYPE_PK => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
 
-        // auto-incremental unsigned primary key
+        // primary key unsigned
         Schema::TYPE_UBIGPK => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
         Schema::TYPE_UPK => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
 

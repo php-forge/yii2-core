@@ -24,10 +24,12 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_AUTO => 'int IDENTITY',
         Schema::TYPE_BIGAUTO => 'bigint IDENTITY',
 
-        // auto-incremental primary key
+        // primary key
         Schema::TYPE_PK => 'int IDENTITY PRIMARY KEY',
-        Schema::TYPE_UPK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_BIGPK => 'bigint IDENTITY PRIMARY KEY',
+
+        // unsigned primary key (MSSQL does not support unsigned columns)
+        Schema::TYPE_UPK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_UBIGPK => 'bigint IDENTITY PRIMARY KEY',
 
         // string types
