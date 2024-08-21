@@ -10,6 +10,29 @@ namespace yii\db\sqlite;
 class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
 {
     /**
+     * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
+     */
+    protected bool $isUnsigned = false;
+
+    /**
+     * Marks column as unsigned.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function unsigned(): static
+    {
+        $this->type = match ($this->type) {
+            Schema::TYPE_PK => Schema::TYPE_UPK,
+            Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
+            default => $this->type,
+        };
+
+        $this->isUnsigned = true;
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function buildUnsignedString(): string
@@ -28,6 +51,9 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
             default => '{type}{length}{notnull}{unique}{check}{default}{append}',
         };
 
-        return $this->buildCompleteString($format);
+        return $this->buildCompleteString(
+            $format,
+            ['{unsigned}' => $this->buildUnsignedString()],
+        );
     }
 }

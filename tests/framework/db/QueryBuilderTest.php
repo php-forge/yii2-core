@@ -603,7 +603,8 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_TINYINT . ' UNSIGNED',
-                $this->tinyInteger()->unsigned(),
+                in_array($this->driverName, ['mysql', 'sqlite'], true)
+                    ? $this->tinyInteger()->unsigned() : $this->tinyInteger(),
                 [
                     'mysql' => 'tinyint(3) UNSIGNED',
                     'sqlite' => 'tinyint UNSIGNED',
@@ -867,21 +868,29 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_UPK,
-                $this->primaryKey()->unsigned(),
+                in_array($this->driverName, ['mysql', 'sqlite'], true)
+                    ? $this->primaryKey()->unsigned() : $this->primaryKey(),
                 [
                     'mysql' => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'serial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
+                [
+                    'pgsql' => 'pk',
+                ]
             ],
             [
                 Schema::TYPE_UBIGPK,
-                $this->bigPrimaryKey()->unsigned(),
+                in_array($this->driverName, ['mysql', 'sqlite'], true)
+                    ? $this->bigPrimaryKey()->unsigned() : $this->bigPrimaryKey(),
                 [
                     'mysql' => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'bigserial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
+                [
+                    'pgsql' => 'bigpk',
+                ]
             ],
             [
                 Schema::TYPE_INTEGER . " COMMENT 'test comment'",
@@ -899,7 +908,6 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->primaryKey()->comment('test comment'),
                 [
                     'mysql' => "int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'test comment'",
-                    'sqlsrv' => 'int IDENTITY PRIMARY KEY',
                 ],
                 [
                     'sqlsrv' => 'pk',
@@ -907,10 +915,9 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_PK . ' FIRST',
-                $this->primaryKey()->first(),
+                in_array($this->driverName, ['mysql'], true) ? $this->primaryKey()->first() : $this->primaryKey(),
                 [
                     'mysql' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST',
-                    'sqlsrv' => 'int IDENTITY PRIMARY KEY',
                 ],
                 [
                     'oci' => 'NUMBER(10) NOT NULL PRIMARY KEY',
@@ -919,10 +926,9 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_INTEGER . ' FIRST',
-                $this->integer()->first(),
+                in_array($this->driverName, ['mysql'], true) ? $this->integer()->first() : $this->integer(),
                 [
                     'mysql' => 'int(11) FIRST',
-                    'sqlsrv' => 'int',
                 ],
                 [
                     'oci' => 'NUMBER(10)',
@@ -932,10 +938,9 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_STRING . ' FIRST',
-                $this->string()->first(),
+                in_array($this->driverName, ['mysql'], true) ? $this->string()->first() : $this->string(),
                 [
                     'mysql' => 'varchar(255) FIRST',
-                    'sqlsrv' => 'nvarchar(255)',
                 ],
                 [
                     'oci' => 'VARCHAR2(255)',
@@ -944,10 +949,10 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_INTEGER . ' NOT NULL FIRST',
-                $this->integer()->append('NOT NULL')->first(),
+                in_array($this->driverName, ['mysql'], true)
+                    ? $this->integer()->append('NOT NULL')->first() : $this->integer()->append('NOT NULL'),
                 [
                     'mysql' => 'int(11) NOT NULL FIRST',
-                    'sqlsrv' => 'int NOT NULL',
                 ],
                 [
                     'oci' => 'NUMBER(10) NOT NULL',
@@ -956,10 +961,10 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             ],
             [
                 Schema::TYPE_STRING . ' NOT NULL FIRST',
-                $this->string()->append('NOT NULL')->first(),
+                in_array($this->driverName, ['mysql'], true)
+                    ? $this->string()->append('NOT NULL')->first() : $this->string()->append('NOT NULL'),
                 [
                     'mysql' => 'varchar(255) NOT NULL FIRST',
-                    'sqlsrv' => 'nvarchar(255) NOT NULL',
                 ],
                 [
                     'oci' => 'VARCHAR2(255) NOT NULL',

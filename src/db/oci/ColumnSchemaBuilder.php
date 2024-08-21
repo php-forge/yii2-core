@@ -14,19 +14,11 @@ class ColumnSchemaBuilder extends AbstractColumnSchemaBuilder
     /**
      * {@inheritdoc}
      */
-    protected function buildUnsignedString(): string
-    {
-        return $this->isUnsigned ? ' UNSIGNED' : '';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function __toString(): string
     {
         $format = match ($this->getTypeCategory()) {
             self::CATEGORY_PK => '{type}{length}{check}{append}',
-            self::CATEGORY_NUMERIC => '{type}{length}{unsigned}{default}{notnull}{check}{append}',
+            self::CATEGORY_NUMERIC => '{type}{length}{default}{notnull}{check}{append}',
             default => '{type}{length}{default}{notnull}{check}{append}',
         };
 

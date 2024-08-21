@@ -72,11 +72,6 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected mixed $append = null;
 
     /**
-     * @var string|null comment value of the column.
-     */
-    protected string|null $comment = null;
-
-    /**
      * @var string|null the `CHECK` constraint for the column.
      */
     protected string|null $check = null;
@@ -113,6 +108,11 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
      * @var string|null the column type definition such as INTEGER, VARCHAR, DATETIME, etc.
      */
     protected string|null $type = null;
+
+    /**
+     * @var string|null comment value of the column.
+     */
+    public string|null $comment = null;
 
     /**
      * @var array mapping of abstract column types (keys) to type categories (values).
