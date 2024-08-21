@@ -57,16 +57,39 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     public const CATEGORY_OTHER = 'other';
 
     /**
-     * @var string|null the column type definition such as INTEGER, VARCHAR, DATETIME, etc.
+     * The column types that are auto-incremental or primary key.
      */
-    protected string|null $type = null;
+    public const CATEGORY_GROUP_AUTO_PK = [
+        self::CATEGORY_AUTO,
+        self::CATEGORY_BIGAUTO,
+        self::CATEGORY_PK,
+        self::CATEGORY_BIGPK,
+    ];
 
     /**
-     * @var array|int|string|null column size or precision definition. This is what goes into the parenthesis after
-     * the column type. This can be either a string, an integer or an array. If it is an array, the array values will
-     * be joined into a string separated by comma.
+     * @var mixed SQL string to be appended to column schema definition.
      */
-    protected array|int|string|null $length = null;
+    protected mixed $append = null;
+
+    /**
+     * @var string|null comment value of the column.
+     */
+    protected string|null $comment = null;
+
+    /**
+     * @var string|null the `CHECK` constraint for the column.
+     */
+    protected string|null $check = null;
+
+    /**
+     * @var Connection the database connection. This is used mainly to escape table and column names.
+     */
+    protected Connection $db;
+
+    /**
+     * @var mixed default value of the column.
+     */
+    protected mixed $default = null;
 
     /**
      * @var bool|null whether the column is or not nullable. If this is `true`, a `NOT NULL` constraint will be added.
@@ -80,55 +103,33 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected bool $isUnique = false;
 
     /**
-     * @var string|null the `CHECK` constraint for the column.
+     * @var array|int|string|null column size or precision definition. This is what goes into the parenthesis after
+     * the column type. This can be either a string, an integer or an array. If it is an array, the array values will
+     * be joined into a string separated by comma.
      */
-    protected string|null $check = null;
+    protected array|int|string|null $length = null;
 
     /**
-     * @var mixed default value of the column.
+     * @var string|null the column type definition such as INTEGER, VARCHAR, DATETIME, etc.
      */
-    protected mixed $default = null;
-
-    /**
-     * @var mixed SQL string to be appended to column schema definition.
-     */
-    protected mixed $append = null;
-
-    /**
-     * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
-     */
-    protected bool $isUnsigned = false;
-
-    /**
-     * @var string|null the column after which this column will be added.
-     */
-    protected string|null $after = null;
-
-    /**
-     * @var bool whether this column is to be inserted at the beginning of the table.
-     */
-    protected bool $isFirst = false;
-
-    /**
-     * @var Connection the database connection. This is used mainly to escape table and column names.
-     */
-    protected Connection $db;
-
-    /**
-     * @var string|null comment value of the column.
-     */
-    public string|null $comment = null;
+    protected string|null $type = null;
 
     /**
      * @var array mapping of abstract column types (keys) to type categories (values).
      */
     public static array $typeCategoryMap = [
+        // auto-incremental column types
         Schema::TYPE_AUTO => self::CATEGORY_AUTO,
         Schema::TYPE_BIGAUTO => self::CATEGORY_BIGAUTO,
+
+        // integer auto-incremental primary key column types
         Schema::TYPE_PK => self::CATEGORY_PK,
         Schema::TYPE_UPK => self::CATEGORY_PK,
-        Schema::TYPE_BIGPK => self::CATEGORY_PK,
-        Schema::TYPE_UBIGPK => self::CATEGORY_PK,
+
+        // big integer auto-incremental primary key column types
+        Schema::TYPE_BIGPK => self::CATEGORY_BIGPK,
+        Schema::TYPE_UBIGPK => self::CATEGORY_BIGPK,
+
         Schema::TYPE_CHAR => self::CATEGORY_STRING,
         Schema::TYPE_STRING => self::CATEGORY_STRING,
         Schema::TYPE_TEXT => self::CATEGORY_STRING,
@@ -170,6 +171,104 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     }
 
     /**
+     * Builds the full string for the column's schema.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        $format = match ($this->getTypeCategory()) {
+            self::CATEGORY_PK => '{type}{check}{comment}{append}',
+            default => '{type}{length}{notnull}{unique}{default}{check}{comment}{append}',
+        };
+
+        return $this->buildCompleteString($format);
+    }
+
+    /**
+     * Specify additional SQL to be appended to column definition.
+     * Position modifiers will be appended after column definition in databases that support them.
+     *
+     * @param string $sql the SQL string to be appended.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function append(string $sql): static
+    {
+        $this->append = $sql;
+
+        return $this;
+    }
+
+    /**
+     * Sets a `CHECK` constraint for the column.
+     *
+     * @param string $check the SQL of the `CHECK` constraint to be added.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function check(string $check): static
+    {
+        $this->check = $check;
+
+        return $this;
+    }
+
+    /**
+     * Specifies the comment for column.
+     *
+     * @param string $comment the comment.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function comment(string $comment): static
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+
+    /**
+     * Specify the default SQL expression for the column.
+     *
+     * @param string $default the default value expression.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function defaultExpression(string $default): static
+    {
+        $this->default = new Expression($default);
+
+        return $this;
+    }
+
+    /**
+     * Specify the default value for the column.
+     *
+     * @param mixed $default the default value.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function defaultValue(mixed $default): static
+    {
+        if ($default === null) {
+            $this->null();
+        }
+
+        $this->default = $default;
+
+        return $this;
+    }
+
+    /**
+     * @return array mapping of abstract column types (keys) to type categories (values).
+     */
+    public function getCategoryMap(): array
+    {
+        return static::$typeCategoryMap;
+    }
+
+    /**
      * Adds a `NOT NULL` constraint to the column.
      *
      * @return static Instance of the column schema builder.
@@ -194,6 +293,14 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     }
 
     /**
+     * @param array $categoryMap mapping of abstract column types (keys) to type categories (values).
+     */
+    public function setCategoryMap(array $categoryMap): void
+    {
+        static::$typeCategoryMap = $categoryMap;
+    }
+
+    /**
      * Adds a `UNIQUE` constraint to the column.
      *
      * @return static Instance of the column schema builder.
@@ -206,156 +313,95 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     }
 
     /**
-     * Sets a `CHECK` constraint for the column.
+     * Builds the custom string that's appended to column definition.
      *
-     * @param string $check the SQL of the `CHECK` constraint to be added.
-     *
-     * @return static Instance of the column schema builder.
+     * @return string custom string to append.
      */
-    public function check(string $check): static
+    protected function buildAppendString(): string
     {
-        $this->check = $check;
-
-        return $this;
+        return $this->append !== null ? ' ' . $this->append : '';
     }
 
     /**
-     * Specify the default value for the column.
+     * Builds the check constraint for the column.
      *
-     * @param mixed $default the default value.
-     *
-     * @return static Instance of the column schema builder.
+     * @return string a string containing the CHECK constraint.
      */
-    public function defaultValue(mixed $default): static
+    protected function buildCheckString(): string
     {
-        if ($default === null) {
-            $this->null();
+        return $this->check !== null ? " CHECK ({$this->check})" : '';
+    }
+
+    /**
+     * Builds the comment specification for the column.
+     *
+     * @return string a string containing the COMMENT keyword and the comment itself.
+     */
+    protected function buildCommentString(): string
+    {
+        return '';
+    }
+
+    /**
+     * Returns the complete column definition from input format.
+     *
+     * @param string $format the format of the definition.
+     * @param array $customPlaceHolder custom placeholder values.
+     *
+     * @return string a string containing the complete column definition.
+     */
+    protected function buildCompleteString(string $format, array $customPlaceHolder = []): string
+    {
+        $placeholderValues = [
+            '{type}' => $this->type,
+            '{length}' => $this->buildLengthString(),
+            '{notnull}' => $this->buildNotNullString(),
+            '{unique}' => $this->buildUniqueString(),
+            '{default}' => $this->buildDefaultString(),
+            '{check}' => $this->buildCheckString(),
+            '{comment}' => $this->buildCommentString(),
+            '{append}' => $this->buildAppendString(),
+        ];
+
+        $placeholderValues += $customPlaceHolder;
+
+        return strtr($format, $placeholderValues);
+    }
+
+    /**
+     * Builds the default value specification for the column.
+     *
+     * @return string string with default value of column.
+     */
+    protected function buildDefaultString(): string
+    {
+        $defaultValue = $this->buildDefaultValue();
+
+        if ($defaultValue === null) {
+            return '';
         }
 
-        $this->default = $default;
-
-        return $this;
+        return ' DEFAULT ' . $defaultValue;
     }
 
     /**
-     * Specifies the comment for column.
+     * Return the default value for the column.
      *
-     * @param string $comment the comment.
-     *
-     * @return static Instance of the column schema builder.
+     * @return string|null string with default value of column.
      */
-    public function comment(string $comment): static
+    protected function buildDefaultValue(): string|null
     {
-        $this->comment = $comment;
+        if ($this->default === null) {
+            return $this->isNotNull === false ? 'NULL' : null;
+        }
 
-        return $this;
-    }
-
-    /**
-     * Marks column as unsigned.
-     *
-     * @return static Instance of the column schema builder.
-     */
-    public function unsigned(): static
-    {
-        $this->type = match ($this->type) {
-            Schema::TYPE_PK => Schema::TYPE_UPK,
-            Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
-            default => $this->type,
+        return match (gettype($this->default)) {
+            // ensure type cast always has . as decimal separator in all locales
+            'double' => StringHelper::floatToString($this->default),
+            'boolean' => $this->default ? 'TRUE' : 'FALSE',
+            'integer', 'object' => (string) $this->default,
+            default => "'{$this->default}'",
         };
-
-        $this->isUnsigned = true;
-
-        return $this;
-    }
-
-    /**
-     * Adds an `AFTER` constraint to the column.
-     * Note: MySQL and Oracle support only.
-     *
-     * @param string $after the column after which $this column will be added.
-     *
-     * @return static Instance of the column schema builder.
-     */
-    public function after(string $after): static
-    {
-        $this->after = $after;
-
-        return $this;
-    }
-
-    /**
-     * Adds an `FIRST` constraint to the column.
-     * Note: MySQL and Oracle support only.
-     *
-     * @return static Instance of the column schema builder.
-     */
-    public function first(): static
-    {
-        $this->isFirst = true;
-
-        return $this;
-    }
-
-    /**
-     * Specify the default SQL expression for the column.
-     *
-     * @param string $default the default value expression.
-     *
-     * @return static Instance of the column schema builder.
-     */
-    public function defaultExpression(string $default): static
-    {
-        $this->default = new Expression($default);
-
-        return $this;
-    }
-
-    /**
-     * Specify additional SQL to be appended to column definition.
-     * Position modifiers will be appended after column definition in databases that support them.
-     *
-     * @param string $sql the SQL string to be appended.
-     * @param Connection|null $db the database connection. If db is not null, the SQL will be quoted using db.
-     *
-     * @return static Instance of the column schema builder.
-     */
-    public function append(string $sql): static
-    {
-        $this->append = $sql;
-
-        return $this;
-    }
-
-    /**
-     * Builds the full string for the column's schema.
-     *
-     * @return string
-     */
-    public function __toString(): string
-    {
-        $format = match ($this->getTypeCategory()) {
-            self::CATEGORY_PK => '{type}{check}{comment}{append}',
-            default => '{type}{length}{notnull}{unique}{default}{check}{comment}{append}',
-        };
-
-        return $this->buildCompleteString($format);
-    }
-
-    /**
-     * @return array mapping of abstract column types (keys) to type categories (values).
-     */
-    public function getCategoryMap(): array
-    {
-        return static::$typeCategoryMap;
-    }
-
-    /**
-     * @param array $categoryMap mapping of abstract column types (keys) to type categories (values).
-     */
-    public function setCategoryMap(array $categoryMap): void
-    {
-        static::$typeCategoryMap = $categoryMap;
     }
 
     /**
@@ -402,92 +448,6 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     }
 
     /**
-     * Return the default value for the column.
-     *
-     * @return string|null string with default value of column.
-     */
-    protected function buildDefaultValue(): string|null
-    {
-        if ($this->default === null) {
-            return $this->isNotNull === false ? 'NULL' : null;
-        }
-
-        return match (gettype($this->default)) {
-            // ensure type cast always has . as decimal separator in all locales
-            'double' => StringHelper::floatToString($this->default),
-            'boolean' => $this->default ? 'TRUE' : 'FALSE',
-            'integer', 'object' => (string) $this->default,
-            default => "'{$this->default}'",
-        };
-    }
-
-    /**
-     * Builds the default value specification for the column.
-     *
-     * @return string string with default value of column.
-     */
-    protected function buildDefaultString(): string
-    {
-        $defaultValue = $this->buildDefaultValue();
-
-        if ($defaultValue === null) {
-            return '';
-        }
-
-        return ' DEFAULT ' . $defaultValue;
-    }
-
-    /**
-     * Builds the check constraint for the column.
-     *
-     * @return string a string containing the CHECK constraint.
-     */
-    protected function buildCheckString(): string
-    {
-        return $this->check !== null ? " CHECK ({$this->check})" : '';
-    }
-
-    /**
-     * Builds the unsigned string for column. Defaults to unsupported.
-     *
-     * @return string a string containing UNSIGNED keyword.
-     */
-    protected function buildUnsignedString(): string
-    {
-        return '';
-    }
-
-    /**
-     * Builds the after constraint for the column. Defaults to unsupported.
-     *
-     * @return string a string containing the AFTER constraint.
-     */
-    protected function buildAfterString(): string
-    {
-        return '';
-    }
-
-    /**
-     * Builds the first constraint for the column. Defaults to unsupported.
-     *
-     * @return string a string containing the FIRST constraint.
-     */
-    protected function buildFirstString(): string
-    {
-        return '';
-    }
-
-    /**
-     * Builds the custom string that's appended to column definition.
-     *
-     * @return string custom string to append.
-     */
-    protected function buildAppendString(): string
-    {
-        return $this->append !== null ? ' ' . $this->append : '';
-    }
-
-    /**
      * Returns the category of the column type.
      *
      * @return string|null a string containing the column type category name.
@@ -495,40 +455,5 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     protected function getTypeCategory(): string|null
     {
         return isset($this->categoryMap[$this->type]) ? $this->categoryMap[$this->type] : null;
-    }
-
-    /**
-     * Builds the comment specification for the column.
-     *
-     * @return string a string containing the COMMENT keyword and the comment itself.
-     */
-    protected function buildCommentString(): string
-    {
-        return '';
-    }
-
-    /**
-     * Returns the complete column definition from input format.
-     *
-     * @param string $format the format of the definition.
-     *
-     * @return string a string containing the complete column definition.
-     */
-    protected function buildCompleteString(string $format): string
-    {
-        $placeholderValues = [
-            '{type}' => $this->type,
-            '{length}' => $this->buildLengthString(),
-            '{unsigned}' => $this->buildUnsignedString(),
-            '{notnull}' => $this->buildNotNullString(),
-            '{unique}' => $this->buildUniqueString(),
-            '{default}' => $this->buildDefaultString(),
-            '{check}' => $this->buildCheckString(),
-            '{comment}' => $this->buildCommentString(),
-            '{pos}' => $this->isFirst ? $this->buildFirstString() : $this->buildAfterString(),
-            '{append}' => $this->buildAppendString(),
-        ];
-
-        return strtr($format, $placeholderValues);
     }
 }

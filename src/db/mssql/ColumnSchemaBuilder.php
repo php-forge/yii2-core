@@ -21,23 +21,13 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     protected $format = '{type}{length}{notnull}{unique}{default}{check}{append}';
 
     /**
-     * The column types that are auto-incremental or primary key.
-     */
-    private const CATEGORY_GROUP_AUTO_PK = [
-        self::CATEGORY_AUTO,
-        self::CATEGORY_BIGAUTO,
-        self::CATEGORY_PK,
-        self::CATEGORY_BIGPK,
-    ];
-
-    /**
      * @var array The parameters for the IDENTITY column.
      */
     private array $identityParams = [];
 
     public function __construct(Connection $db, string|null $type = null, $length = null, $config = [])
     {
-        if ((in_array($type, self::CATEGORY_GROUP_AUTO_PK)) && is_array($length) && count($length) === 2) {
+        if (in_array($type, self::CATEGORY_GROUP_AUTO_PK, true) && is_array($length) && count($length) === 2) {
             // start, increment. If increment is 0, it will be set to 1.
             if ($length[1] === 0) {
                 $length[1] = 1;
@@ -58,7 +48,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     {
         $format = $this->format;
 
-        if (in_array($this->getTypeCategory(), self::CATEGORY_GROUP_AUTO_PK)) {
+        if (in_array($this->getTypeCategory(), self::CATEGORY_GROUP_AUTO_PK, true)) {
             $format = '{type}{identity}{check}{comment}{append}';
         }
 
@@ -184,23 +174,9 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     /**
      * {@inheritdoc}
      */
-    protected function buildCompleteString($format): string
+    protected function buildCompleteString(string $format, array $customPlaceHolder = []): string
     {
-        $placeholderValues = [
-            '{type}' => $this->type,
-            '{length}' => $this->buildLengthString(),
-            '{unsigned}' => $this->buildUnsignedString(),
-            '{notnull}' => $this->buildNotNullString(),
-            '{unique}' => $this->buildUniqueString(),
-            '{default}' => $this->buildDefaultString(),
-            '{check}' => $this->buildCheckString(),
-            '{comment}' => $this->buildCommentString(),
-            '{pos}' => $this->isFirst ? $this->buildFirstString() : $this->buildAfterString(),
-            '{append}' => $this->buildAppendString(),
-            '{identity}' => $this->buildIdentityString(),
-        ];
-
-        return strtr($format, $placeholderValues);
+        return parent::buildCompleteString($format, ['{identity}' => $this->buildIdentityString()]);
     }
 
     /**
@@ -208,7 +184,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
      */
     protected function buildIdentityString(): string
     {
-        if (in_array($this->type, self::CATEGORY_GROUP_AUTO_PK) && $this->identityParams !== []) {
+        if (in_array($this->getTypeCategory(), self::CATEGORY_GROUP_AUTO_PK, true) && $this->identityParams !== []) {
             return "({$this->identityParams[0]},{$this->identityParams[1]})";
         }
 

@@ -20,6 +20,52 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     public const CATEGORY_UPK = 'upk';
 
     /**
+     * @var string|null the column after which this column will be added.
+     */
+    protected string|null $after = null;
+
+    /**
+     * @var bool whether this column is to be inserted at the beginning of the table.
+     */
+    protected bool $isFirst = false;
+
+    /**
+     * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
+     */
+    protected bool $isUnsigned = false;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __toString(): string
+    {
+        $format = match ($this->getTypeCategory()) {
+            self::CATEGORY_AUTO,
+            self::CATEGORY_BIGAUTO,
+            self::CATEGORY_BIGPK,
+            self::CATEGORY_PK => '{type}{length}{comment}{check}{append}{pos}',
+            self::CATEGORY_NUMERIC => '{type}{length}{unsigned}{notnull}{default}{unique}{comment}{append}{pos}{check}',
+            default => '{type}{length}{notnull}{default}{unique}{comment}{append}{pos}{check}',
+        };
+
+        return $this->buildCompleteString($format);
+    }
+
+    /**
+     * Adds an `AFTER` constraint to the column.
+     *
+     * @param string $after the column after which $this column will be added.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function after(string $after): static
+    {
+        $this->after = $after;
+
+        return $this;
+    }
+
+    /**
      * Creates an `INTEGER AUTO_INCREMENT` column.
      *
      * @param int|null $length column size or precision definition.
@@ -74,6 +120,18 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     }
 
     /**
+     * Adds an `FIRST` constraint to the column.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function first(): static
+    {
+        $this->isFirst = true;
+
+        return $this;
+    }
+
+    /**
      * Creates a `INTEGER AUTO_INCREMENT PRIMARY KEY` column.
      *
      * @param int|null $length column size or precision definition. Defaults to 11.
@@ -92,39 +150,19 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     }
 
     /**
-     * Creates a `UNSIGNED BIGINT AUTO_INCREMENT PRIMARY KEY` column.
+     * Marks column as unsigned.
      *
-     * @param int|null $length column size or precision definition. Defaults to 20.
-     *
-     * @return self The column schema builder instance.
+     * @return static Instance of the column schema builder.
      */
-    public function unsignedBigPrimaryKey(int|null $length = null): self
+    public function unsigned(): static
     {
-        $this->type = self::CATEGORY_UBIGPK;
+        $this->type = match ($this->type) {
+            Schema::TYPE_PK => Schema::TYPE_UPK,
+            Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
+            default => $this->type,
+        };
+
         $this->isUnsigned = true;
-
-        if ($length !== null) {
-            $this->length = $length;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Creates a `UNSIGNED INTEGER AUTO_INCREMENT PRIMARY KEY` column.
-     *
-     * @param int|null $length column size or precision definition. Defaults to 11.
-     *
-     * @return self The column schema builder instance.
-     */
-    public function unsignedPrimaryKey(int|null $length = null): self
-    {
-        $this->type = self::CATEGORY_UPK;
-        $this->isUnsigned = true;
-
-        if ($length !== null) {
-            $this->length = $length;
-        }
 
         return $this;
     }
@@ -162,19 +200,20 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     }
 
     /**
-     * {@inheritdoc}
+     * Returns the complete column definition from input format.
+     *
+     * @param string $format the format of the definition.
+     *
+     * @return string a string containing the complete column definition.
      */
-    public function __toString(): string
+    protected function buildCompleteString(string $format, array $customPlaceHolder = []): string
     {
-        $format = match ($this->getTypeCategory()) {
-            self::CATEGORY_AUTO,
-            self::CATEGORY_BIGAUTO,
-            self::CATEGORY_BIGPK,
-            self::CATEGORY_PK => '{type}{length}{comment}{check}{append}{pos}',
-            self::CATEGORY_NUMERIC => '{type}{length}{unsigned}{notnull}{default}{unique}{comment}{append}{pos}{check}',
-            default => '{type}{length}{notnull}{default}{unique}{comment}{append}{pos}{check}',
-        };
-
-        return $this->buildCompleteString($format);
+        return parent::buildCompleteString(
+            $format,
+            [
+                '{unsigned}' => $this->buildUnsignedString(),
+                '{pos}' => $this->isFirst ? $this->buildFirstString() : $this->buildAfterString(),
+            ],
+        );
     }
 }
