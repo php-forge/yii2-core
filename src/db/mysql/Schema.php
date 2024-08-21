@@ -36,6 +36,16 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     public const TYPE_UBIGAUTO = 'ubigauto';
 
     /**
+     * Define the abstract column type as an `integer UNSIGNED` primary key.
+     */
+    public const TYPE_UPK = 'upk';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` primary key.
+     */
+    public const TYPE_UBIGPK = 'ubigpk';
+
+    /**
      * {@inheritdoc}
      */
     public array|string $columnSchemaClass = 'yii\db\mysql\ColumnSchema';

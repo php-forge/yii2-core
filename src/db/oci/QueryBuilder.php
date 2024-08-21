@@ -27,10 +27,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_PK => 'NUMBER(10) NOT NULL PRIMARY KEY',
         Schema::TYPE_BIGPK => 'NUMBER(20) NOT NULL PRIMARY KEY',
 
-        // unsigned primary key (Oracle does not support unsigned integer)
-        Schema::TYPE_UPK => 'NUMBER(10) NOT NULL PRIMARY KEY',
-        Schema::TYPE_UBIGPK => 'NUMBER(20) NOT NULL PRIMARY KEY',
-
         Schema::TYPE_CHAR => 'CHAR(1)',
         Schema::TYPE_STRING => 'VARCHAR2(255)',
         Schema::TYPE_TEXT => 'CLOB',

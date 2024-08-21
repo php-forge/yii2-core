@@ -56,16 +56,6 @@ abstract class Schema extends BaseObject
     public const TYPE_BIGPK = 'bigpk';
 
     /**
-     * Define the abstract column type as an `integer UNSIGNED` primary key.
-     */
-    public const TYPE_UPK = 'upk';
-
-    /**
-     * Define the abstract column type as an `bigint UNSIGNED` primary key.
-     */
-    public const TYPE_UBIGPK = 'ubigpk';
-
-    /**
      * Define the abstract column type as `char`.
      */
     public const TYPE_CHAR = 'char';

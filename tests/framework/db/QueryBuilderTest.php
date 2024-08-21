@@ -867,32 +867,6 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 ],
             ],
             [
-                Schema::TYPE_UPK,
-                in_array($this->driverName, ['mysql', 'sqlite'], true)
-                    ? $this->primaryKey()->unsigned() : $this->primaryKey(),
-                [
-                    'mysql' => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                    'pgsql' => 'serial NOT NULL PRIMARY KEY',
-                    'sqlite' => 'integer UNSIGNED PRIMARY KEY AUTOINCREMENT NOT NULL',
-                ],
-                [
-                    'pgsql' => 'pk',
-                ]
-            ],
-            [
-                Schema::TYPE_UBIGPK,
-                in_array($this->driverName, ['mysql', 'sqlite'], true)
-                    ? $this->bigPrimaryKey()->unsigned() : $this->bigPrimaryKey(),
-                [
-                    'mysql' => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                    'pgsql' => 'bigserial NOT NULL PRIMARY KEY',
-                    'sqlite' => 'integer UNSIGNED PRIMARY KEY AUTOINCREMENT NOT NULL',
-                ],
-                [
-                    'pgsql' => 'bigpk',
-                ]
-            ],
-            [
                 Schema::TYPE_INTEGER . " COMMENT 'test comment'",
                 $this->integer()->comment('test comment'),
                 [
@@ -1017,9 +991,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
         foreach ($this->columnTypes() as $item) {
             list($column, $builder, $expected) = $item;
             if (!(strncmp($column, Schema::TYPE_PK, 2) === 0 ||
-                strncmp($column, Schema::TYPE_UPK, 3) === 0 ||
                 strncmp($column, Schema::TYPE_BIGPK, 5) === 0 ||
-                strncmp($column, Schema::TYPE_UBIGPK, 6) === 0 ||
                 strncmp(substr($column, -5), 'FIRST', 5) === 0
             )) {
                 $columns['col' . ++$i] = str_replace('CHECK (value', 'CHECK ([[col' . $i . ']]', $column);

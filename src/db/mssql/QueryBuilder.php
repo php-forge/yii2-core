@@ -28,10 +28,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_PK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_BIGPK => 'bigint IDENTITY PRIMARY KEY',
 
-        // unsigned primary key (MSSQL does not support unsigned columns)
-        Schema::TYPE_UPK => 'int IDENTITY PRIMARY KEY',
-        Schema::TYPE_UBIGPK => 'bigint IDENTITY PRIMARY KEY',
-
         // string types
         Schema::TYPE_CHAR => 'nchar(1)',
         Schema::TYPE_STRING => 'nvarchar(255)',

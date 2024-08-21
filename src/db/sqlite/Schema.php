@@ -30,6 +30,26 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     use ConstraintFinderTrait;
 
     /**
+     * Define the abstract column type as an `integer UNSIGNED` auto-incremental.
+     */
+    public const TYPE_UAUTO = 'uauto';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` auto-incremental.
+     */
+    public const TYPE_UBIGAUTO = 'ubigauto';
+
+    /**
+     * Define the abstract column type as an `integer UNSIGNED` primary key.
+     */
+    public const TYPE_UPK = 'upk';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` primary key.
+     */
+    public const TYPE_UBIGPK = 'ubigpk';
+
+    /**
      * @var array mapping from physical column types (keys) to abstract column types (values).
      */
     public array $typeMap = [

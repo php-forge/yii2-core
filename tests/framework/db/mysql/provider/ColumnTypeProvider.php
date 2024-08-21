@@ -232,13 +232,13 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
     {
         return [
             [
-                Schema::TYPE_UBIGPK,
+                \yii\db\mysql\Schema::TYPE_UBIGPK,
                 'ubigpk',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey()->unsigned(),
                 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
             ],
             [
-                Schema::TYPE_UBIGPK . '(1)',
+                \yii\db\mysql\Schema::TYPE_UBIGPK . '(1)',
                 'ubigpk(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1)->unsigned(),
                 'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -267,13 +267,13 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
     {
         return [
             [
-                Schema::TYPE_UPK,
+                \yii\db\mysql\Schema::TYPE_UPK,
                 'upk',
                 static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey()->unsigned(),
                 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
             ],
             [
-                Schema::TYPE_UPK . '(1)',
+                \yii\db\mysql\Schema::TYPE_UPK . '(1)',
                 'upk(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(1)->unsigned(),
                 'int(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
