@@ -40,9 +40,6 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     public function __toString(): string
     {
         $format = match ($this->getTypeCategory()) {
-            self::CATEGORY_AUTO,
-            self::CATEGORY_BIGAUTO,
-            self::CATEGORY_BIGPK,
             self::CATEGORY_PK => '{type}{length}{comment}{check}{append}{pos}',
             self::CATEGORY_NUMERIC => '{type}{length}{unsigned}{notnull}{default}{unique}{comment}{append}{pos}{check}',
             default => '{type}{length}{notnull}{default}{unique}{comment}{append}{pos}{check}',
@@ -157,6 +154,8 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
     public function unsigned(): static
     {
         $this->type = match ($this->type) {
+            Schema::TYPE_AUTO => Schema::TYPE_UAUTO,
+            Schema::TYPE_BIGAUTO => Schema::TYPE_UBIGAUTO,
             Schema::TYPE_PK => Schema::TYPE_UPK,
             Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
             default => $this->type,

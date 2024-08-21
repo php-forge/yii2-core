@@ -158,6 +158,76 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
         ];
     }
 
+    public function unsignedAutoIncrement(): array
+    {
+        return [
+            [
+                \yii\db\mysql\Schema::TYPE_UAUTO,
+                'uauto',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement()->unsigned(),
+                'int(10) UNSIGNED AUTO_INCREMENT',
+            ],
+            [
+                \yii\db\mysql\Schema::TYPE_UAUTO . '(1)',
+                'uauto(1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(1)->unsigned(),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
+    public function unsignedAutoIncrementWithRaw(): array
+    {
+        return [
+            [
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                'uauto',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement()->unsigned(),
+            ],
+            [
+                'int(1) UNSIGNED AUTO_INCREMENT',
+                'uauto(1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(1)->unsigned(),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
+    public function unsignedBigAutoIncrement(): array
+    {
+        return [
+            [
+                \yii\db\mysql\Schema::TYPE_UBIGAUTO,
+                'ubigauto',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement()->unsigned(),
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+            ],
+            [
+                \yii\db\mysql\Schema::TYPE_UBIGAUTO . '(1)',
+                'ubigauto(1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(1)->unsigned(),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
+    public function unsignedBigAutoIncrementWithRaw(): array
+    {
+        return [
+            [
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                'ubigauto',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement()->unsigned(),
+            ],
+            [
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+                'ubigauto(1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(1)->unsigned(),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
     public function unsignedBigPrimaryKey(): array
     {
         return [
