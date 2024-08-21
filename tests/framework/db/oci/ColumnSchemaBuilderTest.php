@@ -22,19 +22,4 @@ class ColumnSchemaBuilderTest extends \yiiunit\framework\db\ColumnSchemaBuilderT
     {
         return new ColumnSchemaBuilder($this->getConnection(), $type, $length);
     }
-
-    /**
-     * @return array
-     */
-    public function typesProvider()
-    {
-        return [
-            ['integer UNSIGNED', Schema::TYPE_INTEGER, null, [
-                ['unsigned'],
-            ]],
-            ['integer(10) UNSIGNED', Schema::TYPE_INTEGER, 10, [
-                ['unsigned'],
-            ]],
-        ];
-    }
 }
