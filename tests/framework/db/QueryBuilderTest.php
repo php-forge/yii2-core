@@ -873,7 +873,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 [
                     'mysql' => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'serial NOT NULL PRIMARY KEY',
-                    'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
+                    'sqlite' => 'integer UNSIGNED PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
                 [
                     'pgsql' => 'pk',
@@ -886,7 +886,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 [
                     'mysql' => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'bigserial NOT NULL PRIMARY KEY',
-                    'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
+                    'sqlite' => 'integer UNSIGNED PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
                 [
                     'pgsql' => 'bigpk',
