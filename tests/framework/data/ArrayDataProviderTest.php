@@ -7,195 +7,207 @@
 
 namespace yiiunit\framework\data;
 
-use yii\base\InvalidCallException;
-use yii\data\ActiveDataProvider;
-use yii\db\Query;
-use yiiunit\data\ar\ActiveRecord;
-use yiiunit\data\ar\Customer;
-use yiiunit\data\ar\Item;
-use yiiunit\data\ar\Order;
-use yiiunit\framework\db\DatabaseTestCase;
-use yiiunit\framework\db\UnqueryableQueryMock;
+use yii\data\ArrayDataProvider;
+use yiiunit\TestCase;
 
 /**
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @group data
- * @group db
  */
-abstract class ActiveDataProviderTest extends DatabaseTestCase
+class ArrayDataProviderTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        ActiveRecord::$db = $this->getConnection();
+        $this->mockApplication();
     }
 
-    public function testActiveQuery()
+    public function testGetModels()
     {
-        $provider = new ActiveDataProvider([
-            'query' => Order::find()->orderBy('id'),
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(3, $orders);
-        $this->assertInstanceOf(Order::className(), $orders[0]);
-        $this->assertInstanceOf(Order::className(), $orders[1]);
-        $this->assertInstanceOf(Order::className(), $orders[2]);
-        $this->assertEquals([1, 2, 3], $provider->getKeys());
-
-        $provider = new ActiveDataProvider([
-            'query' => Order::find(),
-            'pagination' => [
-                'pageSize' => 2,
-            ],
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(2, $orders);
+        $simpleArray = [
+            ['name' => 'zero'],
+            ['name' => 'one'],
+        ];
+        $dataProvider = new ArrayDataProvider(['allModels' => $simpleArray]);
+        $this->assertEquals($simpleArray, $dataProvider->getModels());
     }
 
-    public function testActiveRelation()
+    public function testGetSortedData()
     {
-        /* @var $customer Customer */
-        $customer = Customer::findOne(2);
-        $provider = new ActiveDataProvider([
-            'query' => $customer->getOrders(),
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(2, $orders);
-        $this->assertInstanceOf(Order::className(), $orders[0]);
-        $this->assertInstanceOf(Order::className(), $orders[1]);
-        $this->assertEquals([2, 3], $provider->getKeys());
-
-        $provider = new ActiveDataProvider([
-            'query' => $customer->getOrders(),
-            'pagination' => [
-                'pageSize' => 1,
-            ],
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(1, $orders);
+        $simpleArray = [['sortField' => 1], ['sortField' => 0]];
+        $dataProvider = new ArrayDataProvider(
+            [
+                'allModels' => $simpleArray,
+                'sort' => [
+                    'attributes' => [
+                        'sort' => [
+                            'asc' => ['sortField' => SORT_ASC],
+                            'desc' => ['sortField' => SORT_DESC],
+                            'label' => 'Sorting',
+                            'default' => 'asc',
+                        ],
+                    ],
+                    'defaultOrder' => [
+                        'sort' => SORT_ASC,
+                    ],
+                ],
+            ]
+        );
+        $sortedArray = [['sortField' => 0], ['sortField' => 1]];
+        $this->assertEquals($sortedArray, $dataProvider->getModels());
     }
 
-    public function testActiveRelationVia()
+    public function testGetSortedDataByInnerArrayField()
     {
-        /* @var $order Order */
-        $order = Order::findOne(2);
-        $provider = new ActiveDataProvider([
-            'query' => $order->getItems(),
-        ]);
-        $items = $provider->getModels();
-        $this->assertCount(3, $items);
-        $this->assertInstanceOf(Item::className(), $items[0]);
-        $this->assertInstanceOf(item::className(), $items[1]);
-        $this->assertInstanceOf(Item::className(), $items[2]);
-        $this->assertEquals([3, 4, 5], $provider->getKeys());
-
-        $provider = new ActiveDataProvider([
-            'query' => $order->getItems(),
-            'pagination' => [
-                'pageSize' => 2,
-            ],
-        ]);
-        $items = $provider->getModels();
-        $this->assertCount(2, $items);
+        $simpleArray = [
+            ['innerArray' => ['sortField' => 1]],
+            ['innerArray' => ['sortField' => 0]],
+        ];
+        $dataProvider = new ArrayDataProvider(
+            [
+                'allModels' => $simpleArray,
+                'sort' => [
+                    'attributes' => [
+                        'sort' => [
+                            'asc' => ['innerArray.sortField' => SORT_ASC],
+                            'desc' => ['innerArray.sortField' => SORT_DESC],
+                            'label' => 'Sorting',
+                            'default' => 'asc',
+                        ],
+                    ],
+                    'defaultOrder' => [
+                        'sort' => SORT_ASC,
+                    ],
+                ],
+            ]
+        );
+        $sortedArray = [
+            ['innerArray' => ['sortField' => 0]],
+            ['innerArray' => ['sortField' => 1]],
+        ];
+        $this->assertEquals($sortedArray, $dataProvider->getModels());
     }
 
-    public function testActiveRelationViaTable()
+    public function testCaseSensitiveSort()
     {
-        /* @var $order Order */
-        $order = Order::findOne(1);
-        $provider = new ActiveDataProvider([
-            'query' => $order->getBooks(),
-        ]);
-        $items = $provider->getModels();
-        $this->assertCount(2, $items);
-        $this->assertInstanceOf(Item::className(), $items[0]);
-        $this->assertInstanceOf(Item::className(), $items[1]);
+        // source data
+        $unsortedProjects = [
+            ['title' => 'Zabbix', 'license' => 'GPL'],
+            ['title' => 'munin', 'license' => 'GPL'],
+            ['title' => 'Arch Linux', 'license' => 'GPL'],
+            ['title' => 'Nagios', 'license' => 'GPL'],
+            ['title' => 'zend framework', 'license' => 'BSD'],
+            ['title' => 'Zope', 'license' => 'ZPL'],
+            ['title' => 'active-record', 'license' => false],
+            ['title' => 'ActiveState', 'license' => false],
+            ['title' => 'mach', 'license' => false],
+            ['title' => 'MySQL', 'license' => 'GPL'],
+            ['title' => 'mssql', 'license' => 'EULA'],
+            ['title' => 'Master-Master', 'license' => false],
+            ['title' => 'Zend Engine', 'license' => false],
+            ['title' => 'Mageia Linux', 'license' => 'GNU GPL'],
+            ['title' => 'nginx', 'license' => 'BSD'],
+            ['title' => 'Mozilla Firefox', 'license' => 'MPL'],
+        ];
 
-        $provider = new ActiveDataProvider([
-            'query' => $order->getBooks(),
-            'pagination' => [
-                'pageSize' => 1,
-            ],
-        ]);
-        $items = $provider->getModels();
-        $this->assertCount(1, $items);
+        // expected data
+        $sortedProjects = [
+            // upper cased titles
+            ['title' => 'ActiveState', 'license' => false],
+            ['title' => 'Arch Linux', 'license' => 'GPL'],
+            ['title' => 'Mageia Linux', 'license' => 'GNU GPL'],
+            ['title' => 'Master-Master', 'license' => false],
+            ['title' => 'Mozilla Firefox', 'license' => 'MPL'],
+            ['title' => 'MySQL', 'license' => 'GPL'],
+            ['title' => 'Nagios', 'license' => 'GPL'],
+            ['title' => 'Zabbix', 'license' => 'GPL'],
+            ['title' => 'Zend Engine', 'license' => false],
+            ['title' => 'Zope', 'license' => 'ZPL'],
+            // lower cased titles
+            ['title' => 'active-record', 'license' => false],
+            ['title' => 'mach', 'license' => false],
+            ['title' => 'mssql', 'license' => 'EULA'],
+            ['title' => 'munin', 'license' => 'GPL'],
+            ['title' => 'nginx', 'license' => 'BSD'],
+            ['title' => 'zend framework', 'license' => 'BSD'],
+        ];
+
+        $dataProvider = new ArrayDataProvider(
+            [
+                'allModels' => $unsortedProjects,
+                'sort' => [
+                    'attributes' => [
+                        'sort' => [
+                            'asc' => ['title' => SORT_ASC],
+                            'desc' => ['title' => SORT_DESC],
+                            'label' => 'Title',
+                            'default' => 'desc',
+                        ],
+                    ],
+                    'defaultOrder' => [
+                        'sort' => SORT_ASC,
+                    ],
+                ],
+                'pagination' => [
+                    'pageSize' => 100500,
+                ],
+            ]
+        );
+
+        $this->assertEquals($sortedProjects, $dataProvider->getModels());
     }
 
-    public function testQuery()
+    public function testGetKeys()
     {
-        $query = new Query();
-        $provider = new ActiveDataProvider([
-            'db' => $this->getConnection(),
-            'query' => $query->from('order')->orderBy('id'),
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(3, $orders);
-        $this->assertIsArray($orders[0]);
-        $this->assertEquals([0, 1, 2], $provider->getKeys());
+        $pagination = ['pageSize' => 2];
 
-        $query = new Query();
-        $provider = new ActiveDataProvider([
-            'db' => $this->getConnection(),
-            'query' => $query->from('order'),
-            'pagination' => [
-                'pageSize' => 2,
-            ],
-        ]);
-        $orders = $provider->getModels();
-        $this->assertCount(2, $orders);
+        $simpleArray = [
+            ['name' => 'zero'],
+            ['name' => 'one'],
+            ['name' => 'tow'],
+        ];
+        $dataProvider = new ArrayDataProvider(['allModels' => $simpleArray, 'pagination' => $pagination]);
+        $this->assertEquals([0, 1], $dataProvider->getKeys());
+
+        $namedArray = [
+            'key1' => ['name' => 'zero'],
+            'key2' => ['name' => 'one'],
+            'key3' => ['name' => 'two'],
+        ];
+        $dataProvider = new ArrayDataProvider(['allModels' => $namedArray, 'pagination' => $pagination]);
+        $this->assertEquals(['key1', 'key2'], $dataProvider->getKeys());
+
+        $mixedArray = [
+            'key1' => ['name' => 'zero'],
+            9 => ['name' => 'one'],
+            'key3' => ['name' => 'two'],
+        ];
+        $dataProvider = new ArrayDataProvider(['allModels' => $mixedArray, 'pagination' => $pagination]);
+        $this->assertEquals(['key1', 9], $dataProvider->getKeys());
     }
 
-    public function testRefresh()
+    public function testSortFlags()
     {
-        $query = new Query();
-        $provider = new ActiveDataProvider([
-            'db' => $this->getConnection(),
-            'query' => $query->from('order')->orderBy('id'),
-        ]);
-        $this->assertCount(3, $provider->getModels());
-
-        $provider->getPagination()->pageSize = 2;
-        $this->assertCount(3, $provider->getModels());
-        $provider->refresh();
-        $this->assertCount(2, $provider->getModels());
-    }
-
-    public function testPaginationBeforeModels()
-    {
-        $query = new Query();
-        $provider = new ActiveDataProvider([
-            'db' => $this->getConnection(),
-            'query' => $query->from('order')->orderBy('id'),
-        ]);
-        $pagination = $provider->getPagination();
-        $this->assertEquals(0, $pagination->getPageCount());
-        $this->assertCount(3, $provider->getModels());
-        $this->assertEquals(1, $pagination->getPageCount());
-
-        $provider->getPagination()->pageSize = 2;
-        $this->assertCount(3, $provider->getModels());
-        $provider->refresh();
-        $this->assertCount(2, $provider->getModels());
-    }
-
-    public function testDoesNotPerformQueryWhenHasNoModels()
-    {
-        $query = new UnqueryableQueryMock();
-        $provider = new ActiveDataProvider([
-            'db' => $this->getConnection(),
-            'query' => $query->from('order')->where('0=1'),
-        ]);
-        $pagination = $provider->getPagination();
-        $this->assertEquals(0, $pagination->getPageCount());
-
-        try {
-            $this->assertCount(0, $provider->getModels());
-        } catch (InvalidCallException $exception) {
-            $this->fail('An excessive models query was executed.');
-        }
-
-        $this->assertEquals(0, $pagination->getPageCount());
+        $simpleArray = [['sortField' => 1], ['sortField' => 2], ['sortField' => 11]];
+        $dataProvider = new ArrayDataProvider(
+            [
+                'allModels' => $simpleArray,
+                'sort' => [
+                    'sortFlags' => SORT_STRING,
+                    'attributes' => [
+                        'sort' => [
+                            'asc' => ['sortField' => SORT_ASC],
+                            'desc' => ['sortField' => SORT_DESC],
+                            'label' => 'Sorting',
+                            'default' => 'asc',
+                        ],
+                    ],
+                    'defaultOrder' => [
+                        'sort' => SORT_ASC,
+                    ],
+                ],
+            ]
+        );
+        $sortedArray = [['sortField' => 1], ['sortField' => 11], ['sortField' => 2]];
+        $this->assertEquals($sortedArray, $dataProvider->getModels());
     }
 }
