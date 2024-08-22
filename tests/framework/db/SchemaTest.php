@@ -36,11 +36,19 @@ abstract class SchemaTest extends DatabaseTestCase
 
     public function testGetSchemaNames()
     {
+        $db = $this->getConnection();
+
         /* @var $schema Schema */
-        $schema = $this->getConnection()->schema;
+        $schema = $db->schema;
 
         $schemas = $schema->getSchemaNames();
-        $this->assertNotEmpty($schemas);
+
+        if ($db->driverName === 'oci' && version_compare($db->serverVersion, '12.1', '<')) {
+            $this->assertEmpty($schemas);
+        } else {
+            $this->assertNotEmpty($schemas);
+        }
+
         foreach ($this->expectedSchemas as $schema) {
             $this->assertContains($schema, $schemas);
         }
