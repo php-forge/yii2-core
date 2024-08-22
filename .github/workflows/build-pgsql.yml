@@ -28,6 +28,7 @@ concurrency:
 jobs:
   tests:
     name: PHP ${{ matrix.php }}-pgsql-${{ matrix.pgsql }}
+
     env:
       EXTENSIONS: curl, intl, pdo, pdo_pgsql
 
