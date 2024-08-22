@@ -4,10 +4,6 @@ Yii Core version 2 Change Log
 0.1.0 under development
 ------------------------
 
-- Bug #20195: Do not set non abstract values into `ColumnSchema->type` on MSSQL version less then 2017 (axeltomasson)
-- Bug #16116: Codeception: oci does not support enabling/disabling integrity check (@terabytesoftw)
-- Bug #20191: Fix `ActiveRecord::getDirtyAttributes()` for JSON columns with multi-dimensional array values (brandonkelly)
-- Bug #20175: Fix bad result for pagination when used with GridView (@lav45)
 - Enh #3: Remove assets from `composer.json` (@terabytesoftw)
 - Enh #5: Move `CHANGELOG.md` and `UPGRADE.md` to `root` directory (@terabytesoftw)
 - Bug #8: Remove `PHP` deprecated `strpos()` passing `null` to parameter #1 in `Oracle` (@terabytesoftw)
@@ -31,6 +27,16 @@ Yii Core version 2 Change Log
 
 Yii Framework 2 Change Log
 ==========================
+
+2.0.51 July 18, 2024
+-------------------
+
+- Bug #16116: Codeception: oci does not support enabling/disabling integrity check (@terabytesoftw)
+- Bug #20147: Fix error handler compatibility with PHP 8.3 (samdark)
+- Bug #20191: Fix `ActiveRecord::getDirtyAttributes()` for JSON columns with multi-dimensional array values (brandonkelly)
+- Bug #20195: Do not set non abstract values into `ColumnSchema->type` on MSSQL version less then 2017 (axeltomasson)
+- Bug #20211: Add acceptable parameters to `MaskedInput::init()` method (alxlnk)
+- Bug #20226: Revert all PR for "Data providers perform unnecessary COUNT queries that negatively affect performance" (@terabytesoftw)
 
 2.0.50 May 30, 2024
 -------------------
