@@ -28,6 +28,7 @@ concurrency:
 jobs:
   tests:
     name: PHP ${{ matrix.php }}-mariadb-${{ matrix.mariadb }}
+
     env:
       extensions: curl, intl, pdo, pdo_mysql
       XDEBUG_MODE: coverage, develop
@@ -35,7 +36,6 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false
       matrix:
         os:
           - ubuntu-latest

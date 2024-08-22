@@ -28,6 +28,7 @@ concurrency:
 jobs:
   tests:
     name: PHP ${{ matrix.php }}-mysql-${{ matrix.mysql }}
+
     env:
       EXTENSIONS: curl, intl, pdo, pdo_mysql
 
