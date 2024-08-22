@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }}-oracle-11g-r2
+    name: PHP ${{ matrix.php }}-oracle-${{ matrix.oracle }}
 
     env:
       EXTENSIONS: oci8, pdo, pdo_oci
