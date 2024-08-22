@@ -25,7 +25,7 @@ use yii\widgets\MaskedInput;
 class ActiveFieldTest extends \yiiunit\TestCase
 {
     use ArraySubsetAsserts;
-    
+
     /**
      * @var ActiveFieldExtend
      */
@@ -674,6 +674,13 @@ HTML;
         $widget = $this->activeField->widget(TestMaskedInput::className(), [
             'mask' => '999-999-9999',
             'options' => ['placeholder' => 'pholder_direct'],
+        ]);
+        $this->assertStringContainsString('placeholder="pholder_direct"', (string) $widget);
+
+        // use regex clientOptions instead mask
+        $widget = $this->activeField->widget(TestMaskedInput::className(), [
+            'options' => ['placeholder' => 'pholder_direct'],
+            'clientOptions' => ['regex' => '^.*$'],
         ]);
         $this->assertStringContainsString('placeholder="pholder_direct"', (string) $widget);
 
