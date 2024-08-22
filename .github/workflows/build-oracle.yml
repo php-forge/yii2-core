@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }}-oracle-11g-r2
+    name: PHP ${{ matrix.php }}-oracle-${{ matrix.oracle }}
 
     env:
       EXTENSIONS: oci8, pdo, pdo_oci
@@ -44,13 +44,22 @@ jobs:
 
         oracle:
           - 11
+          - 18
+          - 21
 
     services:
       oci:
-        image: wnameless/oracle-xe-11g-r2:latest
+        image: gvenzl/oracle-xe:${{ matrix.oracle }}
         ports:
           - 1521:1521
-        options: --name=oci
+        env:
+          ORACLE_PASSWORD : oracle
+        options: >-
+          --name=oci
+          --health-cmd healthcheck.sh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout.
