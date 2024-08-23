@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\db\querybuilder;
+namespace yiiunit\framework\db\querybuilder\types;
 
 use Closure;
 use yii\db\Connection;
