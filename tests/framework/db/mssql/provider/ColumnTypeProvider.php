@@ -81,6 +81,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 'auto(2,3)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(2, 3),
             ],
+            [
+                'int IDENTITY(-10,1)',
+                'auto(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(-10, 1),
+                'int IDENTITY(-10,1)',
+            ],
         ];
     }
 
@@ -111,6 +117,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 1 => 'bigauto(2,3)',
                 2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(2, 3),
                 3 => 'bigint IDENTITY(2,3)',
+            ],
+            'bigauto(-10,1)' => [
+                Schema::TYPE_BIGAUTO . '(-10,1)',
+                'bigauto(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(-10, 1),
+                'bigint IDENTITY(-10,1)',
             ],
         ];
 
@@ -149,6 +161,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 'bigauto(2,3)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(2, 3),
             ],
+            [
+                'bigint IDENTITY(-10,1)',
+                'bigauto(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(-10, 1),
+                'bigint IDENTITY(-10,1)',
+            ],
         ];
     }
 
@@ -179,6 +197,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 1 => 'bigpk(2,3)',
                 2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(2, 3),
                 3 => 'bigint IDENTITY(2,3) PRIMARY KEY',
+            ],
+            'bigpk(-10,1)' => [
+                Schema::TYPE_BIGPK . '(-10,1)',
+                'bigpk(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(-10, 1),
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
             ],
         ];
 
@@ -217,6 +241,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 'bigpk(2,3)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(2, 3),
             ],
+            [
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
+                'bigpk(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(-10, 1),
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
+            ],
         ];
     }
 
@@ -247,6 +277,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 1 => 'pk(2,3)',
                 2 => static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(2, 3),
                 3 => 'int IDENTITY(2,3) PRIMARY KEY',
+            ],
+            'pk(-10,1)' => [
+                Schema::TYPE_PK . '(-10,1)',
+                'pk(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(-10, 1),
+                'int IDENTITY(-10,1) PRIMARY KEY',
             ],
         ];
 
@@ -284,6 +320,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 'int IDENTITY(2,3) PRIMARY KEY',
                 'pk(2,3)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(2, 3),
+            ],
+            [
+                'int IDENTITY(-10,1) PRIMARY KEY',
+                'pk(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(-10, 1),
+                'int IDENTITY(-10,1) PRIMARY KEY',
             ],
         ];
     }
