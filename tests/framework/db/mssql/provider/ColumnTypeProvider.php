@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mssql\provider;
 
 use yii\db\mssql\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yiiunit\support\TestHelper;
 
 final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractColumnTypeProvider
@@ -36,6 +37,12 @@ final class ColumnTypeProvider extends \yiiunit\framework\db\provider\AbstractCo
                 1 => 'auto(2,3)',
                 2 => static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(2, 3),
                 3 => 'int IDENTITY(2,3)',
+            ],
+            'auto(-10,1)' => [
+                Schema::TYPE_AUTO . '(-10,1)',
+                'auto(-10,1)',
+                static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(-10, 1),
+                'int IDENTITY(-10,1)',
             ],
         ];
 

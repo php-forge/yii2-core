@@ -666,28 +666,28 @@ END";
 
     private function handleIdentityColumn(string $columnType, string $type): string
     {
-        if (preg_match('/^(big)?(auto|pk)\s*\((\d+),(\d+)\)$/i', $type, $matches)) {
+        if (preg_match('/^(big)?(auto|pk)\s*\(([-]?\d+),(\d+)\)$/i', $type, $matches)) {
             $isBig = !empty($matches[1]);
             $isPk = strtolower($matches[2]) === 'pk';
-            $start = $matches[3];
+            $start = $matches[3]; // Ahora puede ser negativo
             $increment = ($matches[4] == '0') ? '1' : $matches[4];
             $dataType = $isBig ? 'bigint' : 'int';
 
             return "$dataType IDENTITY($start,$increment)" . ($isPk ? ' PRIMARY KEY' : '');
         }
 
-        if (preg_match('/^(big)?int IDENTITY\((\d+)\)(\s+PRIMARY KEY)?$/i', $columnType, $matches)) {
+        if (preg_match('/^(big)?int IDENTITY\(([-]?\d+)\)(\s+PRIMARY KEY)?$/i', $columnType, $matches)) {
             $dataType = !empty($matches[1]) ? 'bigint' : 'int';
             $isPk = !empty($matches[3]);
 
             return "$dataType IDENTITY" . ($isPk ? ' PRIMARY KEY' : '');
         }
 
-        if (preg_match('/IDENTITY\((\d+),(\d+)\)/i', $columnType, $matches)) {
-            $start = $matches[1];
+        if (preg_match('/IDENTITY\(([-]?\d+),(\d+)\)/i', $columnType, $matches)) {
+            $start = $matches[1]; // Ahora puede ser negativo
             $increment = ($matches[2] == '0') ? '1' : $matches[2];
 
-            return preg_replace('/IDENTITY\(\d+,\d+\)/i', "IDENTITY($start,$increment)", $columnType);
+            return preg_replace('/IDENTITY\(([-]?\d+),\d+\)/i', "IDENTITY($start,$increment)", $columnType);
         }
 
         return $columnType;
