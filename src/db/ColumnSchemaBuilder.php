@@ -122,10 +122,8 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
         Schema::TYPE_AUTO => self::CATEGORY_AUTO,
         Schema::TYPE_BIGAUTO => self::CATEGORY_BIGAUTO,
 
-        // integer auto-incremental primary key column types
+        // primary key column types
         Schema::TYPE_PK => self::CATEGORY_PK,
-
-        // big integer auto-incremental primary key column types
         Schema::TYPE_BIGPK => self::CATEGORY_BIGPK,
 
         Schema::TYPE_CHAR => self::CATEGORY_STRING,
