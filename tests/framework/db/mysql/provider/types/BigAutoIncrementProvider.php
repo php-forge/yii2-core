@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\provider\types;
 
 use yii\db\mysql\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yiiunit\support\TestHelper;
 
 final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\types\AbstractBigAutoIncrementProvider
@@ -43,6 +44,63 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
                 'ubigauto(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigAutoIncrement(1)->unsigned(),
                 'bigint(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
+    public static function schema(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO),
+                'bigint(20) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO, 1),
+                'bigint(1) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+        ];
+    }
+
+    public static function schemaWithUnsigned(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO)->unsigned(),
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema
+                    ->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO, 1)
+                    ->unsigned(),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UBIGAUTO),
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema
+                    ->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UBIGAUTO, 1),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
             ],
         ];
     }

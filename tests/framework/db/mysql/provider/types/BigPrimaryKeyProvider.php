@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\provider\types;
 
 use yii\db\mysql\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yiiunit\support\TestHelper;
 
 final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\AbstractBigPrimaryKeyProvider
@@ -43,6 +44,60 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'ubigpk(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1)->unsigned(),
                 'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+            ],
+        ];
+    }
+
+    public static function schema(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
+                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, 1),
+                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+        ];
+    }
+
+    public static function schemaWithUnsigned(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK)->unsigned(),
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, 1)->unsigned(),
+                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UBIGPK),
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UBIGPK, 1),
+                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
             ],
         ];
     }

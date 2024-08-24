@@ -47,8 +47,14 @@ abstract class AbstractExecuteColumnTypes extends \yiiunit\TestCase
         // Ensure data was inserted
         $this->assertSame(2, $result);
 
-        // Ensure last insert ID
-        $this->assertSame($expectedLastInsertID, $this->db->getLastInsertID());
+        // Ensure last insert ID.
+        // MySQL not return last insert ID for batch insert.
+        $lastInsertID = match ($this->db->getDriverName()) {
+            'mysql' => $this->db->createCommand("SELECT MAX(id) FROM {$this->table}")->queryScalar(),
+            default => $this->db->getLastInsertID(),
+        };
+
+        $this->assertSame($expectedLastInsertID, $lastInsertID);
 
         TableGenerator::ensureNoTable($this->db, $this->table);
     }

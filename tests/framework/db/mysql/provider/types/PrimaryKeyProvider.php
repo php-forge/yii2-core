@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\provider\types;
 
 use yii\db\mysql\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yiiunit\support\TestHelper;
 
 final class PrimaryKeyProvider extends \yiiunit\framework\db\provider\types\AbstractPrimaryKeyProvider
@@ -43,6 +44,60 @@ final class PrimaryKeyProvider extends \yiiunit\framework\db\provider\types\Abst
                 'upk(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(1)->unsigned(),
                 'int(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+            ],
+        ];
+    }
+
+    public static function schema(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK),
+                'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, 1),
+                'int(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
+            ],
+        ];
+    }
+
+    public static function schemaWithUnsigned(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK)->unsigned(),
+                'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, 1)->unsigned(),
+                'int(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UPK),
+                'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UPK, 1),
+                'int(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'integer',
+                2,
             ],
         ];
     }

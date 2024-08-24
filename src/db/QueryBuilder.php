@@ -783,33 +783,39 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Builds a SQL statement for creating a new DB table.
      *
-     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'),
-     * where name stands for a column name which will be properly quoted by the method, and definition
-     * stands for the column type which must contain an abstract DB type.
+     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'), where name
+     * stands for a column name which will be properly quoted by the method, and definition stands for the column type
+     * which must contain an abstract DB type.
+     *
      * The [[getColumnType()]] method will be invoked to convert any abstract type into a physical one.
      *
-     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly
-     * inserted into the generated SQL.
+     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly inserted
+     * into the generated SQL.
      *
      * For example,
      *
      * ```php
-     * $sql = $queryBuilder->createTable('user', [
-     *  'id' => 'pk',
-     *  'name' => 'string',
-     *  'age' => 'integer',
-     *  'column_name double precision null default null', # definition only example
-     * ]);
+     * $sql = $queryBuilder->createTable(
+     *     'user',
+     *     [
+     *         'id' => 'pk',
+     *         'name' => 'string',
+     *         'age' => 'integer',
+     *         'column_name double precision null default null', # definition only example
+     *     ],
+     * );
      * ```
      *
      * @param string $table the name of the table to be created. The name will be properly quoted by the method.
      * @param array $columns the columns (name => definition) in the new table.
      * @param string|null $options additional SQL fragment that will be appended to the generated SQL.
+     *
      * @return string the SQL statement for creating a new DB table.
      */
-    public function createTable($table, $columns, $options = null)
+    public function createTable(string $table, array $columns, string|null $options = null): string
     {
         $cols = [];
+
         foreach ($columns as $name => $type) {
             if (is_string($name)) {
                 $cols[] = "\t" . $this->db->quoteColumnName($name) . ' ' . $this->getColumnType($type);
@@ -817,6 +823,7 @@ class QueryBuilder extends \yii\base\BaseObject
                 $cols[] = "\t" . $type;
             }
         }
+
         $sql = 'CREATE TABLE ' . $this->db->quoteTableName($table) . " (\n" . implode(",\n", $cols) . "\n)";
 
         return $options === null ? $sql : $sql . ' ' . $options;

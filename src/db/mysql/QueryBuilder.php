@@ -55,7 +55,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         Schema::TYPE_JSON => 'json'
     ];
 
-
     /**
      * {@inheritdoc}
      */
@@ -74,6 +73,94 @@ class QueryBuilder extends \yii\db\QueryBuilder
         return array_merge(parent::defaultExpressionBuilders(), [
             'yii\db\JsonExpression' => 'yii\db\mysql\JsonExpressionBuilder',
         ]);
+    }
+
+    /**
+     * Builds a SQL statement for creating a new DB table.
+     *
+     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'), where name
+     * stands for a column name which will be properly quoted by the method, and definition stands for the column type
+     * which must contain an abstract DB type.
+     *
+     * The [[getColumnType()]] method will be invoked to convert any abstract type into a physical one.
+     *
+     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly inserted
+     * into the generated SQL.
+     *
+     * For example,
+     *
+     * ```php
+     * $sql = $queryBuilder->createTable(
+     *     'user',
+     *     [
+     *         'id' => 'pk',
+     *         'name' => 'string',
+     *         'age' => 'integer',
+     *         'column_name double precision null default null', # definition only example
+     *     ],
+     * );
+     * ```
+     *
+     * Note: When column definition is specified as auto-incremental, the column will be set as key automatically.
+     *
+     * @param string $table the name of the table to be created. The name will be properly quoted by the method.
+     * @param array $columns the columns (name => definition) in the new table.
+     * @param string|null $options additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return string the SQL statement for creating a new DB table.
+     */
+    public function createTable(string $table, array $columns, string|null $options = null): string
+    {
+        $autoIncrementColumn = null;
+        $hasPrimaryKey = false;
+
+        $cols = [];
+
+        foreach ($columns as $name => $type) {
+            if (is_string($name)) {
+                if ($type instanceof ColumnSchemaBuilder) {
+                    if (
+                        in_array(
+                            $type->getType(),
+                            [Schema::TYPE_AUTO, Schema::TYPE_UAUTO, Schema::TYPE_BIGAUTO, Schema::TYPE_UBIGAUTO],
+                            true
+                        )
+                    ) {
+                        $autoIncrementColumn = $name;
+                    }
+
+                    if (
+                        in_array(
+                            $type->getType(),
+                            [Schema::TYPE_PK, Schema::TYPE_UPK, Schema::TYPE_BIGPK, Schema::TYPE_UBIGPK],
+                            true
+                        )
+                    ) {
+                        $hasPrimaryKey = true;
+                    }
+                } else {
+                    if (stripos($type, 'AUTO_INCREMENT') !== false) {
+                        $autoIncrementColumn = $name;
+                    }
+
+                    if (stripos($type, 'PRIMARY KEY') !== false) {
+                        $hasPrimaryKey = true;
+                    }
+                }
+
+                $cols[] = "\t" . $this->db->quoteColumnName($name) . ' ' . $this->getColumnType($type);
+            } else {
+                $cols[] = "\t" . $type;
+            }
+        }
+
+        if ($autoIncrementColumn !== null && $hasPrimaryKey === false) {
+            $cols[] = 'PRIMARY KEY (' . $this->db->quoteColumnName($autoIncrementColumn) . ')';
+        }
+
+        $sql = 'CREATE TABLE ' . $this->db->quoteTableName($table) . " (\n" . implode(",\n", $cols) . "\n)";
+
+        return $options === null ? $sql : $sql . ' ' . $options;
     }
 
     /**

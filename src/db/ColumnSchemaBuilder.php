@@ -265,6 +265,16 @@ class ColumnSchemaBuilder extends BaseObject implements \Stringable
     }
 
     /**
+     * Returns the column type.
+     *
+     * @return string|null the column type.
+     */
+    public function getType(): string|null
+    {
+        return $this->type;
+    }
+
+    /**
      * Adds a `NOT NULL` constraint to the column.
      *
      * @return static Instance of the column schema builder.

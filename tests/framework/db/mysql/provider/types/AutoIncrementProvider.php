@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\provider\types;
 
 use yii\db\mysql\ColumnSchemaBuilder;
+use yii\db\Schema;
 use yiiunit\support\TestHelper;
 
 final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\AbstractAutoIncrementProvider
@@ -43,6 +44,62 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
                 'uauto(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->autoIncrement(1)->unsigned(),
                 'int(1) UNSIGNED AUTO_INCREMENT',
+            ],
+        ];
+    }
+
+    public static function schema(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO),
+                'int(11) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO, 1),
+                'int(1) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+        ];
+    }
+
+    public static function schemaWithUnsigned(): array
+    {
+        return [
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO)->unsigned(),
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema
+                    ->createColumnSchemaBuilder(Schema::TYPE_AUTO, 1)
+                    ->unsigned(),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UAUTO),
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UAUTO, 1),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
             ],
         ];
     }
