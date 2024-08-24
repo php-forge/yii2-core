@@ -6,9 +6,8 @@ namespace yiiunit\framework\db\querybuilder;
 
 use yii\db\Connection;
 use yii\db\QueryInterface;
-use yiiunit\TestCase;
 
-abstract class AbstractInsert extends TestCase
+abstract class AbstractInsert extends \yiiunit\TestCase
 {
     protected Connection|null $db = null;
 
