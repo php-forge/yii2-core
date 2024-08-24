@@ -7,11 +7,10 @@ namespace yiiunit\framework\db\querybuilder;
 use yii\db\Connection;
 use yii\db\Query;
 use yii\db\QueryInterface;
-use yiiunit\TestCase;
 
 use function json_encode;
 
-abstract class AbstractUpsert extends TestCase
+abstract class AbstractUpsert extends \yiiunit\TestCase
 {
     protected Connection|null $db = null;
 
