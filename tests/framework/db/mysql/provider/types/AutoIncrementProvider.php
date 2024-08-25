@@ -51,6 +51,7 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO),
                 'int(11) AUTO_INCREMENT',
@@ -65,12 +66,7 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
                 'integer',
                 2,
             ],
-        ];
-    }
-
-    public static function schemaWithUnsigned(): array
-    {
-        return [
+            // schema with unsigned
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO)->unsigned(),
                 'int(10) UNSIGNED AUTO_INCREMENT',
@@ -96,6 +92,69 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
             ],
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UAUTO, 1),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(),
+                'int(11) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(1),
+                'int(1) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            // builder generator wiht unsigned
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement()->unsigned(),
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema
+                    ->createColumnSchemaBuilder()
+                    ->autoIncrement(1)
+                    ->unsigned(),
+                'int(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            // raw sql
+            [
+                'int(11) AUTO_INCREMENT',
+                'int(11) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'int(1) AUTO_INCREMENT',
+                'int(1) AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            // raw sql with unsigned
+            [
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                'int(10) UNSIGNED AUTO_INCREMENT',
+                true,
+                'integer',
+                2,
+            ],
+            [
+                'int(1) UNSIGNED AUTO_INCREMENT',
                 'int(1) UNSIGNED AUTO_INCREMENT',
                 true,
                 'integer',

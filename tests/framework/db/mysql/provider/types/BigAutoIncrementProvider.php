@@ -51,6 +51,7 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO),
                 'bigint(20) AUTO_INCREMENT',
@@ -65,12 +66,7 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
                 'bigint',
                 2,
             ],
-        ];
-    }
-
-    public static function schemaWithUnsigned(): array
-    {
-        return [
+            // schema with unsigned
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO)->unsigned(),
                 'bigint(20) UNSIGNED AUTO_INCREMENT',
@@ -97,6 +93,69 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
             [
                 'id' => static fn (Schema $schema) => $schema
                     ->createColumnSchemaBuilder(\yii\db\mysql\Schema::TYPE_UBIGAUTO, 1),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(),
+                'bigint(20) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(1),
+                'bigint(1) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            // builder generator with unsigned
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement()->unsigned(),
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema
+                    ->createColumnSchemaBuilder()
+                    ->bigAutoIncrement(1)
+                    ->unsigned(),
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            // raw sql
+            [
+                'bigint(20) AUTO_INCREMENT',
+                'bigint(20) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'bigint(1) AUTO_INCREMENT',
+                'bigint(1) AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            // raw sql with unsigned
+            [
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                'bigint(20) UNSIGNED AUTO_INCREMENT',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'bigint(1) UNSIGNED AUTO_INCREMENT',
                 'bigint(1) UNSIGNED AUTO_INCREMENT',
                 true,
                 'bigint',

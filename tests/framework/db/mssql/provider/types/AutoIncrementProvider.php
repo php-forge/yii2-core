@@ -54,6 +54,7 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_AUTO),
                 'int IDENTITY',
@@ -82,6 +83,65 @@ final class AutoIncrementProvider extends \yiiunit\framework\db\provider\types\A
                 'integer',
                 '5',
             ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(),
+                'int IDENTITY',
+                null,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(0, 0),
+                'int IDENTITY(0,1)',
+                null,
+                'integer',
+                '1',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(-10, 2),
+                'int IDENTITY(-10,2)',
+                null,
+                'integer',
+                '-8',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->autoIncrement(2, 3),
+                'int IDENTITY(2,3)',
+                null,
+                'integer',
+                '5',
+            ],
+            // raw sql
+            [
+                'int IDENTITY',
+                'int IDENTITY',
+                null,
+                'integer',
+                '2',
+            ],
+            [
+                'int IDENTITY(0,0)',
+                'int IDENTITY(0,1)',
+                null,
+                'integer',
+                '1',
+            ],
+            [
+                'int IDENTITY(-10,2)',
+                'int IDENTITY(-10,2)',
+                null,
+                'integer',
+                '-8',
+            ],
+            [
+                'int IDENTITY(2,3)',
+                'int IDENTITY(2,3)',
+                null,
+                'integer',
+                '5',
+            ],
+
         ];
     }
 

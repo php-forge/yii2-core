@@ -54,6 +54,7 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
                 'bigint IDENTITY PRIMARY KEY',
@@ -77,6 +78,64 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
             ],
             [
                 'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [2, 3]),
+                'bigint IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'bigint',
+                '5',
+            ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(),
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(0, 0),
+                'bigint IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '1',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(-10, 2),
+                'bigint IDENTITY(-10,2) PRIMARY KEY',
+                true,
+                'bigint',
+                '-8',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(2, 3),
+                'bigint IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'bigint',
+                '5',
+            ],
+            // raw sql
+            [
+                'bigint IDENTITY PRIMARY KEY',
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'bigint IDENTITY(0,0) PRIMARY KEY',
+                'bigint IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '1',
+            ],
+            [
+                'bigint IDENTITY(-10,2) PRIMARY KEY',
+                'bigint IDENTITY(-10,2) PRIMARY KEY',
+                true,
+                'bigint',
+                '-8',
+            ],
+            [
+                'bigint IDENTITY(2,3) PRIMARY KEY',
                 'bigint IDENTITY(2,3) PRIMARY KEY',
                 true,
                 'bigint',

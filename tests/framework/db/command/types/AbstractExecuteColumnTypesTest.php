@@ -15,14 +15,18 @@ abstract class AbstractExecuteColumnTypes extends \yiiunit\TestCase
     protected string $table = 'column_types';
 
     public function executeColumnTypes(
-        Closure $abstractColumn,
+        Closure|string $abstractColumn,
         string $expectedColumnSchemaType,
         bool|null $isPrimaryKey,
         string $expectedColumnType,
         int|string $expectedLastInsertID,
     ): void {
+        if (is_callable($abstractColumn)) {
+            $abstractColumn = $abstractColumn($this->db->schema);
+        }
+
         $columns = [
-            'id' => $abstractColumn($this->db->schema),
+            'id' => $abstractColumn,
             'name' => $this->db->schema->createColumnSchemaBuilder(Schema::TYPE_STRING)
         ];
 

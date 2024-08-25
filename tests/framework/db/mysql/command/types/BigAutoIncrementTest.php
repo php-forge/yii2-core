@@ -27,26 +27,7 @@ final class BigAutoIncrementTest extends \yiiunit\framework\db\command\types\Abs
      * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::schema
      */
     public function testExecute(
-        Closure $abstractColumn,
-        string $expectedColumnSchemaType,
-        bool|null $isPrimaryKey,
-        string $expectedColumnType,
-        int|string $expectedLastInsertID,
-    ): void {
-        parent::executeColumnTypes(
-            $abstractColumn,
-            $expectedColumnSchemaType,
-            $isPrimaryKey,
-            $expectedColumnType,
-            $expectedLastInsertID,
-        );
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::schemaWithUnsigned
-     */
-    public function testExecuteWithUnsigned(
-        Closure $abstractColumn,
+        Closure|string $abstractColumn,
         string $expectedColumnSchemaType,
         bool|null $isPrimaryKey,
         string $expectedColumnType,

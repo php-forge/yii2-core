@@ -27,7 +27,7 @@ final class PrimaryKeyTest extends \yiiunit\framework\db\command\types\AbstractE
      * @dataProvider \yiiunit\framework\db\mssql\provider\types\PrimaryKeyProvider::schema
      */
     public function testExecute(
-        Closure $abstractColumn,
+        Closure|string $abstractColumn,
         string $expectedColumnSchemaType,
         bool|null $isPrimaryKey,
         string $expectedColumnType,

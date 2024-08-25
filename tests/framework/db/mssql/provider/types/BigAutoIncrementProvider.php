@@ -54,6 +54,7 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO),
                 'bigint IDENTITY',
@@ -77,6 +78,64 @@ final class BigAutoIncrementProvider extends \yiiunit\framework\db\provider\type
             ],
             [
                 'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGAUTO, [2, 3]),
+                'bigint IDENTITY(2,3)',
+                null,
+                'bigint',
+                '5',
+            ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(),
+                'bigint IDENTITY',
+                null,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(0, 0),
+                'bigint IDENTITY(0,1)',
+                null,
+                'bigint',
+                '1',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(-10, 2),
+                'bigint IDENTITY(-10,2)',
+                null,
+                'bigint',
+                '-8',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigAutoIncrement(2, 3),
+                'bigint IDENTITY(2,3)',
+                null,
+                'bigint',
+                '5',
+            ],
+            // raw sql
+            [
+                'bigint IDENTITY',
+                'bigint IDENTITY',
+                null,
+                'bigint',
+                '2',
+            ],
+            [
+                'bigint IDENTITY(0,0)',
+                'bigint IDENTITY(0,1)',
+                null,
+                'bigint',
+                '1',
+            ],
+            [
+                'bigint IDENTITY(-10,2)',
+                'bigint IDENTITY(-10,2)',
+                null,
+                'bigint',
+                '-8',
+            ],
+            [
+                'bigint IDENTITY(2,3)',
                 'bigint IDENTITY(2,3)',
                 null,
                 'bigint',

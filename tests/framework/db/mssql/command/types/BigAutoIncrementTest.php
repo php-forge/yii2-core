@@ -27,7 +27,7 @@ final class BigAutoIncrementTest extends \yiiunit\framework\db\command\types\Abs
      * @dataProvider \yiiunit\framework\db\mssql\provider\types\BigAutoIncrementProvider::schema
      */
     public function testExecute(
-        Closure $abstractColumn,
+        Closure|string $abstractColumn,
         string $expectedColumnSchemaType,
         bool|null $isPrimaryKey,
         string $expectedColumnType,

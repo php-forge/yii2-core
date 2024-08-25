@@ -27,26 +27,7 @@ final class BigPrimaryKeyTest extends \yiiunit\framework\db\command\types\Abstra
      * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigPrimaryKeyProvider::schema
      */
     public function testExecute(
-        Closure $abstractColumn,
-        string $expectedColumnSchemaType,
-        bool|null $isPrimaryKey,
-        string $expectedColumnType,
-        int|string $expectedLastInsertID,
-    ): void {
-        parent::executeColumnTypes(
-            $abstractColumn,
-            $expectedColumnSchemaType,
-            $isPrimaryKey,
-            $expectedColumnType,
-            $expectedLastInsertID,
-        );
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigPrimaryKeyProvider::schemaWithUnsigned
-     */
-    public function testExecuteWithUnsigned(
-        Closure $abstractColumn,
+        Closure|string $abstractColumn,
         string $expectedColumnSchemaType,
         bool|null $isPrimaryKey,
         string $expectedColumnType,

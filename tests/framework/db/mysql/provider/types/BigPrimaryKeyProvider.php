@@ -51,6 +51,7 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
     public static function schema(): array
     {
         return [
+            // schema
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
                 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -65,12 +66,7 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'bigint',
                 2,
             ],
-        ];
-    }
-
-    public static function schemaWithUnsigned(): array
-    {
-        return [
+            // schema with unsigned
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK)->unsigned(),
                 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -99,6 +95,66 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'bigint',
                 2,
             ],
+            // builder generator
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(),
+                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(1),
+                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            // builder generator with unsigned
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey()->unsigned(),
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(1)->unsigned(),
+                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            // raw sql
+            [
+                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            // raw sql with unsigned
+            [
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ]
         ];
     }
 
