@@ -11,8 +11,16 @@ use yiiunit\support\TableGenerator;
 
 abstract class AbstractExecuteColumnTypes extends \yiiunit\TestCase
 {
-    protected Connection $db;
+    protected Connection|null $db = null;
     protected string $table = 'column_types';
+
+    public function tearDown(): void
+    {
+        $this->db->close();
+        $this->db = null;
+
+        parent::tearDown();
+    }
 
     public function executeColumnTypes(
         Closure|string $abstractColumn,

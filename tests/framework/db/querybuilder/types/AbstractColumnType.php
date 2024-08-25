@@ -6,18 +6,10 @@ namespace yiiunit\framework\db\querybuilder\types;
 
 use Closure;
 use yii\db\Connection;
-use yii\db\SchemaBuilderTrait;
 
 abstract class AbstractColumnType extends \yiiunit\TestCase
 {
-    use SchemaBuilderTrait;
-
     protected Connection|null $db = null;
-
-    protected function getDb(): Connection
-    {
-        return $this->db;
-    }
 
     public function tearDown(): void
     {
