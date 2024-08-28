@@ -6,6 +6,7 @@ namespace yii\db;
 
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 
 /**
@@ -106,7 +107,6 @@ class Command extends Component
      * when executing the command.
      */
     private $_retryHandler;
-
 
     /**
      * Enables query cache for this command.
@@ -649,6 +649,46 @@ class Command extends Component
     }
 
     /**
+     * Creates a SQL command for creating a new DB sequence.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * In Oci for example, this will be used to set the `CACHE` and `CYCLE` options of the sequence.
+     * ```php
+     * [
+     *    'cache' => 20,
+     *    'cycle' => true,
+     * ]
+     * ```
+     *
+     * @return static the command object itself.
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): static
+    {
+        $sql = $this->db->getQueryBuilder()->createSequence($table, $start, $increment, $options);
+
+        return $this->setSql($sql);
+    }
+
+    /**
+     * Creates a SQL command for dropping a DB sequence.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     *
+     * @return static the command object itself.
+     */
+    public function dropSequence(string $table): static
+    {
+        $sql = $this->db->getQueryBuilder()->dropSequence($table);
+
+        return $this->setSql($sql);
+    }
+
+    /**
      * Creates a SQL command for creating a new DB table.
      *
      * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'),
@@ -976,15 +1016,19 @@ class Command extends Component
      * Creates a SQL command for resetting the sequence value of a table's primary key.
      * The sequence will be reset such that the primary key of the next new row inserted
      * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence will be reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
-     * @return $this the command object itself
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
+     *
+     * @param string $table the name of the table whose primary key sequence will be reset.
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
+     * row's primary key will have the maximum existing value +1.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return static the command object itself.
+     *
+     * @throws NotSupportedException if this is not supported by the underlying DBMS.
      */
-    public function resetSequence($table, $value = null)
+    public function resetSequence(string $table, mixed $value = null, array $options = []): static
     {
-        $sql = $this->db->getQueryBuilder()->resetSequence($table, $value);
+        $sql = $this->db->getQueryBuilder()->resetSequence($table, $value, $options);
 
         return $this->setSql($sql);
     }
@@ -1000,7 +1044,7 @@ class Command extends Component
      * @throws NotSupportedException if this is not supported by the underlying DBMS
      * @since 2.0.16
      */
-    public function executeResetSequence($table, $value = null)
+    public function executeResetSequence(string $table, $value = null)
     {
         return $this->db->getQueryBuilder()->executeResetSequence($table, $value);
     }
@@ -1144,6 +1188,49 @@ class Command extends Component
             $profile and Yii::endProfile($rawSql, __METHOD__);
             throw $e;
         }
+    }
+
+    /**
+     * Executes a query to get the next value of the identity or sequence for the specified table.
+     *
+     * This method uses the master database connection to ensure consistency.
+     *
+     * @param string $table The name of the table associated with the identity or sequence.
+     *
+     * @return int The next value of the identity or sequence for the specified table.
+     *
+     * @throws \yii\db\Exception If there's an error executing the SQL query.
+     * @throws \yii\base\InvalidConfigException If the database connection is not properly configured.
+     */
+    public function getNextAutoIncrementValue(string $table): int
+    {
+        $tableSchema = $this->db->getTableSchema($table);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Unknown table: $table");
+        }
+
+        $pk = $tableSchema->primaryKey;
+
+        if (empty($pk)) {
+            throw new InvalidArgumentException("Table does not have a primary key: $table");
+        }
+
+        if (count($pk) > 1) {
+            throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: $table");
+        }
+
+        $nextValSQL = $this->db->queryBuilder->getNextSequenceValue($table);
+
+        if (empty($tableSchema->sequenceName)) {
+            $nextValSQL = $this->db->querybuilder->getNextIdentityValue($table);
+        }
+
+        return $this->db->useMaster(
+            static function (Connection $db) use ($nextValSQL): false|int {
+                return (int) $db->createCommand($nextValSQL)->queryScalar();
+            }
+        );
     }
 
     /**

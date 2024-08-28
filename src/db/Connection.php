@@ -301,10 +301,10 @@ class Connection extends Component
         'mysql' => \yii\db\mysql\Command::class, // MySQL
         'sqlite' => \yii\db\sqlite\Command::class, // sqlite 3
         'sqlite2' => \yii\db\sqlite\Command::class, // sqlite 2
-        'sqlsrv' => \yii\db\Command::class, // newer MSSQL driver on MS Windows hosts
+        'sqlsrv' => \yii\db\mssql\Command::class, // newer MSSQL driver on MS Windows hosts
         'oci' => \yii\db\oci\Command::class, // Oracle driver
-        'mssql' => \yii\db\Command::class, // older MSSQL driver on MS Windows hosts
-        'dblib' => \yii\db\Command::class, // dblib drivers on GNU/Linux (and maybe other OSes) hosts
+        'mssql' => \yii\db\mssql\Command::class, // older MSSQL driver on MS Windows hosts
+        'dblib' => \yii\db\mssql\Command::class, // dblib drivers on GNU/Linux (and maybe other OSes) hosts
     ];
     /**
      * @var bool whether to enable [savepoint](https://en.wikipedia.org/wiki/Savepoint).

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\oci;
 
@@ -25,11 +22,8 @@ use yii\helpers\ArrayHelper;
 /**
  * Schema is the class for retrieving metadata from an Oracle database.
  *
- * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
- * the sequence object.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
+ * sequence object.
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -52,7 +46,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected array|string $tableQuoteCharacter = '"';
 
-
     /**
      * {@inheritdoc}
      */
@@ -66,6 +59,29 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             }
             $this->defaultSchema = strtoupper($username);
         }
+    }
+
+    /**
+     * Retrieves the sequence name for a given table name.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     *
+     * @return string|null the sequence name for the table. `NULL` if no sequence name.
+     */
+    public function getTableSequenceName(string $table): string|null
+    {
+        $sequenceName = $this->db
+            ->createCommand(
+                <<<SQL
+                SELECT * FROM USER_SEQUENCES WHERE SEQUENCE_NAME = :tableName
+                SQL,
+                [':tableName' => "{$table}_SEQ"]
+            )
+            ->queryScalar();
+
+        /** @var string|null */
+        return $sequenceName === false ? null : $sequenceName;
     }
 
     /**
@@ -154,9 +170,12 @@ SQL;
     protected function loadTableSchema($name)
     {
         $table = new TableSchema();
+
         $this->resolveTableNames($table, $name);
+
         if ($this->findColumns($table)) {
             $this->findConstraints($table);
+
             return $table;
         }
 
@@ -304,35 +323,45 @@ SQL;
      */
     protected function findColumns($table)
     {
-        $sql = <<<'SQL'
-SELECT
-    A.COLUMN_NAME,
-    A.DATA_TYPE,
-    A.DATA_PRECISION,
-    A.DATA_SCALE,
-    (
-      CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
-        ELSE A.DATA_LENGTH
-      END
-    ) AS DATA_LENGTH,
-    A.NULLABLE,
-    A.DATA_DEFAULT,
-    COM.COMMENTS AS COLUMN_COMMENT
-FROM ALL_TAB_COLUMNS A
-    INNER JOIN ALL_OBJECTS B ON B.OWNER = A.OWNER AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
-    LEFT JOIN ALL_COL_COMMENTS COM ON (A.OWNER = COM.OWNER AND A.TABLE_NAME = COM.TABLE_NAME AND A.COLUMN_NAME = COM.COLUMN_NAME)
-WHERE
-    A.OWNER = :schemaName
-    AND B.OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')
-    AND B.OBJECT_NAME = :tableName
-ORDER BY A.COLUMN_ID
-SQL;
+        $sql = <<<SQL
+        SELECT
+            A.COLUMN_NAME,
+            A.DATA_TYPE,
+            A.DATA_PRECISION,
+            A.DATA_SCALE,
+            (
+                CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
+                ELSE A.DATA_LENGTH
+                END
+            ) AS DATA_LENGTH,
+            A.NULLABLE,
+            A.DATA_DEFAULT,
+            COM.COMMENTS AS COLUMN_COMMENT,
+            ID.COLUMN_NAME as IDENTITY_COLUMN,
+            ID.IDENTITY_OPTIONS
+        FROM ALL_TAB_COLUMNS A
+            INNER JOIN ALL_OBJECTS B ON B.OWNER = A.OWNER AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
+            LEFT JOIN ALL_COL_COMMENTS COM ON (A.OWNER = COM.OWNER AND A.TABLE_NAME = COM.TABLE_NAME AND A.COLUMN_NAME = COM.COLUMN_NAME)
+            LEFT JOIN ALL_TAB_IDENTITY_COLS ID ON A.OWNER = ID.OWNER AND A.TABLE_NAME = ID.TABLE_NAME AND A.COLUMN_NAME = ID.COLUMN_NAME
+        WHERE
+            A.OWNER = :schemaName
+            AND B.OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')
+            AND B.OBJECT_NAME = :tableName
+        ORDER BY A.COLUMN_ID
+        SQL;
+
+        if (version_compare($this->db->serverVersion, '12', '<')) {
+            $sql = $this->findColumnsSQLLegacy();
+        }
 
         try {
-            $columns = $this->db->createCommand($sql, [
-                ':tableName' => $table->name,
-                ':schemaName' => $table->schemaName,
-            ])->queryAll();
+            $columns = $this->db->createCommand(
+                $sql,
+                [
+                    ':tableName' => $table->name,
+                    ':schemaName' => $table->schemaName,
+                ],
+            )->queryAll();
         } catch (\Exception $e) {
             return false;
         }
@@ -345,34 +374,13 @@ SQL;
             if ($this->db->slavePdo->getAttribute(\PDO::ATTR_CASE) === \PDO::CASE_LOWER) {
                 $column = array_change_key_case($column, CASE_UPPER);
             }
+
             $c = $this->createColumn($column);
+
             $table->columns[$c->name] = $c;
         }
 
         return true;
-    }
-
-    /**
-     * Sequence name of table.
-     *
-     * @param string $tableName
-     * @internal param \yii\db\TableSchema $table->name the table schema
-     * @return string|null whether the sequence exists
-     */
-    protected function getTableSequenceName($tableName)
-    {
-        $sequenceNameSql = <<<'SQL'
-SELECT
-    UD.REFERENCED_NAME AS SEQUENCE_NAME
-FROM USER_DEPENDENCIES UD
-    JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-WHERE
-    UT.TABLE_NAME = :tableName
-    AND UD.TYPE = 'TRIGGER'
-    AND UD.REFERENCED_TYPE = 'SEQUENCE'
-SQL;
-        $sequenceName = $this->db->createCommand($sequenceNameSql, [':tableName' => $tableName])->queryScalar();
-        return $sequenceName === false ? null : $sequenceName;
     }
 
     /**
@@ -401,15 +409,20 @@ SQL;
      * Creates ColumnSchema instance.
      *
      * @param array $column
+     *
      * @return ColumnSchema
      */
-    protected function createColumn($column)
+    protected function createColumn(array $column): ColumnSchema
     {
         $c = $this->createColumnSchema();
+
+        // set the properties for the column
         $c->name = $column['COLUMN_NAME'];
         $c->allowNull = $column['NULLABLE'] === 'Y';
         $c->comment = $column['COLUMN_COMMENT'] === null ? '' : $column['COLUMN_COMMENT'];
         $c->isPrimaryKey = false;
+        $c->autoIncrement = isset($column['IDENTITY_COLUMN']) ? true : false;
+
         $this->extractColumnType($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
         $this->extractColumnSize($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
 
@@ -741,5 +754,32 @@ SQL;
         }
 
         return $result[$returnType];
+    }
+
+    private function findColumnsSQLLegacy(): string
+    {
+        return <<<SQL
+        SELECT
+            A.COLUMN_NAME,
+            A.DATA_TYPE,
+            A.DATA_PRECISION,
+            A.DATA_SCALE,
+            (
+            CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
+                ELSE A.DATA_LENGTH
+            END
+            ) AS DATA_LENGTH,
+            A.NULLABLE,
+            A.DATA_DEFAULT,
+            COM.COMMENTS AS COLUMN_COMMENT
+        FROM ALL_TAB_COLUMNS A
+            INNER JOIN ALL_OBJECTS B ON B.OWNER = A.OWNER AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
+            LEFT JOIN ALL_COL_COMMENTS COM ON (A.OWNER = COM.OWNER AND A.TABLE_NAME = COM.TABLE_NAME AND A.COLUMN_NAME = COM.COLUMN_NAME)
+        WHERE
+            A.OWNER = :schemaName
+            AND B.OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')
+            AND B.OBJECT_NAME = :tableName
+        ORDER BY A.COLUMN_ID
+        SQL;
     }
 }

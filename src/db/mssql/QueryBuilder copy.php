@@ -19,6 +19,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @var array mapping from abstract column types (keys) to physical column types (values).
      */
     public $typeMap = [
+        Schema::TYPE_AUTO => 'INT IDENTITY',
+        Schema::TYPE_BIGAUTO => 'BIGINT IDENTITY',
         Schema::TYPE_PK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_UPK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_BIGPK => 'bigint IDENTITY PRIMARY KEY',
@@ -51,6 +53,22 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'yii\db\conditions\InCondition' => 'yii\db\mssql\conditions\InConditionBuilder',
             'yii\db\conditions\LikeCondition' => 'yii\db\mssql\conditions\LikeConditionBuilder',
         ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addCommentOnColumn(string $table, string $column, string $comment): string
+    {
+        return $this->buildAddCommentSql($comment, $table, $column);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addCommentOnTable(string $table, string $comment): string
+    {
+        return $this->buildAddCommentSql($comment, $table);
     }
 
     /**
@@ -188,29 +206,36 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * {@inheritdoc}
+     * Creates a SQL statement for resetting the sequence value of a table's primary key.
+     * The sequence will be reset such that the primary key of the next new row inserted will have the specified value
+     * or 1.
+     *
+     * @param string $table the name of the table whose primary key sequence will be reset.
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
+     * row's primary key will have a value 1.
+     *
+     * @return string the SQL statement for resetting sequence.
+     * 
+     * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
      */
-    public function getNextIdentityValue(string $table): string
+    public function resetSequence($tableName, $value = null)
     {
-        return "SELECT IDENT_CURRENT('{$table}') + IDENT_INCR('$table')";
-    }
+        $table = $this->db->getTableSchema($tableName);
+        if ($table !== null && $table->sequenceName !== null) {
+            $tableName = $this->db->quoteTableName($tableName);
+            if ($value === null) {
+                $key = $this->db->quoteColumnName(reset($table->primaryKey));
+                $value = "(SELECT COALESCE(MAX({$key}),0) FROM {$tableName})+1";
+            } else {
+                $value = (int) $value;
+            }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getNextSequenceValue(string $table): string
-    {
-        return 'SELECT NEXT VALUE FOR ' . $this->db->quoteTableName($table);
-    }
+            return "DBCC CHECKIDENT ('{$tableName}', RESEED, {$value})";
+        } elseif ($table === null) {
+            throw new InvalidArgumentException("Table not found: $tableName");
+        }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function resetSequence(string $table, mixed $value = null, array $options = []): string
-    {
-        $value = (int) $value;
-
-        return "DBCC CHECKIDENT ('$table', RESEED, $value)";
+        throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.");
     }
 
     /**
@@ -235,74 +260,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         return $command;
-    }
-
-     /**
-      * Builds a SQL command for adding or updating a comment to a table or a column. The command built will check if a
-      * comment already exists. If so, it will be updated, otherwise, it will be added.
-      *
-      * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
-      * @param string $table the table to be commented or whose column is to be commented. The table name will be
-      * properly quoted by the method.
-      * @param string|null $column optional. The name of the column to be commented. If empty, the command will add the
-      * comment to the table instead. The column name will be properly quoted by the method.
-
-      * @return string the SQL statement for adding a comment.
-
-      * @throws InvalidArgumentException if the table does not exist.
-      */
-    protected function buildAddCommentSql($comment, $table, $column = null)
-    {
-        $tableSchema = $this->db->schema->getTableSchema($table);
-
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: $table");
-        }
-
-        $schemaName = $tableSchema->schemaName ? "N'" . $tableSchema->schemaName . "'" : 'SCHEMA_NAME()';
-        $tableName = 'N' . $this->db->quoteValue($tableSchema->name);
-        $columnName = $column ? 'N' . $this->db->quoteValue($column) : null;
-        $comment = 'N' . $this->db->quoteValue($comment);
-
-        $functionParams = "
-            @name = N'MS_description',
-            @value = $comment,
-            @level0type = N'SCHEMA', @level0name = $schemaName,
-            @level1type = N'TABLE', @level1name = $tableName"
-            . ($column ? ", @level2type = N'COLUMN', @level2name = $columnName" : '') . ';';
-
-        return "
-            IF NOT EXISTS (
-                    SELECT 1
-                    FROM fn_listextendedproperty (
-                        N'MS_description',
-                        'SCHEMA', $schemaName,
-                        'TABLE', $tableName,
-                        " . ($column ? "'COLUMN', $columnName " : ' DEFAULT, DEFAULT ') . "
-                    )
-            )
-                EXEC sys.sp_addextendedproperty $functionParams
-            ELSE
-                EXEC sys.sp_updateextendedproperty $functionParams
-        ";
-    }
-
-    /**
-     * {@inheritdoc}
-     * @since 2.0.8
-     */
-    public function addCommentOnColumn($table, $column, $comment)
-    {
-        return $this->buildAddCommentSql($comment, $table, $column);
-    }
-
-    /**
-     * {@inheritdoc}
-     * @since 2.0.8
-     */
-    public function addCommentOnTable($table, $comment)
-    {
-        return $this->buildAddCommentSql($comment, $table);
     }
 
     /**
@@ -641,5 +598,63 @@ END";
     {
         return $this->dropConstraintsForColumn($table, $column) . "\nALTER TABLE " . $this->db->quoteTableName($table)
             . ' DROP COLUMN ' . $this->db->quoteColumnName($column);
+    }
+
+    /**
+     * Builds a SQL command for adding or updating a comment to a table or a column. The command built will check if a
+     * comment already exists. If so, it will be updated, otherwise, it will be added.
+     *
+     * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
+     * @param string $table the table to be commented or whose column is to be commented. The table name will be
+     * properly quoted by the method.
+     * @param string|null $column optional. The name of the column to be commented. If empty, the command will add the
+     * comment to the table instead. The column name will be properly quoted by the method.
+     * @return string the SQL statement for adding a comment.
+     * @throws InvalidArgumentException if the table does not exist.
+     */
+    private function buildAddCommentSql(string $comment, string $table, string $column = null): string
+    {
+        $tableSchema = $this->db->getTableSchema($table);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: $table");
+        }
+
+        $schemaName = $tableSchema->schemaName ? "N'" . (string) $tableSchema->schemaName . "'" : 'SCHEMA_NAME()';
+        $tableName = 'N' . (string) $this->db->quoteValue($tableSchema->name);
+        $columnName = $column ? 'N' . (string) $this->db->quoteValue($column) : null;
+        $comment = 'N' . (string) $this->db->quoteValue($comment);
+
+        $functionParams = "
+            @name = N'MS_description',
+            @value = $comment,
+            @level0type = N'SCHEMA', @level0name = $schemaName,
+            @level1type = N'TABLE', @level1name = $tableName"
+            . ($column ? ", @level2type = N'COLUMN', @level2name = $columnName" : '') . ';';
+
+        $existsSql = <<<SQL
+            SELECT 1
+            FROM fn_listextendedproperty (
+                N'MS_description',
+                'SCHEMA', $schemaName,
+                'TABLE', $tableName,
+                " . ($column ? "'COLUMN', $columnName " : ' DEFAULT, DEFAULT ') . "
+            )
+        SQL;
+
+        $addSql = <<<SQL
+            EXEC sys.sp_addextendedproperty $functionParams
+        SQL;
+
+        $updateSql = <<<SQL
+            EXEC sys.sp_updateextendedproperty $functionParams
+        SQL;
+
+        return <<<SQL
+            IF NOT EXISTS ($existsSql)
+            $addSql
+            ELSE
+            $updateSql
+        SQL;
     }
 }

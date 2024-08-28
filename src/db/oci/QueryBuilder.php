@@ -98,6 +98,64 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * If enabled, the `CACHE` option will be used to cache sequence values for better performance, example
+     * `cache` => `20`, will cache 20 sequence values. If `false` is provided, the `NOCACHE` option will be used.
+     * If enabled, the `CYCLE` option will be used to allow the sequence to restart once the maximal value is reached.
+     * If `false` is provided, the `NOCYCLE` option will be used.
+     *
+     * @return string the SQL statement for creating the sequence.
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        $cache = $options['cache'] ?? false;
+        $cycle = $options['cycle'] ?? false;
+
+        return 'CREATE SEQUENCE ' . $this->db->quoteTableName("{$table}_SEQ")
+            . ' START WITH ' . $start
+            . ' MINVALUE ' . $start
+            . ' INCREMENT BY ' . $increment
+            . ($cache !== false ? ' CACHE ' . $cache : ' NOCACHE')
+            . ($cycle !== false ? ' MAXVALUE ' . PHP_INT_MAX . ' CYCLE' : ' NOCYCLE');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dropSequence(string $table): string
+    {
+        return 'DROP SEQUENCE ' . $this->db->quoteTableName("{$table}_SEQ");
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getNextSequenceValue(string $table): string
+    {
+        return 'SELECT ' . $this->db->quoteTableName("{$table}_SEQ") . '.NEXTVAL FROM DUAL';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function resetSequence(string $table, mixed $value = null, array $options = []): string
+    {
+        $cache = $options['cache'] ?? false;
+        $cycle = $options['cycle'] ?? false;
+
+        return "ALTER SEQUENCE {$this->db->quoteTableName("{$table}_SEQ")}"
+            . " INCREMENT BY {$this->db->quoteValue($value)}"
+            . ($cache !== false ? " CACHE {$this->db->quoteValue($cache)}" : ' NOCACHE')
+            . ($cycle !== false ? ' MAXVALUE ' . PHP_INT_MAX . ' CYCLE' : ' NOCYCLE');
+    }
+
+    /**
      * Builds a SQL statement for renaming a DB table.
      *
      * @param string $table the table to be renamed. The name will be properly quoted by the method.
@@ -136,39 +194,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     public function dropIndex($name, $table)
     {
         return 'DROP INDEX ' . $this->db->quoteTableName($name);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function executeResetSequence($table, $value = null)
-    {
-        $tableSchema = $this->db->getTableSchema($table);
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Unknown table: $table");
-        }
-        if ($tableSchema->sequenceName === null) {
-            throw new InvalidArgumentException("There is no sequence associated with table: $table");
-        }
-
-        if ($value !== null) {
-            $value = (int) $value;
-        } else {
-            if (count($tableSchema->primaryKey) > 1) {
-                throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: $table");
-            }
-            // use master connection to get the biggest PK value
-            $value = $this->db->useMaster(function (Connection $db) use ($tableSchema) {
-                return $db->createCommand(
-                    'SELECT MAX("' . $tableSchema->primaryKey[0] . '") FROM "' . $tableSchema->name . '"'
-                )->queryScalar();
-            }) + 1;
-        }
-
-        //Oracle needs at least two queries to reset sequence (see adding transactions and/or use alter method to avoid grants' issue?)
-        $this->db->createCommand('DROP SEQUENCE "' . $tableSchema->sequenceName . '"')->execute();
-        $this->db->createCommand('CREATE SEQUENCE "' . $tableSchema->sequenceName . '" START WITH ' . $value
-            . ' INCREMENT BY 1 NOMAXVALUE NOCACHE')->execute();
     }
 
     /**

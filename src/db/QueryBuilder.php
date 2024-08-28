@@ -63,7 +63,6 @@ class QueryBuilder extends \yii\base\BaseObject
      *
      * @see setConditionClasses()
      * @see defaultConditionClasses()
-     * @since 2.0.14
      */
     protected $conditionClasses = [];
     /**
@@ -91,7 +90,6 @@ class QueryBuilder extends \yii\base\BaseObject
      * @since 2.0.14
      */
     protected $expressionBuilders = [];
-
 
     /**
      * Constructor.
@@ -168,6 +166,35 @@ class QueryBuilder extends \yii\base\BaseObject
             'yii\db\conditions\HashCondition' => 'yii\db\conditions\HashConditionBuilder',
             'yii\db\conditions\BetweenColumnsCondition' => 'yii\db\conditions\BetweenColumnsConditionBuilder',
         ];
+    }
+
+    /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return string the SQL statement for creating the sequence.
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support creating sequences.');
+    }
+
+    /**
+     * Creates an `DROP SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     *
+     * @return string the SQL statement for dropping the sequence.
+     */
+    public function dropSequence(string $table): string
+    {
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support dropping sequences.');
     }
 
     /**
@@ -1126,15 +1153,21 @@ class QueryBuilder extends \yii\base\BaseObject
 
     /**
      * Creates a SQL statement for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence will be reset
-     * @param array|string|null $value the value for the primary key of the next new row inserted. If this is not set,
+     *
+     * The sequence will be reset such that the primary key of the next new row inserted will have the specified value
+     * or the maximum existing value +1.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
      * the next new row's primary key will have the maximum existing value +1.
-     * @return string the SQL statement for resetting sequence
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return string the SQL statement for resetting sequence.
+     *
+     * @throws NotSupportedException if this is not supported by the underlying DBMS.
      */
-    public function resetSequence($table, $value = null)
+    public function resetSequence(string $table, mixed $value = null, array $options = []): string
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support resetting sequence.');
     }
@@ -1144,13 +1177,12 @@ class QueryBuilder extends \yii\base\BaseObject
      * Reason for execute is that some databases (Oracle) need several queries to do so.
      * The sequence is reset such that the primary key of the next new row inserted
      * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence is reset
+     *
+     * @param string $table the name of the table whose primary key sequence is reset.
      * @param array|string|null $value the value for the primary key of the next new row inserted. If this is not set,
      * the next new row's primary key will have the maximum existing value +1.
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
-     * @since 2.0.16
      */
-    public function executeResetSequence($table, $value = null)
+    public function executeResetSequence(string $table, array|int|null $value = null): void
     {
         $this->db->createCommand()->resetSequence($table, $value)->execute();
     }

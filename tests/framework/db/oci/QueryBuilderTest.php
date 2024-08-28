@@ -111,21 +111,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
         $this->assertEquals($this->replaceQuotes($expected), $sql);
     }
 
-    public function testExecuteResetSequence()
-    {
-        $db = $this->getConnection();
-        $qb = $this->getQueryBuilder();
-        $sqlResult = "SELECT last_number FROM user_sequences WHERE sequence_name = 'item_SEQ'";
-
-        $qb->executeResetSequence('item');
-        $result = $db->createCommand($sqlResult)->queryScalar();
-        $this->assertEquals(6, $result);
-
-        $qb->executeResetSequence('item', 4);
-        $result = $db->createCommand($sqlResult)->queryScalar();
-        $this->assertEquals(4, $result);
-    }
-
     public function likeConditionProvider()
     {
         /*

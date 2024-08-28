@@ -13,6 +13,57 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
 {
     protected static string $driverName = 'oci';
 
+    public static function createSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ" START WITH 1 MINVALUE 1 INCREMENT BY 1 NOCACHE NOCYCLE
+                SQL,
+            ],
+            'with_schema' => [
+                'SYSTEM.T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "SYSTEM"."T_sequence_SEQ" START WITH 1 MINVALUE 1 INCREMENT BY 1 NOCACHE NOCYCLE
+                SQL,
+            ],
+            'with options' => [
+                'T_sequence',
+                1,
+                2,
+                ['cache' => 50, 'cycle' => true],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ" START WITH 1 MINVALUE 1 INCREMENT BY 2 CACHE 50 MAXVALUE 9223372036854775807 CYCLE
+                SQL,
+            ],
+        ];
+    }
+
+    public static function dropSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                <<<SQL
+                DROP SEQUENCE "T_sequence_SEQ"
+                SQL,
+            ],
+            'with schema' => [
+                'SYSTEM.T_sequence',
+                <<<SQL
+                DROP SEQUENCE "SYSTEM"."T_sequence_SEQ"
+                SQL,
+            ],
+        ];
+    }
+
     public static function insert(): array
     {
         $insert = parent::insert();
@@ -117,6 +168,39 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 INSERT INTO {{%type}} ("time") VALUES (now())
                 SQL,
                 [],
+            ],
+        ];
+    }
+
+    public static function resetSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                1,
+                [],
+                <<<SQL
+                ALTER SEQUENCE "T_sequence_SEQ" INCREMENT BY 1 NOCACHE NOCYCLE
+                SQL,
+            ],
+            'with schema' => [
+                'SYSTEM.T_sequence',
+                1,
+                [],
+                <<<SQL
+                ALTER SEQUENCE "SYSTEM"."T_sequence_SEQ" INCREMENT BY 1 NOCACHE NOCYCLE
+                SQL,
+            ],
+            'with options' => [
+                'T_sequence',
+                2,
+                [
+                    'cache' => 50,
+                    'cycle' => true,
+                ],
+                <<<SQL
+                ALTER SEQUENCE "T_sequence_SEQ" INCREMENT BY 2 CACHE 50 MAXVALUE 9223372036854775807 CYCLE
+                SQL,
             ],
         ];
     }
