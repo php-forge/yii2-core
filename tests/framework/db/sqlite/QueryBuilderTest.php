@@ -22,17 +22,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
 
     protected $likeEscapeCharSql = " ESCAPE '\\'";
 
-    public function columnTypes()
-    {
-        return array_merge(parent::columnTypes(), [
-            [
-                Schema::TYPE_PK,
-                $this->primaryKey()->first()->after('col_before'),
-                'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
-            ],
-        ]);
-    }
-
     public function conditionProvider()
     {
         return array_merge(parent::conditionProvider(), [

@@ -20,108 +20,192 @@ use function strpos;
  *
  * Schema represents the database schema information that is DBMS specific.
  *
- * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
- * the sequence object.
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
+ * sequence object.
  * @property-read QueryBuilder $queryBuilder The query builder for this connection.
  * @property-read string[] $schemaNames All schema names in the database, except system schemas.
  * @property-read string $serverVersion Server version as a string.
  * @property-read string[] $tableNames All table names in the database.
- * @property-read TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element
- * is an instance of [[TableSchema]] or its child class.
+ * @property-read TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element is an
+ * instance of [[TableSchema]] or its child class.
  * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
  * transaction. This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
  * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific
  * syntax to be used after `SET TRANSACTION ISOLATION LEVEL`.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Sergey Makinen <sergey@makinen.ru>
- * @since 2.0
  */
 abstract class Schema extends BaseObject
 {
-    // The following are the supported abstract column data types.
-    const TYPE_PK = 'pk';
-    const TYPE_UPK = 'upk';
-    const TYPE_BIGPK = 'bigpk';
-    const TYPE_UBIGPK = 'ubigpk';
-    const TYPE_CHAR = 'char';
-    const TYPE_STRING = 'string';
-    const TYPE_TEXT = 'text';
-    const TYPE_TINYINT = 'tinyint';
-    const TYPE_SMALLINT = 'smallint';
-    const TYPE_INTEGER = 'integer';
-    const TYPE_BIGINT = 'bigint';
-    const TYPE_FLOAT = 'float';
-    const TYPE_DOUBLE = 'double';
-    const TYPE_DECIMAL = 'decimal';
-    const TYPE_DATETIME = 'datetime';
-    const TYPE_TIMESTAMP = 'timestamp';
-    const TYPE_TIME = 'time';
-    const TYPE_DATE = 'date';
-    const TYPE_BINARY = 'binary';
-    const TYPE_BOOLEAN = 'boolean';
-    const TYPE_MONEY = 'money';
-    const TYPE_JSON = 'json';
     /**
-     * Schema cache version, to detect incompatibilities in cached values when the
-     * data format of the cache changes.
+     * Define the abstract column type as an `integer` auto-incremental.
      */
-    const SCHEMA_CACHE_VERSION = 1;
+    public const TYPE_AUTO = 'auto';
 
     /**
-     * @var Connection the database connection
+     * Define the abstract column type as an `bigint` auto-incremental.
      */
-    public $db;
+    public const TYPE_BIGAUTO = 'bigauto';
+
     /**
-     * @var string the default schema name used for the current session.
+     * Define the abstract column type as an `integer` primary key.
      */
-    public $defaultSchema;
+    public const TYPE_PK = 'pk';
+
     /**
-     * @var array map of DB errors and corresponding exceptions
+     * Define the abstract column type as an `bigint` primary key.
+     */
+    public const TYPE_BIGPK = 'bigpk';
+
+    /**
+     * Define the abstract column type as `char`.
+     */
+    public const TYPE_CHAR = 'char';
+
+    /**
+     * Define the abstract column type as `string`.
+     */
+    public const TYPE_STRING = 'string';
+
+    /**
+     * Define the abstract column type as `text`.
+     */
+    public const TYPE_TEXT = 'text';
+
+    /**
+     * Define the abstract column type as `smallint`.
+     */
+    public const TYPE_TINYINT = 'tinyint';
+
+    /**
+     * Define the abstract column type as `smallint`.
+     */
+    public const TYPE_SMALLINT = 'smallint';
+
+    /**
+     * Define the abstract column type as `integer`.
+     */
+    public const TYPE_INTEGER = 'integer';
+
+    /**
+     * Define the abstract column type as `bigint`.
+     */
+    public const TYPE_BIGINT = 'bigint';
+
+    /**
+     * Define the abstract column type as `float`.
+     */
+    public const TYPE_FLOAT = 'float';
+
+    /**
+     * Define the abstract column type as `double`.
+     */
+    public const TYPE_DOUBLE = 'double';
+
+    /**
+     * Define the abstract column type as `decimal`.
+     */
+    public const TYPE_DECIMAL = 'decimal';
+
+    /**
+     * Define the abstract column type as `datetime`.
+     */
+    public const TYPE_DATETIME = 'datetime';
+
+    /**
+     * Define the abstract column type as `timestamp`.
+     */
+    public const TYPE_TIMESTAMP = 'timestamp';
+
+    /**
+     * Define the abstract column type as `time`.
+     */
+    public const TYPE_TIME = 'time';
+
+    /**
+     * Define the abstract column type as `date`.
+     */
+    public const TYPE_DATE = 'date';
+
+    /**
+     * Define the abstract column type as `binary`.
+     */
+    public const TYPE_BINARY = 'binary';
+
+    /**
+     * Define the abstract column type as a `boolean`.
+     */
+    public const TYPE_BOOLEAN = 'boolean';
+
+    /**
+     * Define the abstract column type as a `money`.
+     */
+    public const TYPE_MONEY = 'money';
+
+    /**
+     * Define the abstract column type as `json` data.
+     */
+    public const TYPE_JSON = 'json';
+
+    /**
+     * Schema cache version, to detect incompatibilities in cached values when the data format of the cache changes.
+     */
+    public const SCHEMA_CACHE_VERSION = 1;
+
+    /**
+     * @var Connection|null the database connection.
+     */
+    public Connection|null $db = null;
+
+    /**
+     * @var string|null the default schema name used for the current session.
+     */
+    public string|null $defaultSchema = null;
+
+    /**
+     * @var array map of DB errors and corresponding exceptions.
      * If left part is found in DB error message exception class from the right part is used.
      */
-    public $exceptionMap = [
+    public array $exceptionMap = [
         'SQLSTATE[23' => 'yii\db\IntegrityException',
     ];
+
     /**
-     * @var string|array column schema class or class config
-     * @since 2.0.11
+     * @var string|array column schema class or class config.
      */
-    public $columnSchemaClass = 'yii\db\ColumnSchema';
+    public array|string $columnSchemaClass = 'yii\db\ColumnSchema';
 
     /**
      * @var string|string[] character used to quote schema, table, etc. names.
      * An array of 2 characters can be used in case starting and ending characters are different.
-     * @since 2.0.14
      */
     protected array|string $tableQuoteCharacter = "'";
+
     /**
      * @var string|string[] character used to quote column names.
      * An array of 2 characters can be used in case starting and ending characters are different.
-     * @since 2.0.14
      */
     protected array|string $columnQuoteCharacter = '"';
 
     /**
-     * @var array list of ALL schema names in the database, except system schemas
+     * @var array list of ALL schema names in the database, except system schemas.
      */
-    private $_schemaNames;
+    private array $_schemaNames = [];
+
     /**
-     * @var array list of ALL table names in the database
+     * @var array list of ALL table names in the database.
      */
-    private $_tableNames = [];
+    private array $_tableNames = [];
     /**
      * @var array list of loaded table metadata (table name => metadata type => metadata).
      */
-    private $_tableMetadata = [];
+    private array $_tableMetadata = [];
     /**
-     * @var QueryBuilder the query builder for this database
+     * @var QueryBuilder|null the query builder for this database
      */
-    private $_builder;
+    private QueryBuilder|null $_builder = null;
     /**
      * @var string server version as a string.
      */
-    private $_serverVersion;
+    private string|null $_serverVersion = null;
 
 
     /**
@@ -206,14 +290,15 @@ abstract class Schema extends BaseObject
 
     /**
      * Returns all schema names in the database, except system schemas.
-     * @param bool $refresh whether to fetch the latest available schema names. If this is false,
-     * schema names fetched previously (if available) will be returned.
+     *
+     * @param bool $refresh whether to fetch the latest available schema names. If this is false, schema names fetched
+     * previously (if available) will be returned.
+     *
      * @return string[] all schema names in the database, except system schemas.
-     * @since 2.0.4
      */
     public function getSchemaNames($refresh = false)
     {
-        if ($this->_schemaNames === null || $refresh) {
+        if ($this->_schemaNames === [] || $refresh) {
             $this->_schemaNames = $this->findSchemaNames();
         }
 
@@ -320,14 +405,15 @@ abstract class Schema extends BaseObject
      *
      * This method may be overridden by child classes to create a DBMS-specific column schema builder.
      *
-     * @param string $type type of the column. See [[ColumnSchemaBuilder::$type]].
+     * @param string|null $type type of the column. See [[ColumnSchemaBuilder::$type]]. If null, returning instance may
+     * not be configured yet.
      * @param int|string|array|null $length length or precision of the column. See [[ColumnSchemaBuilder::$length]].
-     * @return ColumnSchemaBuilder column schema builder instance
-     * @since 2.0.6
+     *
+     * @return ColumnSchemaBuilder the column schema builder instance.
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::class, [$type, $length]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 
     /**

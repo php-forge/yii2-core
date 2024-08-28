@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mysql;
 
@@ -22,29 +19,41 @@ use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
 /**
- * Schema is the class for retrieving metadata from a MySQL database (version 4.1.x and 5.x).
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * Schema is the class for retrieving metadata from a MySQL database (5.6.x, 5.7.x and 8.x).
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
     use ConstraintFinderTrait;
 
     /**
+     * Define the abstract column type as an `integer UNSIGNED` auto-incremental.
+     */
+    public const TYPE_UAUTO = 'uauto';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` auto-incremental.
+     */
+    public const TYPE_UBIGAUTO = 'ubigauto';
+
+    /**
+     * Define the abstract column type as an `integer UNSIGNED` primary key.
+     */
+    public const TYPE_UPK = 'upk';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` primary key.
+     */
+    public const TYPE_UBIGPK = 'ubigpk';
+
+    /**
      * {@inheritdoc}
      */
-    public $columnSchemaClass = 'yii\db\mysql\ColumnSchema';
-    /**
-     * @var bool whether MySQL used is older than 5.1.
-     */
-    private $_oldMysql;
-
+    public array|string $columnSchemaClass = 'yii\db\mysql\ColumnSchema';
 
     /**
      * @var array mapping from physical column types (keys) to abstract column types (values)
      */
-    public $typeMap = [
+    public array $typeMap = [
         'tinyint' => self::TYPE_TINYINT,
         'bool' => self::TYPE_TINYINT,
         'boolean' => self::TYPE_TINYINT,
@@ -87,10 +96,16 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      */
     protected array|string $tableQuoteCharacter = '`';
+
     /**
      * {@inheritdoc}
      */
     protected array|string $columnQuoteCharacter = '`';
+
+    /**
+     * @var bool|null whether MySQL used is older than 5.1.
+     */
+    private bool|null $_oldMysql = null;
 
     /**
      * {@inheritdoc}
@@ -517,9 +532,9 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 
     /**

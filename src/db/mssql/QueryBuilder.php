@@ -6,12 +6,13 @@ namespace yii\db\mssql;
 
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
+use yii\db\ColumnSchemaBuilder;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
 
 /**
- * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
+ * QueryBuilder is the query builder for MS SQL Server databases (version 2012 and above).
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -19,26 +20,43 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @var array mapping from abstract column types (keys) to physical column types (values).
      */
     public $typeMap = [
+        // auto-incremental
+        Schema::TYPE_AUTO => 'int IDENTITY',
+        Schema::TYPE_BIGAUTO => 'bigint IDENTITY',
+
+        // primary key
         Schema::TYPE_PK => 'int IDENTITY PRIMARY KEY',
-        Schema::TYPE_UPK => 'int IDENTITY PRIMARY KEY',
         Schema::TYPE_BIGPK => 'bigint IDENTITY PRIMARY KEY',
-        Schema::TYPE_UBIGPK => 'bigint IDENTITY PRIMARY KEY',
+
+        // string types
         Schema::TYPE_CHAR => 'nchar(1)',
         Schema::TYPE_STRING => 'nvarchar(255)',
         Schema::TYPE_TEXT => 'nvarchar(max)',
+
+        // integers
         Schema::TYPE_TINYINT => 'tinyint',
         Schema::TYPE_SMALLINT => 'smallint',
         Schema::TYPE_INTEGER => 'int',
         Schema::TYPE_BIGINT => 'bigint',
+
+        // decimals
         Schema::TYPE_FLOAT => 'float',
         Schema::TYPE_DOUBLE => 'float',
         Schema::TYPE_DECIMAL => 'decimal(18,0)',
+
+        // dates
         Schema::TYPE_DATETIME => 'datetime',
         Schema::TYPE_TIMESTAMP => 'datetime',
         Schema::TYPE_TIME => 'time',
         Schema::TYPE_DATE => 'date',
+
+        // binary
         Schema::TYPE_BINARY => 'varbinary(max)',
+
+        // boolean
         Schema::TYPE_BOOLEAN => 'bit',
+
+        // money
         Schema::TYPE_MONEY => 'decimal(19,4)',
     ];
 
@@ -580,14 +598,13 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function getColumnType($type)
+    public function getColumnType(string|ColumnSchemaBuilder $type): string
     {
         $columnType = parent::getColumnType($type);
-        // remove unsupported keywords
-        $columnType = preg_replace("/\s*comment '.*'/i", '', $columnType);
-        $columnType = preg_replace('/ first$/i', '', $columnType);
 
-        return $columnType;
+        $columnType = $this->handleIdentityColumn($columnType, (string) $type);
+
+        return preg_replace(["/\s*comment '.*'/i", '/ first$/i', '/\s+unsigned/i'], '', $columnType);
     }
 
     /**
@@ -645,5 +662,34 @@ END";
     {
         return $this->dropConstraintsForColumn($table, $column) . "\nALTER TABLE " . $this->db->quoteTableName($table)
             . ' DROP COLUMN ' . $this->db->quoteColumnName($column);
+    }
+
+    private function handleIdentityColumn(string $columnType, string $type): string
+    {
+        if (preg_match('/^(big)?(auto|pk)\s*\(([-]?\d+),(\d+)\)$/i', $type, $matches)) {
+            $isBig = !empty($matches[1]);
+            $isPk = strtolower($matches[2]) === 'pk';
+            $start = $matches[3]; // Ahora puede ser negativo
+            $increment = ($matches[4] == '0') ? '1' : $matches[4];
+            $dataType = $isBig ? 'bigint' : 'int';
+
+            return "$dataType IDENTITY($start,$increment)" . ($isPk ? ' PRIMARY KEY' : '');
+        }
+
+        if (preg_match('/^(big)?int IDENTITY\(([-]?\d+)\)(\s+PRIMARY KEY)?$/i', $columnType, $matches)) {
+            $dataType = !empty($matches[1]) ? 'bigint' : 'int';
+            $isPk = !empty($matches[3]);
+
+            return "$dataType IDENTITY" . ($isPk ? ' PRIMARY KEY' : '');
+        }
+
+        if (preg_match('/IDENTITY\(([-]?\d+),(\d+)\)/i', $columnType, $matches)) {
+            $start = $matches[1]; // Ahora puede ser negativo
+            $increment = ($matches[2] == '0') ? '1' : $matches[2];
+
+            return preg_replace('/IDENTITY\(([-]?\d+),\d+\)/i', "IDENTITY($start,$increment)", $columnType);
+        }
+
+        return $columnType;
     }
 }

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mssql;
 
@@ -19,10 +16,7 @@ use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
 /**
- * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
- *
- * @author Timur Ruziev <resurtm@gmail.com>
- * @since 2.0
+ * Schema is the class for retrieving metadata from MS SQL Server databases (version 2012 and above).
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -32,15 +26,17 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    public $columnSchemaClass = 'yii\db\mssql\ColumnSchema';
+    public array|string $columnSchemaClass = 'yii\db\mssql\ColumnSchema';
+
     /**
-     * @var string the default schema used for the current session.
+     * @var string|null the default schema used for the current session.
      */
-    public $defaultSchema = 'dbo';
+    public string|null $defaultSchema = 'dbo';
+
     /**
      * @var array mapping from physical column types (keys) to abstract column types (values)
      */
-    public $typeMap = [
+    public array $typeMap = [
         // exact numbers
         'bigint' => self::TYPE_BIGINT,
         'numeric' => self::TYPE_DECIMAL,
@@ -51,10 +47,12 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         'int' => self::TYPE_INTEGER,
         'tinyint' => self::TYPE_TINYINT,
         'money' => self::TYPE_MONEY,
+
         // approximate numbers
         'float' => self::TYPE_FLOAT,
         'double' => self::TYPE_DOUBLE,
         'real' => self::TYPE_FLOAT,
+
         // date and time
         'date' => self::TYPE_DATE,
         'datetimeoffset' => self::TYPE_DATETIME,
@@ -62,20 +60,23 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         'smalldatetime' => self::TYPE_DATETIME,
         'datetime' => self::TYPE_DATETIME,
         'time' => self::TYPE_TIME,
+
         // character strings
         'char' => self::TYPE_CHAR,
         'varchar' => self::TYPE_STRING,
         'text' => self::TYPE_TEXT,
+
         // unicode character strings
         'nchar' => self::TYPE_CHAR,
         'nvarchar' => self::TYPE_STRING,
         'ntext' => self::TYPE_TEXT,
+
         // binary strings
         'binary' => self::TYPE_BINARY,
         'varbinary' => self::TYPE_BINARY,
         'image' => self::TYPE_BINARY,
-        // other data types
-        // 'cursor' type cannot be used with tables
+
+        // other data types, 'cursor' type cannot be used with tables
         'timestamp' => self::TYPE_TIMESTAMP,
         'hierarchyid' => self::TYPE_STRING,
         'uniqueidentifier' => self::TYPE_STRING,
@@ -332,7 +333,7 @@ SQL;
      */
     public function createQueryBuilder()
     {
-        return Yii::createObject(QueryBuilder::className(), [$this->db]);
+        return Yii::createObject(QueryBuilder::class, [$this->db]);
     }
 
     /**
@@ -778,8 +779,8 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 }

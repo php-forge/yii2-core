@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\sqlite;
 
@@ -23,22 +20,39 @@ use yii\db\Transaction;
 use yii\helpers\ArrayHelper;
 
 /**
- * Schema is the class for retrieving metadata from a SQLite (2/3) database.
+ * Schema is the class for retrieving metadata from a SQLite v3 database.
  *
- * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
- * transaction. This can be either [[Transaction::READ_UNCOMMITTED]] or [[Transaction::SERIALIZABLE]].
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * @property-write string $transactionIsolationLevel The transaction isolation level to use for this transaction.
+ * This can be either [[Transaction::READ_UNCOMMITTED]] or [[Transaction::SERIALIZABLE]].
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
     use ConstraintFinderTrait;
 
     /**
-     * @var array mapping from physical column types (keys) to abstract column types (values)
+     * Define the abstract column type as an `integer UNSIGNED` auto-incremental.
      */
-    public $typeMap = [
+    public const TYPE_UAUTO = 'uauto';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` auto-incremental.
+     */
+    public const TYPE_UBIGAUTO = 'ubigauto';
+
+    /**
+     * Define the abstract column type as an `integer UNSIGNED` primary key.
+     */
+    public const TYPE_UPK = 'upk';
+
+    /**
+     * Define the abstract column type as an `bigint UNSIGNED` primary key.
+     */
+    public const TYPE_UBIGPK = 'ubigpk';
+
+    /**
+     * @var array mapping from physical column types (keys) to abstract column types (values).
+     */
+    public array $typeMap = [
         'tinyint' => self::TYPE_TINYINT,
         'bit' => self::TYPE_SMALLINT,
         'boolean' => self::TYPE_BOOLEAN,
@@ -77,7 +91,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      */
     protected array|string $columnQuoteCharacter = '`';
-
 
     /**
      * {@inheritdoc}
@@ -212,11 +225,10 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * {@inheritdoc}
-     * @return ColumnSchemaBuilder column schema builder instance
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 
     /**

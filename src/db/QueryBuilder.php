@@ -783,33 +783,39 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Builds a SQL statement for creating a new DB table.
      *
-     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'),
-     * where name stands for a column name which will be properly quoted by the method, and definition
-     * stands for the column type which must contain an abstract DB type.
+     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'), where name
+     * stands for a column name which will be properly quoted by the method, and definition stands for the column type
+     * which must contain an abstract DB type.
+     *
      * The [[getColumnType()]] method will be invoked to convert any abstract type into a physical one.
      *
-     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly
-     * inserted into the generated SQL.
+     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly inserted
+     * into the generated SQL.
      *
      * For example,
      *
      * ```php
-     * $sql = $queryBuilder->createTable('user', [
-     *  'id' => 'pk',
-     *  'name' => 'string',
-     *  'age' => 'integer',
-     *  'column_name double precision null default null', # definition only example
-     * ]);
+     * $sql = $queryBuilder->createTable(
+     *     'user',
+     *     [
+     *         'id' => 'pk',
+     *         'name' => 'string',
+     *         'age' => 'integer',
+     *         'column_name double precision null default null', # definition only example
+     *     ],
+     * );
      * ```
      *
      * @param string $table the name of the table to be created. The name will be properly quoted by the method.
      * @param array $columns the columns (name => definition) in the new table.
      * @param string|null $options additional SQL fragment that will be appended to the generated SQL.
+     *
      * @return string the SQL statement for creating a new DB table.
      */
-    public function createTable($table, $columns, $options = null)
+    public function createTable(string $table, array $columns, string|null $options = null): string
     {
         $cols = [];
+
         foreach ($columns as $name => $type) {
             if (is_string($name)) {
                 $cols[] = "\t" . $this->db->quoteColumnName($name) . ' ' . $this->getColumnType($type);
@@ -817,6 +823,7 @@ class QueryBuilder extends \yii\base\BaseObject
                 $cols[] = "\t" . $type;
             }
         }
+
         $sql = 'CREATE TABLE ' . $this->db->quoteTableName($table) . " (\n" . implode(",\n", $cols) . "\n)";
 
         return $options === null ? $sql : $sql . ' ' . $options;
@@ -1264,9 +1271,12 @@ class QueryBuilder extends \yii\base\BaseObject
      * The following abstract column types are supported (using MySQL as an example to explain the corresponding
      * physical types):
      *
-     * - `pk`: an auto-incremental primary key type, will be converted into "int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY"
-     * - `bigpk`: an auto-incremental primary key type, will be converted into "bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY"
-     * - `upk`: an unsigned auto-incremental primary key type, will be converted into "int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY"
+     * - `pk`: an auto-incremental primary key type, will be converted into
+     *    "int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY"
+     * - `bigpk`: an auto-incremental primary key type, will be converted into
+     *   "bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY"
+     * - `upk`: an unsigned auto-incremental primary key type, will be converted into
+     *   "int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY"
      * - `char`: char type, will be converted into "char(1)"
      * - `string`: string type, will be converted into "varchar(255)"
      * - `text`: a long string type, will be converted into "text"
@@ -1283,31 +1293,42 @@ class QueryBuilder extends \yii\base\BaseObject
      * - `money`: money type, will be converted into "decimal(19,4)"
      * - `binary`: binary data type, will be converted into "blob"
      *
-     * If the abstract type contains two or more parts separated by spaces (e.g. "string NOT NULL"), then only
-     * the first part will be converted, and the rest of the parts will be appended to the converted result.
+     * If the abstract type contains two or more parts separated by spaces (e.g. "string NOT NULL"), then only the first
+     * part will be converted, and the rest of the parts will be appended to the converted result.
+     *
      * For example, 'string NOT NULL' is converted to 'varchar(255) NOT NULL'.
      *
-     * For some of the abstract types you can also specify a length or precision constraint
-     * by appending it in round brackets directly to the type.
+     * For some of the abstract types you can also specify a length or precision constraint by appending it in round
+     * brackets directly to the type.
+     *
      * For example `string(32)` will be converted into "varchar(32)" on a MySQL database.
+     *
      * If the underlying DBMS does not support these kind of constraints for a type it will
      * be ignored.
      *
      * If a type cannot be found in [[typeMap]], it will be returned without any change.
-     * @param string|ColumnSchemaBuilder $type abstract column type
+     *
+     * @param string|ColumnSchemaBuilder $type abstract column type.
+     *
      * @return string physical column type.
      */
-    public function getColumnType($type)
+    public function getColumnType(string|ColumnSchemaBuilder $type): string
     {
-        if ($type instanceof ColumnSchemaBuilder) {
-            $type = $type->__toString();
+        if (is_string($type) === false) {
+            $type = (string) $type;
         }
 
         if (isset($this->typeMap[$type])) {
             return $this->typeMap[$type];
-        } elseif (preg_match('/^(\w+)\((.+?)\)(.*)$/', $type, $matches)) {
+        }
+
+        if (preg_match('/^(\w+)\((.+?)\)(.*)$/', $type, $matches)) {
             if (isset($this->typeMap[$matches[1]])) {
-                return preg_replace('/\(.+\)/', '(' . $matches[2] . ')', $this->typeMap[$matches[1]]) . $matches[3];
+                return preg_replace(
+                    '/\(.+\)/',
+                    '(' . $matches[2] . ')',
+                    $this->typeMap[$matches[1]]
+                ) . $matches[3];
             }
         } elseif (preg_match('/^(\w+)\s+/', $type, $matches)) {
             if (isset($this->typeMap[$matches[1]])) {

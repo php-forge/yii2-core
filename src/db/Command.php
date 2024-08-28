@@ -651,33 +651,37 @@ class Command extends Component
     /**
      * Creates a SQL command for creating a new DB table.
      *
-     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'),
-     * where name stands for a column name which will be properly quoted by the method, and definition
-     * stands for the column type which must contain an abstract DB type.
+     * The columns in the new table should be specified as name-definition pairs (e.g. 'name' => 'string'), where name
+     * stands for a column name which will be properly quoted by the method, and definition stands for the column type
+     * which must contain an abstract DB type.
      *
-     * The method [[QueryBuilder::getColumnType()]] will be called
-     * to convert the abstract column types to physical ones. For example, `string` will be converted
-     * as `varchar(255)`, and `string not null` becomes `varchar(255) not null`.
+     * The method [[QueryBuilder::getColumnType()]] will be called to convert the abstract column types to physical
+     * ones. For example, `string` will be converted as `varchar(255)`, and `string not null` becomes
+     * `varchar(255) not null`.
      *
-     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly
-     * inserted into the generated SQL.
+     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly inserted
+     * into the generated SQL.
      *
      * Example usage:
      * ```php
-     * Yii::$app->db->createCommand()->createTable('post', [
-     *     'id' => 'pk',
-     *     'title' => 'string',
-     *     'text' => 'text',
-     *     'column_name double precision null default null',
-     * ]);
+     * Yii::$app->db->createCommand()->createTable(
+     *     'post',
+     *     [
+     *         'id' => 'pk',
+     *         'title' => 'string',
+     *         'text' => 'text',
+     *         'column_name double precision null default null',
+     *     ],
+     * );
      * ```
      *
      * @param string $table the name of the table to be created. The name will be properly quoted by the method.
      * @param array $columns the columns (name => definition) in the new table.
      * @param string|null $options additional SQL fragment that will be appended to the generated SQL.
-     * @return $this the command object itself
+     *
+     * @return static the command object itself.
      */
-    public function createTable($table, $columns, $options = null)
+    public function createTable(string $table, array $columns, string|null $options = null): static
     {
         $sql = $this->db->getQueryBuilder()->createTable($table, $columns, $options);
 

@@ -20,7 +20,7 @@ abstract class ColumnSchemaBuilderTest extends DatabaseTestCase
      */
     public function getColumnSchemaBuilder($type, $length = null)
     {
-        return new ColumnSchemaBuilder($type, $length, $this->getConnection());
+        return new ColumnSchemaBuilder($this->getConnection(), $type, $length);
     }
 
     /**
@@ -29,12 +29,6 @@ abstract class ColumnSchemaBuilderTest extends DatabaseTestCase
     public function typesProvider()
     {
         return [
-            ['integer NULL DEFAULT NULL', Schema::TYPE_INTEGER, null, [
-                ['unsigned'], ['null'],
-            ]],
-            ['integer(10)', Schema::TYPE_INTEGER, 10, [
-                ['unsigned'],
-            ]],
             ['timestamp() WITH TIME ZONE NOT NULL', 'timestamp() WITH TIME ZONE', null, [
                 ['notNull'],
             ]],
@@ -68,6 +62,7 @@ abstract class ColumnSchemaBuilderTest extends DatabaseTestCase
     public function checkBuildString($expected, $type, $length, $calls)
     {
         $builder = $this->getColumnSchemaBuilder($type, $length);
+
         foreach ($calls as $call) {
             $method = array_shift($call);
             \call_user_func_array([$builder, $method], $call);

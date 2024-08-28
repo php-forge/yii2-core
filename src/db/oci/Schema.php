@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\oci;
 
@@ -23,13 +20,10 @@ use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
 /**
- * Schema is the class for retrieving metadata from an Oracle database.
+ * Schema is the class for retrieving metadata from an Oracle database (version 11g and above).
  *
  * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
  * the sequence object.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -38,12 +32,13 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    public $columnSchemaClass = 'yii\db\oci\ColumnSchema';
+    public array|string $columnSchemaClass = 'yii\db\oci\ColumnSchema';
+
     /**
      * @var array map of DB errors and corresponding exceptions
      * If left part is found in DB error message exception class from the right part is used.
      */
-    public $exceptionMap = [
+    public array $exceptionMap = [
         'ORA-00001: unique constraint' => 'yii\db\IntegrityException',
     ];
 
@@ -51,7 +46,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      */
     protected array|string $tableQuoteCharacter = '"';
-
 
     /**
      * {@inheritdoc}
@@ -272,9 +266,9 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function createColumnSchemaBuilder(string|null $type = null, $length = null): ColumnSchemaBuilder
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length]);
+        return Yii::createObject(ColumnSchemaBuilder::class, [$this->db, $type, $length]);
     }
 
     /**

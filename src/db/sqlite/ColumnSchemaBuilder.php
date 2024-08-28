@@ -1,26 +1,41 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\sqlite;
 
-use yii\db\ColumnSchemaBuilder as AbstractColumnSchemaBuilder;
-
 /**
  * ColumnSchemaBuilder is the schema builder for Sqlite databases.
- *
- * @author Chris Harris <chris@buckshotsoftware.com>
- * @since 2.0.8
  */
-class ColumnSchemaBuilder extends AbstractColumnSchemaBuilder
+class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
 {
+    /**
+     * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
+     */
+    protected bool $isUnsigned = false;
+
+    /**
+     * Marks column as unsigned.
+     *
+     * @return static Instance of the column schema builder.
+     */
+    public function unsigned(): static
+    {
+        $this->type = match ($this->type) {
+            Schema::TYPE_PK => Schema::TYPE_UPK,
+            Schema::TYPE_BIGPK => Schema::TYPE_UBIGPK,
+            default => $this->type,
+        };
+
+        $this->isUnsigned = true;
+
+        return $this;
+    }
+
     /**
      * {@inheritdoc}
      */
-    protected function buildUnsignedString()
+    protected function buildUnsignedString(): string
     {
         return $this->isUnsigned ? ' UNSIGNED' : '';
     }
@@ -30,17 +45,15 @@ class ColumnSchemaBuilder extends AbstractColumnSchemaBuilder
      */
     public function __toString()
     {
-        switch ($this->getTypeCategory()) {
-            case self::CATEGORY_PK:
-                $format = '{type}{check}{append}';
-                break;
-            case self::CATEGORY_NUMERIC:
-                $format = '{type}{length}{unsigned}{notnull}{unique}{check}{default}{append}';
-                break;
-            default:
-                $format = '{type}{length}{notnull}{unique}{check}{default}{append}';
-        }
+        $format = match ($this->getTypeCategory()) {
+            self::CATEGORY_PK => '{type}{check}{append}',
+            self::CATEGORY_NUMERIC => '{type}{length}{unsigned}{notnull}{unique}{check}{default}{append}',
+            default => '{type}{length}{notnull}{unique}{check}{default}{append}',
+        };
 
-        return $this->buildCompleteString($format);
+        return $this->buildCompleteString(
+            $format,
+            ['{unsigned}' => $this->buildUnsignedString()],
+        );
     }
 }

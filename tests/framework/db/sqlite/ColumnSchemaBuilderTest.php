@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\db\sqlite;
 
@@ -12,21 +9,18 @@ use yii\db\sqlite\ColumnSchemaBuilder;
 
 /**
  * ColumnSchemaBuilderTest tests ColumnSchemaBuilder for SQLite.
+ *
  * @group db
  * @group sqlite
+ * @group column-schema-builder
  */
 class ColumnSchemaBuilderTest extends \yiiunit\framework\db\ColumnSchemaBuilderTest
 {
     public $driverName = 'sqlite';
 
-    /**
-     * @param string $type
-     * @param int $length
-     * @return ColumnSchemaBuilder
-     */
-    public function getColumnSchemaBuilder($type, $length = null)
+    public function getColumnSchemaBuilder($type, $length = null): ColumnSchemaBuilder
     {
-        return new ColumnSchemaBuilder($type, $length, $this->getConnection());
+        return new ColumnSchemaBuilder($this->getConnection(), $type, $length);
     }
 
     /**

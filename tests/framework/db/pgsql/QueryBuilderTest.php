@@ -42,16 +42,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
                 'char(6) CHECK (value LIKE \'test%\')',
             ],
             [
-                Schema::TYPE_CHAR . '(6)',
-                $this->char(6)->unsigned(),
-                'char(6)',
-            ],
-            [
-                Schema::TYPE_INTEGER . '(8)',
-                $this->integer(8)->unsigned(),
-                'integer',
-            ],
-            [
                 Schema::TYPE_TIMESTAMP . '(4)',
                 $this->timestamp(4),
                 'timestamp(4)',
