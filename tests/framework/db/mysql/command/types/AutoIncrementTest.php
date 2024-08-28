@@ -24,7 +24,7 @@ final class AutoIncrementTest extends \yiiunit\framework\db\command\types\Abstra
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\AutoIncrementProvider::schema
+     * @dataProvider \yiiunit\framework\db\mysql\provider\types\AutoIncrementProvider::command
      */
     public function testExecute(
         Closure|string $abstractColumn,

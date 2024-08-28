@@ -24,26 +24,14 @@ final class AutoIncrementTest extends \yiiunit\framework\db\querybuilder\types\A
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mssql\provider\types\AutoIncrementProvider::builder
+     * @dataProvider \yiiunit\framework\db\mssql\provider\types\AutoIncrementProvider::queryBuilder
      */
-    public function testBuilder(
+    public function testGenerateColumnType(
         string $column,
         string $expectedColumn,
         Closure $builder,
         string $expectedBuilder,
     ): void {
         $this->getColumnType($column, $expectedColumn, $builder, $expectedBuilder);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mssql\provider\types\AutoIncrementProvider::raw
-     */
-    public function testRaw(
-        string $columnRaw,
-        string $column,
-        Closure $builder,
-        string $expectColumn = '',
-    ): void {
-        $this->getColumnTypeRaw($columnRaw, $column, $builder, $expectColumn);
     }
 }

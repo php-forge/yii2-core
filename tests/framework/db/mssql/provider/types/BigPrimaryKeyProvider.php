@@ -10,7 +10,142 @@ use yiiunit\support\TestHelper;
 
 final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\AbstractBigPrimaryKeyProvider
 {
-    public static function builder(): array
+    public static function command(): array
+    {
+        return [
+            // default
+            [
+                Schema::TYPE_BIGPK,
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                Schema::TYPE_BIGPK . '(1)',
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                Schema::TYPE_BIGPK . '(0,0)',
+                'bigint IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '1',
+            ],
+            [
+                Schema::TYPE_BIGPK . '(1,1)',
+                'bigint IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                Schema::TYPE_BIGPK . '(2,3)',
+                'bigint IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'bigint',
+                '5',
+            ],
+            [
+                Schema::TYPE_BIGPK . '(-10,1)',
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '-9',
+            ],
+            // builder
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [1]),
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [0, 0]),
+                'bigint IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '1',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [1, 1]),
+                'bigint IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [2, 3]),
+                'bigint IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'bigint',
+                '5',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [-10, 1]),
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '-9',
+            ],
+            // builder shortcut
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(),
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(1),
+                'bigint IDENTITY PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(0, 0),
+                'bigint IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '1',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(1, 1),
+                'bigint IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(2, 3),
+                'bigint IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'bigint',
+                '5',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(-10, 1),
+                'bigint IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'bigint',
+                '-9',
+            ],
+        ];
+    }
+
+    public static function queryBuilder(): array
     {
         $expected = [
             'bigpk' => [
@@ -46,140 +181,8 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
             ],
         ];
 
-        $types = parent::bigPrimaryKey();
+        $types = parent::queryBuilder();
 
         return TestHelper::addExpected($expected, $types);
-    }
-
-    public static function schema(): array
-    {
-        return [
-            // schema
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
-                'bigint IDENTITY PRIMARY KEY',
-                true,
-                'bigint',
-                '2',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [0, 0]),
-                'bigint IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'bigint',
-                '1',
-            ],
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [-10, 2]),
-                'bigint IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'bigint',
-                '-8',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, [2, 3]),
-                'bigint IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'bigint',
-                '5',
-            ],
-            // builder generator
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(),
-                'bigint IDENTITY PRIMARY KEY',
-                true,
-                'bigint',
-                '2',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(0, 0),
-                'bigint IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'bigint',
-                '1',
-            ],
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(-10, 2),
-                'bigint IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'bigint',
-                '-8',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(2, 3),
-                'bigint IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'bigint',
-                '5',
-            ],
-            // raw sql
-            [
-                'bigint IDENTITY PRIMARY KEY',
-                'bigint IDENTITY PRIMARY KEY',
-                true,
-                'bigint',
-                '2',
-            ],
-            [
-                'bigint IDENTITY(0,0) PRIMARY KEY',
-                'bigint IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'bigint',
-                '1',
-            ],
-            [
-                'bigint IDENTITY(-10,2) PRIMARY KEY',
-                'bigint IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'bigint',
-                '-8',
-            ],
-            [
-                'bigint IDENTITY(2,3) PRIMARY KEY',
-                'bigint IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'bigint',
-                '5',
-            ],
-        ];
-    }
-
-    public static function raw(): array
-    {
-        return [
-            [
-                'bigint IDENTITY PRIMARY KEY',
-                'bigpk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(),
-            ],
-            [
-                'bigint IDENTITY(1) PRIMARY KEY',
-                'bigpk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1),
-                'bigint IDENTITY PRIMARY KEY',
-            ],
-            [
-                'bigint IDENTITY(0,0) PRIMARY KEY',
-                'bigpk(0,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(0, 0),
-                'bigint IDENTITY(0,1) PRIMARY KEY',
-            ],
-            [
-                'bigint IDENTITY(1,1) PRIMARY KEY',
-                'bigpk(1,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1, 1),
-            ],
-            [
-                'bigint IDENTITY(2,3) PRIMARY KEY',
-                'bigpk(2,3)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(2, 3),
-            ],
-            [
-                'bigint IDENTITY(-10,1) PRIMARY KEY',
-                'bigpk(-10,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(-10, 1),
-                'bigint IDENTITY(-10,1) PRIMARY KEY',
-            ],
-        ];
     }
 }

@@ -118,37 +118,16 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         foreach ($columns as $name => $type) {
             if (is_string($name)) {
-                if ($type instanceof ColumnSchemaBuilder) {
-                    if (
-                        in_array(
-                            $type->getType(),
-                            [Schema::TYPE_AUTO, Schema::TYPE_UAUTO, Schema::TYPE_BIGAUTO, Schema::TYPE_UBIGAUTO],
-                            true
-                        )
-                    ) {
-                        $autoIncrementColumn = $name;
-                    }
+                $columnType = $this->getColumnType($type);
+                $cols[] = "\t" . $this->db->quoteColumnName($name) . ' ' . $columnType;
 
-                    if (
-                        in_array(
-                            $type->getType(),
-                            [Schema::TYPE_PK, Schema::TYPE_UPK, Schema::TYPE_BIGPK, Schema::TYPE_UBIGPK],
-                            true
-                        )
-                    ) {
-                        $hasPrimaryKey = true;
-                    }
-                } else {
-                    if (stripos($type, 'AUTO_INCREMENT') !== false) {
-                        $autoIncrementColumn = $name;
-                    }
-
-                    if (stripos($type, 'PRIMARY KEY') !== false) {
-                        $hasPrimaryKey = true;
-                    }
+                if (stripos($columnType, 'AUTO_INCREMENT') !== false) {
+                    $autoIncrementColumn = $name;
                 }
 
-                $cols[] = "\t" . $this->db->quoteColumnName($name) . ' ' . $this->getColumnType($type);
+                if (stripos($columnType, 'PRIMARY KEY') !== false) {
+                    $hasPrimaryKey = true;
+                }
             } else {
                 $cols[] = "\t" . $type;
             }

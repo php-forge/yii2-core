@@ -24,50 +24,14 @@ final class PrimaryKeyTest extends \yiiunit\framework\db\querybuilder\types\Abst
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\PrimaryKeyProvider::builder
+     * @dataProvider \yiiunit\framework\db\mysql\provider\types\PrimaryKeyProvider::queryBuilder
      */
-    public function testBuilder(
+    public function testGenerateColumnType(
         string $column,
         string $expectedColumn,
         Closure $builder,
         string $expectedBuilder,
     ): void {
         $this->getColumnType($column, $expectedColumn, $builder, $expectedBuilder);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\PrimaryKeyProvider::builderWithUnsigned
-     */
-    public function testBuilderWithUnsigned(
-        string $column,
-        string $expectedColumn,
-        Closure $builder,
-        string $expectedBuilder,
-    ): void {
-        $this->getColumnType($column, $expectedColumn, $builder, $expectedBuilder);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\PrimaryKeyProvider::raw
-     */
-    public function testRaw(
-        string $columnRaw,
-        string $column,
-        Closure $builder,
-        string $expectColumn = '',
-    ): void {
-        $this->getColumnTypeRaw($columnRaw, $column, $builder, $expectColumn);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\PrimaryKeyProvider::rawWithUnsigned
-     */
-    public function testRawWithUnsigned(
-        string $columnRaw,
-        string $column,
-        Closure $builder,
-        string $expectColumn = '',
-    ): void {
-        $this->getColumnTypeRaw($columnRaw, $column, $builder, $expectColumn);
     }
 }

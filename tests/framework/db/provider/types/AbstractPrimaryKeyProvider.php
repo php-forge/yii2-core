@@ -8,7 +8,7 @@ use yii\db\Schema;
 
 abstract class AbstractPrimaryKeyProvider
 {
-    public static function primaryKey(): array
+    public static function queryBuilder(): array
     {
         return [
             'pk' => [

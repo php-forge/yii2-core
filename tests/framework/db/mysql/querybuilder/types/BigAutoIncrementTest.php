@@ -24,50 +24,14 @@ final class BigAutoIncrementTest extends \yiiunit\framework\db\querybuilder\type
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::builder
+     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::queryBuilder
      */
-    public function testBuilder(
+    public function testGenerateColumnType(
         string $column,
         string $expectedColumn,
         Closure $builder,
         string $expectedBuilder,
     ): void {
         $this->getColumnType($column, $expectedColumn, $builder, $expectedBuilder);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::builderWithUnsigned
-     */
-    public function testBuilderWithUnsigned(
-        string $column,
-        string $expectedColumn,
-        Closure $builder,
-        string $expectedBuilder,
-    ): void {
-        $this->getColumnType($column, $expectedColumn, $builder, $expectedBuilder);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::raw
-     */
-    public function testRaw(
-        string $columnRaw,
-        string $column,
-        Closure $builder,
-        string $expectColumn = '',
-    ): void {
-        $this->getColumnTypeRaw($columnRaw, $column, $builder, $expectColumn);
-    }
-
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigAutoIncrementProvider::rawWithUnsigned
-     */
-    public function testRawWithUnsigned(
-        string $columnRaw,
-        string $column,
-        Closure $builder,
-        string $expectColumn = '',
-    ): void {
-        $this->getColumnTypeRaw($columnRaw, $column, $builder, $expectColumn);
     }
 }

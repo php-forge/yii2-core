@@ -10,7 +10,142 @@ use yiiunit\support\TestHelper;
 
 final class PrimaryKeyProvider extends \yiiunit\framework\db\provider\types\AbstractPrimaryKeyProvider
 {
-    public static function builder(): array
+    public static function command(): array
+    {
+        return [
+            // default
+            [
+                Schema::TYPE_PK,
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                Schema::TYPE_PK . '(1)',
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                Schema::TYPE_PK . '(0,0)',
+                'int IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'integer',
+                '1',
+            ],
+            [
+                Schema::TYPE_PK . '(1,1)',
+                'int IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                Schema::TYPE_PK . '(2,3)',
+                'int IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'integer',
+                '5',
+            ],
+            [
+                Schema::TYPE_PK . '(-10,1)',
+                'int IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'integer',
+                '-9',
+            ],
+            // builder
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK),
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [1]),
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [0, 0]),
+                'int IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'integer',
+                '1',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [1, 1]),
+                'int IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [2, 3]),
+                'int IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'integer',
+                '5',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [-10, 1]),
+                'int IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'integer',
+                '-9',
+            ],
+            // builder shortcut
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(),
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(1),
+                'int IDENTITY PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(0, 0),
+                'int IDENTITY(0,1) PRIMARY KEY',
+                true,
+                'integer',
+                '1',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(1, 1),
+                'int IDENTITY(1,1) PRIMARY KEY',
+                true,
+                'integer',
+                '2',
+            ],
+            [
+                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(2, 3),
+                'int IDENTITY(2,3) PRIMARY KEY',
+                true,
+                'integer',
+                '5',
+            ],
+            [
+                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(-10, 1),
+                'int IDENTITY(-10,1) PRIMARY KEY',
+                true,
+                'integer',
+                '-9',
+            ],
+        ];
+    }
+
+    public static function queryBuilder(): array
     {
         $expected = [
             'pk' => [
@@ -46,140 +181,8 @@ final class PrimaryKeyProvider extends \yiiunit\framework\db\provider\types\Abst
             ],
         ];
 
-        $types = parent::primaryKey();
+        $types = parent::queryBuilder();
 
         return TestHelper::addExpected($expected, $types);
-    }
-
-    public static function schema(): array
-    {
-        return [
-            // schema
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK),
-                'int IDENTITY PRIMARY KEY',
-                true,
-                'integer',
-                '2',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [0, 0]),
-                'int IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'integer',
-                '1',
-            ],
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [-10, 2]),
-                'int IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'integer',
-                '-8',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_PK, [2, 3]),
-                'int IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'integer',
-                '5',
-            ],
-            // builder generator
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(),
-                'int IDENTITY PRIMARY KEY',
-                true,
-                'integer',
-                '2',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(0, 0),
-                'int IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'integer',
-                '1',
-            ],
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(-10, 2),
-                'int IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'integer',
-                '-8',
-            ],
-            [
-                'id' => static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->primaryKey(2, 3),
-                'int IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'integer',
-                '5',
-            ],
-            // raw sql
-            [
-                'int IDENTITY PRIMARY KEY',
-                'int IDENTITY PRIMARY KEY',
-                true,
-                'integer',
-                '2',
-            ],
-            [
-                'int IDENTITY(0,0) PRIMARY KEY',
-                'int IDENTITY(0,1) PRIMARY KEY',
-                true,
-                'integer',
-                '1',
-            ],
-            [
-                'int IDENTITY(-10,2) PRIMARY KEY',
-                'int IDENTITY(-10,2) PRIMARY KEY',
-                true,
-                'integer',
-                '-8',
-            ],
-            [
-                'int IDENTITY(2,3) PRIMARY KEY',
-                'int IDENTITY(2,3) PRIMARY KEY',
-                true,
-                'integer',
-                '5',
-            ],
-        ];
-    }
-
-    public static function raw(): array
-    {
-        return [
-            [
-                'int IDENTITY PRIMARY KEY',
-                'pk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(),
-            ],
-            [
-                'int IDENTITY(1) PRIMARY KEY',
-                'pk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(1),
-                'int IDENTITY PRIMARY KEY',
-            ],
-            [
-                'int IDENTITY(0,0) PRIMARY KEY',
-                'pk(0,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(0, 0),
-                'int IDENTITY(0,1) PRIMARY KEY',
-            ],
-            [
-                'int IDENTITY(1,1) PRIMARY KEY',
-                'pk(1,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(1, 1),
-            ],
-            [
-                'int IDENTITY(2,3) PRIMARY KEY',
-                'pk(2,3)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(2, 3),
-            ],
-            [
-                'int IDENTITY(-10,1) PRIMARY KEY',
-                'pk(-10,1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->primaryKey(-10, 1),
-                'int IDENTITY(-10,1) PRIMARY KEY',
-            ],
-        ];
     }
 }

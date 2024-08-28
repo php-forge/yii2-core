@@ -24,7 +24,7 @@ final class BigPrimaryKeyTest extends \yiiunit\framework\db\command\types\Abstra
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigPrimaryKeyProvider::schema
+     * @dataProvider \yiiunit\framework\db\mysql\provider\types\BigPrimaryKeyProvider::command
      */
     public function testExecute(
         Closure|string $abstractColumn,

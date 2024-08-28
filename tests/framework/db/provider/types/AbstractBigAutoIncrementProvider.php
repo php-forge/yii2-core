@@ -8,7 +8,7 @@ use yii\db\Schema;
 
 abstract class AbstractBigAutoIncrementProvider
 {
-    public static function bigAutoIncrement(): array
+    public static function queryBuilder(): array
     {
         return [
             'bigauto' => [

@@ -10,48 +10,39 @@ use yiiunit\support\TestHelper;
 
 final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\AbstractBigPrimaryKeyProvider
 {
-    public static function builder(): array
-    {
-        $expected = [
-            'bigpk' => [
-                1 => 'bigpk',
-                2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(),
-                3 => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-            ],
-            'bigpk(1)' => [
-                1 => 'bigpk(1)',
-                2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1),
-                3 => 'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-            ],
-        ];
-
-        $types = parent::bigPrimaryKey();
-
-        return TestHelper::addExpected($expected, $types);
-    }
-
-    public function builderWithUnsigned(): array
+    public static function command(): array
     {
         return [
+            // default
+            [
+                Schema::TYPE_BIGPK,
+                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
+            [
+                Schema::TYPE_BIGPK . '(1)',
+                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
+            ],
             [
                 \yii\db\mysql\Schema::TYPE_UBIGPK,
-                'ubigpk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey()->unsigned(),
                 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
             ],
             [
                 \yii\db\mysql\Schema::TYPE_UBIGPK . '(1)',
-                'ubigpk(1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1)->unsigned(),
                 'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                true,
+                'bigint',
+                2,
             ],
-        ];
-    }
-
-    public static function schema(): array
-    {
-        return [
-            // schema
+            // builder
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK),
                 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -62,21 +53,6 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, 1),
                 'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ],
-            // schema with unsigned
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK)->unsigned(),
-                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ],
-            [
-                static fn (Schema $schema) => $schema->createColumnSchemaBuilder(Schema::TYPE_BIGPK, 1)->unsigned(),
-                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 true,
                 'bigint',
                 2,
@@ -95,7 +71,7 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'bigint',
                 2,
             ],
-            // builder generator
+            // builder shortcut
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey(),
                 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -110,7 +86,6 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'bigint',
                 2,
             ],
-            // builder generator with unsigned
             [
                 static fn (Schema $schema) => $schema->createColumnSchemaBuilder()->bigPrimaryKey()->unsigned(),
                 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -125,70 +100,38 @@ final class BigPrimaryKeyProvider extends \yiiunit\framework\db\provider\types\A
                 'bigint',
                 2,
             ],
-            // raw sql
-            [
-                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ],
-            [
-                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ],
-            // raw sql with unsigned
-            [
-                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ],
-            [
-                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                true,
-                'bigint',
-                2,
-            ]
         ];
     }
 
-    public function raw(): array
+    public static function queryBuilder(): array
     {
-        return [
-            [
-                'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigpk',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(),
+        $expected = [
+            'bigpk' => [
+                1 => 'bigpk',
+                2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(),
+                3 => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+            ],
+            'bigpk(1)' => [
+                1 => 'bigpk(1)',
+                2 => static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1),
+                3 => 'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
             ],
             [
-                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'bigpk(1)',
-                static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1),
-                'bigint(1) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-            ],
-        ];
-    }
-
-    public function rawWithUnsigned(): array
-    {
-        return [
-            [
-                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                \yii\db\mysql\Schema::TYPE_UBIGPK,
                 'ubigpk',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey()->unsigned(),
+                'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
             ],
             [
-                'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                \yii\db\mysql\Schema::TYPE_UBIGPK . '(1)',
                 'ubigpk(1)',
                 static fn (ColumnSchemaBuilder $builder) => $builder->bigPrimaryKey(1)->unsigned(),
                 'bigint(1) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
             ],
         ];
+
+        $types = parent::queryBuilder();
+
+        return TestHelper::addExpected($expected, $types);
     }
 }
