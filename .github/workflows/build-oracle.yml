@@ -43,13 +43,13 @@ jobs:
           - 8.1
 
         oracle:
-          - 11
-          - 18
-          - 21
+          - tqldtqmapirails/oracle-xe-12c:latest
+          - gvenzl/oracle-xe:18
+          - gvenzl/oracle-xe:21
 
     services:
       oci:
-        image: gvenzl/oracle-xe:${{ matrix.oracle }}
+        image: ${{ matrix.oracle }}
         ports:
           - 1521:1521
         env:
