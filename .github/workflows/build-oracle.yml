@@ -43,7 +43,7 @@ jobs:
           - 8.1
 
         oracle:
-          - tqldtqmapirails/oracle-xe-12c:latest
+          - konnecteam/docker-oracle-12c
           - gvenzl/oracle-xe:18
           - gvenzl/oracle-xe:21
 
