@@ -24,6 +24,7 @@ Yii Core version 2 Change Log
 - Bug #75: Refactor `prepareInsertValues()` method in `QueryBuilder::class` to accept `TableSchema` object (@terabytesoftw)
 - Bug #77: Add support for test `Oracle` 18, 21 (@terabytesoftw)
 - Bug #78: Fix test case for `getSchemaNames()` method in `SchemaTest::class` in `Oracle` (@terabytesoftw)
+- Enh #83: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
