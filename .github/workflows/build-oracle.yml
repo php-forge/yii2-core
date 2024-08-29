@@ -60,9 +60,10 @@ jobs:
         options: >-
           --name=oci
           --health-cmd healthcheck.sh
-          --health-interval 15s
-          --health-timeout 15s
-          --health-retries 20
+          --health-interval 30s
+          --health-timeout 20s
+          --health-retries 30
+          --health-start-period 120s
 
     steps:
       - name: Checkout.
