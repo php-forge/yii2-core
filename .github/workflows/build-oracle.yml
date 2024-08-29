@@ -44,7 +44,7 @@ jobs:
 
         oracle:
           - version: 12c
-            image: konnecteam/docker-oracle-12c:sequelize
+            image: tqldtqmapirails/oracle-xe-12c:latest
           - version: 18
             image: gvenzl/oracle-xe:18
           - version: 21
@@ -60,9 +60,9 @@ jobs:
         options: >-
           --name=oci
           --health-cmd healthcheck.sh
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 15
 
     steps:
       - name: Checkout.
