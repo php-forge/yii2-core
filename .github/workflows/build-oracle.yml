@@ -43,8 +43,6 @@ jobs:
           - 8.1
 
         oracle:
-          - version: 12c
-            image: tqldtqmapirails/oracle-xe-12c:latest
           - version: 18
             image: gvenzl/oracle-xe:18
           - version: 21
@@ -60,10 +58,9 @@ jobs:
         options: >-
           --name=oci
           --health-cmd healthcheck.sh
-          --health-interval 30s
-          --health-timeout 20s
-          --health-retries 30
-          --health-start-period 120s
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout.
