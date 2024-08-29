@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }}-oracle-${{ matrix.oracle }}
+    name: PHP ${{ matrix.php }}-oracle-${{ matrix.oracle.version }}
 
     env:
       EXTENSIONS: oci8, pdo, pdo_oci
@@ -43,13 +43,16 @@ jobs:
           - 8.1
 
         oracle:
-          - konnecteam/docker-oracle-12c
-          - gvenzl/oracle-xe:18
-          - gvenzl/oracle-xe:21
+          - version: 12c
+            image: konnecteam/docker-oracle-12c:sequelize
+          - version: 18
+            image: gvenzl/oracle-xe:18
+          - version: 21
+            image: gvenzl/oracle-xe:21
 
     services:
       oci:
-        image: ${{ matrix.oracle }}
+        image: ${{ matrix.oracle.image }}
         ports:
           - 1521:1521
         env:
