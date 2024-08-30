@@ -190,27 +190,39 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function getNextIdentityValue(string $table): string
+    public function getCurrentAutoIncrementValue(string $table, string $pk): string
     {
-        return "SELECT IDENT_CURRENT('{$table}') + IDENT_INCR('$table')";
+        return "SELECT MAX({$this->db->quoteColumnName($pk)}) FROM {$this->db->quoteTableName($table)}";
     }
 
     /**
-     * {@inheritdoc}
+     * Resets the identity column for a specified table in MSSQL.
+     *
+     * @param string $table the name of the table whose identity column is to be reset.
+     * The name will be properly quoted by the method.
+     * @param int|null $value the value to reset the identity to, minus 1. If null, reseeds to the last used identity
+     * value.
+     * To reset to a specific value N, pass N-1. For example, to reset to `10`, pass `9`.
+     * This is because MSSQL will use the next value `(value + 1)` for the next insert.
+     * The value will be properly quoted by the method.
+     * @param array $options Additional options (not used in MSSQL implementation, kept for consistency with other DB
+     * drivers).
+     *
+     * @return string the SQL statement to reset the identity column.
+     *
+     * @throws \yii\db\Exception if there's an error in generating the SQL statement.
+     *
+     * @see \yii\db\Connection::quoteTableName()
      */
-    public function getNextSequenceValue(string $table): string
+    public function resetSequence(string $table, int|null $value = null, array $options = []): string
     {
-        return 'SELECT NEXT VALUE FOR ' . $this->db->quoteTableName($table);
-    }
+        $tableName = $this->db->quoteTableName($table);
 
-    /**
-     * {@inheritdoc}
-     */
-    public function resetSequence(string $table, mixed $value = null, array $options = []): string
-    {
-        $value = (int) $value;
+        if ($value === null) {
+            return "DBCC CHECKIDENT ({$tableName}, RESEED, 0) WITH NO_INFOMSGS;DBCC CHECKIDENT ({$tableName}, RESEED)";
+        }
 
-        return "DBCC CHECKIDENT ('$table', RESEED, $value)";
+        return "DBCC CHECKIDENT ({$tableName}, RESEED, {$value})";
     }
 
     /**

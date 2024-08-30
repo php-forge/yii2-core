@@ -18,7 +18,7 @@ abstract class AbstractSequence extends \yiiunit\TestCase
         parent::tearDown();
     }
 
-    public function testExecuteResetIdentity(): void
+    public function testExecuteResetSequence(): void
     {
         $table = 'customer';
         $sequenceName = '';
@@ -27,15 +27,15 @@ abstract class AbstractSequence extends \yiiunit\TestCase
             $sequenceName = $this->db->quoteTableName($table . '_SEQ');
         }
 
-        // retrieve the next value of auto-increment (identity/sequence) column
-        $nextSequenceValue = $this->db->createCommand()->getNextAutoIncrementValue($table);
+        // reset the sequence to 10.
+        // if `ORACLE` is used, the sequence will be reset to 10.
+        // if `SQLSRV` is used, the sequence will be reset to 9. This is because the `IDENTITY` column starts from 1.
+        $result = match ($this->db->driverName) {
+            'sqlsrv' => $this->db->createCommand()->executeResetSequence($table, 9),
+            default => $this->db->createCommand()->executeResetSequence($table, 10),
+        };
 
-        $this->assertSame(4, $nextSequenceValue);
-
-        // reset the sequence to 10 and return next value of the sequence
-        $result = $this->db->createCommand()->executeResetSequence($table, 10);
-
-        $this->assertSame(10, $result);
+        $this->assertSame(0, $result);
 
         // insert a new row
         $result = $this->db
@@ -50,36 +50,103 @@ abstract class AbstractSequence extends \yiiunit\TestCase
         // retrieve the last insert ID
         $lastInsertID = $this->db->getLastInsertID($sequenceName);
 
-        $this->assertSame('11', $lastInsertID);
+        $this->assertSame('10', $lastInsertID);
+    }
+
+    public function testExecuteResetSequenceTo1(): void
+    {
+        $table = 'item';
+        $sequenceName = '';
+
+        $driverName = $this->db->driverName;
+
+        if ($driverName === 'oci') {
+            $sequenceName = $this->db->quoteTableName($table . '_SEQ');
+        }
+
+        // remove all rows
+        // if `SQLSRV` is used, the sequence will be reset to 1, if truncate table its executed.
+        // if `SQLSRV` is used, the sequence will be reset to 6, if delete from table its executed.
+        $result = match ($driverName) {
+            'sqlsrv' => $this->db->createCommand()->truncateTable($table)->execute(),
+            default => $this->db->createCommand()->delete($table)->execute(),
+        };
+
+        match ($driverName) {
+            'sqlsrv' => $this->assertSame(0, $result),
+            default => $this->assertSame(5, $result),
+        };
+
+        // reset sequence to 1
+        $result = $this->db->createCommand()->executeResetSequence($table, 1);
+
+        $this->assertSame(0, $result);
+
+        // insert a new row
+        $result = $this->db
+            ->createCommand()
+            ->insert(
+                $table,
+                ['name' => 'name1', 'category_id' => 1]
+            )->execute();
+
+        $this->assertSame(1, $result);
+
+        // retrieve the last insert ID
+        $lastInsertID = $this->db->getLastInsertID($sequenceName);
+
+        $this->assertSame('1', $lastInsertID);
     }
 
     public function testExecuteResetIdentityWithValueEqualToCurrent(): void
     {
         $table = 'item';
 
-        // reset sequence to 6 and return next value of the sequence
-        $result = $this->db->createCommand()->executeResetSequence($table, 6);
+        $sequenceName = '';
 
-        $this->assertSame(6, $result);
+        $driverName = $this->db->driverName;
 
-        // retrieve the next value of auto-increment (identity/sequence) column
-        $nextSequenceValue = $this->db->createCommand()->getNextAutoIncrementValue($table);
+        if ($driverName === 'oci') {
+            $sequenceName = $this->db->quoteTableName($table . '_SEQ');
+        }
 
-        $this->assertSame(7, $nextSequenceValue);
+        // reset sequence to current value
+        $result = $this->db->createCommand()->executeResetSequence($table, 5);
+
+        $this->assertSame(0, $result);
+
+        // retrieve the last insert ID
+        $lastInsertID = $this->db->getLastInsertID($sequenceName);
+
+        match ($driverName) {
+            'oci' => $this->assertSame('5', $lastInsertID),
+            default => $this->assertSame('6', $lastInsertID),
+        };
     }
 
     public function testExecuteResetIdentityWithEmptyValue(): void
     {
         $table = 'item';
 
+        $sequenceName = '';
+
+        $driverName = $this->db->driverName;
+
+        if ($driverName === 'oci') {
+            $sequenceName = $this->db->quoteTableName($table . '_SEQ');
+        }
+
         // reset sequence to max value and return next value of the sequence
         $result = $this->db->createCommand()->executeResetSequence($table);
 
-        $this->assertSame(6, $result);
+        $this->assertSame(0, $result);
 
-        // retrieve the next value of auto-increment (identity/sequence) column
-        $nextSequenceValue = $this->db->createCommand()->getNextAutoIncrementValue($table);
+        // retrieve the last insert ID
+        $lastInsertID = $this->db->getLastInsertID($sequenceName);
 
-        $this->assertSame(7, $nextSequenceValue);
+        match ($driverName) {
+            'oci' => $this->assertSame('5', $lastInsertID),
+            default => $this->assertSame('6', $lastInsertID),
+        };
     }
 }

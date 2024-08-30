@@ -112,7 +112,7 @@ SQL;
         return $parent;
     }
 
-    public function testResetSequence()
+    public function testExecuteResetSequence(): void
     {
         $db = $this->getConnection();
 
@@ -138,33 +138,35 @@ SQL;
         $this->assertEquals(0, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
 
         // counter should be reset to 1
-        $db->createCommand()->resetSequence('reset_sequence')->execute();
+        $db->createCommand()->executeResetSequence('reset_sequence');
         $db->createCommand()->insert('reset_sequence', ['description' => 'test'])->execute();
         $this->assertEquals(1, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
         $this->assertEquals(1, $db->createCommand('SELECT MAX([[id]]) FROM {{reset_sequence}}')->queryScalar());
 
         // counter should be reset to 5, so next record gets ID 5
-        $db->createCommand()->resetSequence('reset_sequence', 5)->execute();
+        $db->createCommand()->executeResetSequence('reset_sequence', 5);
         $db->createCommand()->insert('reset_sequence', ['description' => 'test'])->execute();
         $this->assertEquals(2, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
         $this->assertEquals(5, $db->createCommand('SELECT MAX([[id]]) FROM {{reset_sequence}}')->queryScalar());
     }
 
-    public function testResetSequenceExceptionTableNoExist()
+    public function testExecuteResetSequenceExceptionTableNoExist(): void
     {
-        $this->expectException('yii\base\InvalidArgumentException');
-        $this->expectExceptionMessage('Table not found: no_exist_table');
-
         $db = $this->getConnection();
-        $db->createCommand()->resetSequence('no_exist_table', 5)->execute();
+
+        $this->expectException('yii\base\InvalidArgumentException');
+        $this->expectExceptionMessage("Table not found: 'no_exist_table'");
+
+        $db->createCommand()->executeResetSequence('no_exist_table', 5);
     }
 
-    public function testResetSequenceExceptionSquenceNoExist()
+    public function testExecuteResetSequenceExceptionSquenceNoExist(): void
     {
-        $this->expectException('yii\base\InvalidArgumentException');
-        $this->expectExceptionMessage("There is not sequence associated with table 'type'.");
-
         $db = $this->getConnection();
-        $db->createCommand()->resetSequence('type', 5)->execute();
+
+        $this->expectException('yii\base\InvalidArgumentException');
+        $this->expectExceptionMessage("Table does not have a sequence: 'type'.");
+
+        $db->createCommand()->executeResetSequence('type', 5);
     }
 }

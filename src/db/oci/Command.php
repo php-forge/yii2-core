@@ -38,42 +38,6 @@ class Command extends \yii\db\Command
         $this->pendingParams = [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function executeResetSequence(string $table, mixed $value = null, array $options = []): false|int
-    {
-        if ($value === null) {
-            return $this->getNextAutoIncrementValue($table);
-        }
-
-        $currentVal = $this->getNextAutoIncrementValue($table);
-
-        $increment = $value - ($currentVal);
-
-        if ($increment === 0) {
-            return $currentVal;
-        }
-
-        $qb = $this->db->getQueryBuilder();
-
-        if ($this->setSql($qb->resetSequence($table, $increment, $options))->execute() === false) {
-            return false;
-        }
-
-        $newVal = $this->getNextAutoIncrementValue($table);
-
-        if ($newVal === false) {
-            return false;
-        }
-
-        if ($this->setSql($this->db->queryBuilder->resetSequence($table, 1, $options))->execute() === false) {
-            return false;
-        }
-
-        return $newVal;
-    }
-
     public function insertWithReturningPks(string $table, array $columns): array|bool|int
     {
         $params = [];

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace yii\db\oci;
 
 use PDO;
-use yii\base\InvalidArgumentException;
-use yii\db\Connection;
 use yii\db\Exception;
 use yii\db\Expression;
 use yii\helpers\StringHelper;
@@ -136,21 +134,41 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function getNextSequenceValue(string $table): string
+    public function getCurrentAutoIncrementValue(string $table, string $pk): string
     {
-        return 'SELECT ' . $this->db->quoteTableName("{$table}_SEQ") . '.NEXTVAL FROM DUAL';
+        return "SELECT MAX({$this->db->quoteColumnName($pk)}) FROM {$this->db->quoteTableName($table)}";
     }
 
     /**
-     * {@inheritdoc}
+     * Resets the specified sequence in Oracle database.
+     *
+     * @param string $sequenceName The name of the sequence to reset.
+     * The name will be properly quoted by the method.
+     * @param int|null $value The value to restart the sequence with. If null, the last insert ID will be used.
+     * The value will be properly quoted by the method.
+     * @param array $options Additional options for the sequence reset:
+     * - cache: (int|false) The cache size for the sequence. Set to false for NOCACHE.
+     * - cycle: (bool) Whether the sequence should cycle (true) or not (false).
+     *
+     * @return string The SQL statement to reset the sequence.
+     *
+     * @throws \yii\db\Exception If there's an error retrieving the last insert ID when $value is null.
+     *
+     * @see \yii\db\Connection::quoteTableName()
+     * @see \yii\db\Connection::getLastInsertID()
+     * @see \yii\db\Connection::quoteValue()
      */
-    public function resetSequence(string $table, mixed $value = null, array $options = []): string
+    public function resetSequence(string $sequenceName, int|null $value = null, array $options = []): string
     {
         $cache = $options['cache'] ?? false;
         $cycle = $options['cycle'] ?? false;
 
-        return "ALTER SEQUENCE {$this->db->quoteTableName("{$table}_SEQ")}"
-            . " INCREMENT BY {$this->db->quoteValue($value)}"
+        if ($value === null) {
+            $value = (int) $this->db->getLastInsertID($sequenceName);
+        }
+
+        return "ALTER SEQUENCE {$this->db->quoteTableName($sequenceName)}"
+            . " RESTART START WITH $value"
             . ($cache !== false ? " CACHE {$this->db->quoteValue($cache)}" : ' NOCACHE')
             . ($cycle !== false ? ' MAXVALUE ' . PHP_INT_MAX . ' CYCLE' : ' NOCYCLE');
     }

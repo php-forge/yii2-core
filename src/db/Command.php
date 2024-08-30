@@ -1013,40 +1013,49 @@ class Command extends Component
     }
 
     /**
-     * Creates a SQL command for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
+     * Executes a db command resetting the identity or sequence column of a table.
      *
-     * @param string $table the name of the table whose primary key sequence will be reset.
+     * The identity or sequence is reset such that the primary key of the next new row inserted will have the specified
+     * value or the maximum existing `value + 1`.
+     *
+     * @param string $table the name of the table whose primary key identity or sequence is reset.
+     * The name will be properly quoted by the method.
      * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
-     * row's primary key will have the maximum existing value +1.
-     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * row's primary key will have the maximum existing `value + 1`.
+     * The value will be properly quoted by the method.
      *
-     * @return static the command object itself.
-     *
-     * @throws NotSupportedException if this is not supported by the underlying DBMS.
-     */
-    public function resetSequence(string $table, mixed $value = null, array $options = []): static
-    {
-        $sql = $this->db->getQueryBuilder()->resetSequence($table, $value, $options);
-
-        return $this->setSql($sql);
-    }
-
-    /**
-     * Executes a db command resetting the sequence value of a table's primary key.
-     * Reason for execute is that some databases (Oracle) need several queries to do so.
-     * The sequence is reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence is reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
      * @throws NotSupportedException if this is not supported by the underlying DBMS
-     * @since 2.0.16
      */
-    public function executeResetSequence(string $table, $value = null)
+    public function executeResetSequence(string $table, int|null $value = null): false|int
     {
-        return $this->db->getQueryBuilder()->executeResetSequence($table, $value);
+        $tableSchema = $this->db->getTableSchema($table);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '{$table}'.");
+        }
+
+        if ($tableSchema->sequenceName === null) {
+            throw new InvalidArgumentException("Table does not have a sequence: '{$table}'.");
+        }
+
+        if (empty($tableSchema->primaryKey)) {
+            throw new InvalidArgumentException("Table does not have a primary key: '{$table}'.");
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: '{$table}'.");
+        }
+
+        $sql = match ($this->db->driverName) {
+            'oci' => $this->db->getQueryBuilder()->resetSequence($tableSchema->sequenceName, $value),
+            default => $this->db->getQueryBuilder()->resetSequence($table, $value),
+        };
+
+        $result = $this->setSql($sql)->execute();
+
+        if ($result !== false) {
+            return 0;
+        }
     }
 
     /**
@@ -1191,44 +1200,45 @@ class Command extends Component
     }
 
     /**
-     * Executes a query to get the next value of the identity or sequence for the specified table.
+     * Executes a query to retrieve the current value of an auto-increment column for a specified table.
      *
-     * This method uses the master database connection to ensure consistency.
+     * This method uses the master database connection to ensure data consistency.
      *
-     * @param string $table The name of the table associated with the identity or sequence.
+     * @param string $table The name of the table associated with the auto-increment column.
      *
-     * @return int The next value of the identity or sequence for the specified table.
+     * @return int|false The current value of the auto-increment column, or `false` if the table does not exist,
+     * is empty, or does not have an auto-increment column.
      *
-     * @throws \yii\db\Exception If there's an error executing the SQL query.
      * @throws \yii\base\InvalidConfigException If the database connection is not properly configured.
+     * @throws InvalidArgumentException If the table does not have a primary key or has a composite primary key.
      */
-    public function getNextAutoIncrementValue(string $table): int
+    public function getCurrentAutoIncrementValue(string $table): int|false
     {
         $tableSchema = $this->db->getTableSchema($table);
 
         if ($tableSchema === null) {
-            throw new InvalidArgumentException("Unknown table: $table");
+            return false;
         }
 
-        $pk = $tableSchema->primaryKey;
-
-        if (empty($pk)) {
+        if (empty($tableSchema->primaryKey)) {
             throw new InvalidArgumentException("Table does not have a primary key: $table");
         }
 
-        if (count($pk) > 1) {
-            throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: $table");
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException(
+                "Can't get current sequence value for composite primary key in table: $table"
+            );
         }
 
-        $nextValSQL = $this->db->queryBuilder->getNextSequenceValue($table);
+        $pk = reset($tableSchema->primaryKey);
 
-        if (empty($tableSchema->sequenceName)) {
-            $nextValSQL = $this->db->querybuilder->getNextIdentityValue($table);
-        }
+        $nextValSQL = $this->db->getQueryBuilder()->getCurrentAutoIncrementValue($table, $pk);
 
         return $this->db->useMaster(
             static function (Connection $db) use ($nextValSQL): false|int {
-                return (int) $db->createCommand($nextValSQL)->queryScalar();
+                $result = $db->createCommand($nextValSQL)->queryScalar();
+
+                return $result === null ? false : (int) $result;
             }
         );
     }

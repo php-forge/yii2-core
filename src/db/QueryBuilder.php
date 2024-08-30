@@ -1159,15 +1159,14 @@ class QueryBuilder extends \yii\base\BaseObject
      *
      * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
      * generated based on the table name: `tablename_SEQ`.
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
+     * @param int $value the value for the primary key of the next new row inserted.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
      *
      * @return string the SQL statement for resetting sequence.
      *
      * @throws NotSupportedException if this is not supported by the underlying DBMS.
      */
-    public function resetSequence(string $table, mixed $value = null, array $options = []): string
+    public function resetSequence(string $table, int $value, array $options = []): string
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support resetting sequence.');
     }
