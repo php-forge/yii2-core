@@ -6,11 +6,7 @@
 
 BEGIN
   FOR i IN (SELECT ut.table_name FROM USER_TABLES ut) LOOP
-    EXECUTE IMMEDIATE 'DROP TABLE "' || i.table_name || '" CASCADE CONSTRAINTS';
-  END LOOP;
-
-  FOR i IN (SELECT us.sequence_name FROM USER_SEQUENCES us) LOOP
-    EXECUTE IMMEDIATE 'DROP SEQUENCE "' || i.sequence_name || '"';
+    EXECUTE IMMEDIATE 'DROP TABLE "' || i.table_name || '" CASCADE CONSTRAINTS PURGE';
   END LOOP;
 
   FOR i IN (SELECT uv.view_name FROM USER_VIEWS uv) LOOP
@@ -176,7 +172,6 @@ CREATE TABLE "department" (
   "title" VARCHAR2(255) NOT NULL,
   CONSTRAINT "department_PK" PRIMARY KEY ("id") ENABLE
 );
-CREATE SEQUENCE "department_SEQ";
 
 CREATE TABLE "employee" (
   "id" INTEGER NOT NULL,
@@ -185,7 +180,6 @@ CREATE TABLE "employee" (
   "last_name" VARCHAR2(255) NOT NULL,
   CONSTRAINT "employee_PK" PRIMARY KEY ("id", "department_id") ENABLE
 );
-CREATE SEQUENCE "employee_SEQ";
 
 CREATE TABLE "dossier" (
   "id" INTEGER NOT NULL,

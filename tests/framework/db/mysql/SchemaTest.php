@@ -69,7 +69,7 @@ SQL;
         $this->assertEquals('CURRENT_TIMESTAMP(3)', (string)$ts->defaultValue);
     }
 
-    public function testGetSchemaNames()
+    public function testGetSchemaNames(): void
     {
         $this->markTestSkipped('Schemas are not supported in MySQL.');
     }

@@ -108,15 +108,13 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             CASE
                 WHEN EXISTS (
                     SELECT 1
-                    FROM USER_DEPENDENCIES UD
-                        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-                    WHERE UT.TABLE_NAME = :tableName AND UD.TYPE = 'TRIGGER' AND UD.REFERENCED_TYPE = 'SEQUENCE'
+                    FROM USER_TRIGGERS UT
+                    WHERE UT.TABLE_NAME = :tableName AND UT.TRIGGER_TYPE = 'BEFORE' AND UT.TRIGGER_NAME LIKE '%_SEQ'
                 )
                 THEN (
-                    SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
-                    FROM USER_DEPENDENCIES UD
-                        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-                    WHERE UT.TABLE_NAME = :tableName AND UD.TYPE = 'TRIGGER' AND UD.REFERENCED_TYPE = 'SEQUENCE'
+                    SELECT TRIGGER_NAME AS SEQUENCE_NAME
+                    FROM USER_TRIGGERS
+                    WHERE TABLE_NAME = :tableName AND TRIGGER_TYPE = 'BEFORE' AND TRIGGER_NAME LIKE '%_SEQ'
                 )
                 ELSE (
                     SELECT SEQUENCE_NAME
@@ -156,14 +154,11 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function findSchemaNames()
     {
-        static $sql = <<<'SQL'
-SELECT "u"."USERNAME"
-FROM "DBA_USERS" "u"
-WHERE "u"."DEFAULT_TABLESPACE" NOT IN ('SYSTEM', 'SYSAUX')
-ORDER BY "u"."USERNAME" ASC
-SQL;
-
-        return $this->db->createCommand($sql)->queryColumn();
+        return $this->db->createCommand(
+            <<<SQL
+            SELECT [[USERNAME]] FROM [[USER_USERS]] ORDER BY [[USERNAME]] ASC
+            SQL
+        )->queryColumn();
     }
 
     /**

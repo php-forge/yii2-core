@@ -55,6 +55,8 @@ jobs:
           - 1521:1521
         env:
           ORACLE_PASSWORD : oracle
+          APP_USER : yiitest
+          APP_USER_PASSWORD : root
         options: >-
           --name=oci
           --health-cmd healthcheck.sh
