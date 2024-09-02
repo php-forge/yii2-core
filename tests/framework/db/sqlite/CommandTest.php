@@ -112,44 +112,6 @@ SQL;
         return $parent;
     }
 
-    public function testExecuteResetSequence(): void
-    {
-        $db = $this->getConnection();
-
-        if ($db->getTableSchema('reset_sequence', true) !== null) {
-            $db->createCommand()->dropTable('reset_sequence')->execute();
-        }
-
-        // create table reset_sequence
-        $db->createCommand()->createTable(
-            'reset_sequence',
-            [
-                'id' => Schema::TYPE_PK,
-                'description' => Schema::TYPE_TEXT,
-            ]
-        )->execute();
-
-        // ensure auto increment is working
-        $db->createCommand()->insert('reset_sequence', ['description' => 'test'])->execute();
-        $this->assertEquals(1, $db->createCommand('SELECT MAX([[id]]) FROM {{reset_sequence}}')->queryScalar());
-
-        // remove all records
-        $db->createCommand()->delete('reset_sequence')->execute();
-        $this->assertEquals(0, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
-
-        // counter should be reset to 1
-        $db->createCommand()->executeResetSequence('reset_sequence');
-        $db->createCommand()->insert('reset_sequence', ['description' => 'test'])->execute();
-        $this->assertEquals(1, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
-        $this->assertEquals(1, $db->createCommand('SELECT MAX([[id]]) FROM {{reset_sequence}}')->queryScalar());
-
-        // counter should be reset to 5, so next record gets ID 5
-        $db->createCommand()->executeResetSequence('reset_sequence', 5);
-        $db->createCommand()->insert('reset_sequence', ['description' => 'test'])->execute();
-        $this->assertEquals(2, $db->createCommand('SELECT COUNT(*) FROM {{reset_sequence}}')->queryScalar());
-        $this->assertEquals(5, $db->createCommand('SELECT MAX([[id]]) FROM {{reset_sequence}}')->queryScalar());
-    }
-
     public function testExecuteResetSequenceExceptionTableNoExist(): void
     {
         $db = $this->getConnection();

@@ -1023,10 +1023,11 @@ class Command extends Component
      * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
      * row's primary key will have the maximum existing `value + 1`.
      * The value will be properly quoted by the method.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
      *
      * @throws NotSupportedException if this is not supported by the underlying DBMS
      */
-    public function executeResetSequence(string $table, int|null $value = null): false|int
+    public function executeResetSequence(string $table, int|null $value = null, array $options = []): false|int
     {
         $tableSchema = $this->db->getTableSchema($table);
 
@@ -1047,9 +1048,52 @@ class Command extends Component
         }
 
         $sql = match ($this->db->driverName) {
-            'oci' => $this->db->getQueryBuilder()->resetSequence($tableSchema->sequenceName, $value),
-            default => $this->db->getQueryBuilder()->resetSequence($table, $value),
+            'oci' => $this->db->getQueryBuilder()->resetSequence($table, $value, $options),
+            default => $this->db->getQueryBuilder()->resetSequence($table, $value, $options),
         };
+
+        $result = $this->setSql($sql)->execute();
+
+        if ($result !== false) {
+            return 0;
+        }
+    }
+
+    /**
+     * Executes a db command resetting the auto-increment value for a table.
+     *
+     * The auto-increment value is reset such that the primary key of the next new row inserted will have the specified
+     * value or the maximum existing `value + 1`.
+     *
+     * @param string $table the name of the table whose auto-increment value is reset.
+     * The name will be properly quoted by the method.
+     * @param int|null $value the value for the auto-increment counter. If this is not set, the next new row's primary
+     * key will have the maximum existing `value + 1`.
+     *
+     * @return false|int If the value is `false`, it means the execution failed. Otherwise, it returns 0.
+     *
+     * @throws NotSupportedException if this is not supported by the underlying DBMS
+     */
+    public function executeResetAutoIncrement(string $table, int|null $value = null): false|int
+    {
+        $tableSchema = $this->db->getTableSchema($table);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '{$table}'.");
+        }
+
+        if (empty($tableSchema->primaryKey)) {
+            throw new InvalidArgumentException("Table does not have a primary key: '{$table}'.");
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException(
+                "Can't reset auto-increment for composite primary key in table: '{$table}'."
+            );
+        }
+
+        $column = reset($tableSchema->primaryKey);
+        $sql = $this->db->getQueryBuilder()->resetAutoIncrement($table, $column, $value);
 
         $result = $this->setSql($sql)->execute();
 

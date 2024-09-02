@@ -131,10 +131,12 @@ class ActiveFixture extends BaseActiveFixture
     protected function resetTable()
     {
         $table = $this->getTableSchema();
+
+        // delete data
         $this->db->createCommand()->delete($table->fullName)->execute();
-        if ($table->sequenceName !== null) {
-            $this->db->createCommand()->executeResetSequence($table->fullName, 1);
-        }
+
+        // reset sequence number for auto-incremental columns
+        $this->db->createCommand()->executeResetAutoIncrement($table->fullName, 1);
     }
 
     /**

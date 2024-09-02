@@ -227,39 +227,27 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * Creates a SQL statement for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted will have the specified value
-     * or 1.
-     *
-     * @param string $table the name of the table whose primary key sequence will be reset.
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
-     * row's primary key will have a value 1.
-     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
-     *
-     * @return string the SQL statement for resetting sequence.
-     *
-     * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
+     * {@inheritdoc}
      */
-    public function resetSequence(string $table, mixed $value = null, $options = []): string
+    public function resetAutoIncrement(string $table, string $column, int|null $value = null): string
     {
         $db = $this->db;
         $tableSchema = $db->getTableSchema($table);
 
         if ($tableSchema !== null && $tableSchema->sequenceName !== null) {
-            $tableName = $db->quoteTableName($table);
-
             if ($value === null) {
-                $key = $this->db->quoteColumnName(reset($tableSchema->primaryKey));
                 $value = $this->db->useMaster(
-                    static function (Connection $db) use ($key, $tableName) {
-                        return $db->createCommand("SELECT MAX($key) FROM $tableName")->queryScalar();
+                    static function (Connection $db) use ($column, $table) {
+                        return $db->createCommand("SELECT MAX([[{$column}]]) FROM [[$table]]")->queryScalar();
                     }
                 );
             } else {
                 $value = (int) $value - 1;
             }
 
-            return "UPDATE sqlite_sequence SET seq='$value' WHERE name='{$tableSchema->name}'";
+            return <<<SQL
+            UPDATE [[sqlite_sequence]] SET seq='$value' WHERE name='$table'
+            SQL;
         } elseif ($tableSchema === null) {
             throw new InvalidArgumentException("Table not found: $table");
         }

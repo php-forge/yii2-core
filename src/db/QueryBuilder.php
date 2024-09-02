@@ -396,7 +396,7 @@ class QueryBuilder extends \yii\base\BaseObject
      * @return array array of column names, placeholders, values and params.
      */
     protected function prepareInsertValues(
-        TableSchema|null $tableSchema,
+        TableSchema $tableSchema,
         array|QueryInterface $columns,
         array $params = []
     ): array {

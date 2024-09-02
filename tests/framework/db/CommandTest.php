@@ -290,11 +290,11 @@ SQL;
         $this->assertTrue(\is_array($result) && isset($result[0]));
     }
 
-    public function testBatchInsert()
+    public function testBatchInsertC()
     {
-        $command = $this->getConnection()->createCommand();
+        $command = $this->getConnection(true)->createCommand();
         $command->batchInsert(
-            '{{customer}}',
+            'customer',
             ['email', 'name', 'address'],
             [
                 ['t1@example.com', 't1', 't1 address'],
@@ -306,7 +306,7 @@ SQL;
         // @see https://github.com/yiisoft/yii2/issues/11693
         $command = $this->getConnection()->createCommand();
         $command->batchInsert(
-            '{{customer}}',
+            'customer',
             ['email', 'name', 'address'],
             []
         );

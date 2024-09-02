@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db;
 
@@ -12,9 +9,6 @@ use yii\helpers\StringHelper;
 
 /**
  * ColumnSchema class describes the metadata of a column in a database table.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class ColumnSchema extends BaseObject
 {
@@ -78,7 +72,14 @@ class ColumnSchema extends BaseObject
      * @var string comment of this column. Not all DBMS support this.
      */
     public $comment;
-
+    /**
+     * @var string|null the name of the sequence associated with this column. `NULL` if there is no sequence.
+     *
+     *
+     * This property holds the name of the sequence used for generating values for identity columns. It is typically
+     * used with Oracle databases.
+     */
+    public string|null $sequenceName = null;
 
     /**
      * Converts the input value according to [[phpType]] after retrieval from the database.
@@ -179,7 +180,7 @@ class ColumnSchema extends BaseObject
             case 'boolean':
                 // treating a 0 bit value as false too
                 // https://github.com/yiisoft/yii2/issues/9006
-                return (bool) $value && $value !== "\0" && strtolower($value) !== 'false';
+                return (bool) $value && $value !== "\0" && strtolower((string) $value) !== 'false';
             case 'double':
                 return (float) $value;
         }

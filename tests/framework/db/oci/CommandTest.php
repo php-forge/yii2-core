@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yiiunit\framework\db\oci;
 
@@ -11,6 +8,7 @@ use yii\caching\ArrayCache;
 use yii\db\Connection;
 use yii\db\Query;
 use yii\db\Schema;
+use yiiunit\support\OciConnection;
 
 /**
  * @group db
@@ -29,14 +27,15 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         $this->assertEquals('SELECT "id", "t"."name" FROM "customer" t', $command->sql);
     }
 
-    public function testLastInsertId()
+    public function testLastInsertId(): void
     {
         $db = $this->getConnection();
 
         $sql = 'INSERT INTO {{profile}}([[description]]) VALUES (\'non duplicate\')';
         $command = $db->createCommand($sql);
         $command->execute();
-        $this->assertEquals(3, $db->getSchema()->getLastInsertID('profile_SEQ'));
+
+        $this->assertEquals(3, $db->getLastInsertID($db->getSchema()->getIdentitySequenceName('profile')));
     }
 
     public function batchInsertSqlProvider()
@@ -303,7 +302,7 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
     /**
      * verify that {{}} are not going to be replaced in parameters.
      */
-    public function testNoTablenameReplacement()
+    public function testNoTablenameReplacement(): void
     {
         $db = $this->getConnection();
 
@@ -316,8 +315,7 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
             ]
         )->execute();
 
-        $customerId = $db->getLastInsertID('customer_SEQ');
-
+        $customerId = $db->getLastInsertID($db->getSchema()->getIdentitySequenceName('customer'));
         $customer = $db->createCommand('SELECT * FROM {{customer}} WHERE [[id]]=' . $customerId)->queryOne();
         $this->assertEquals('Some {{weird}} name', $customer['name']);
         $this->assertEquals('Some {{%weird}} address', $customer['address']);
@@ -376,7 +374,7 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
             'total' => 42,
         ])->execute();
 
-        $orderId = $db->getLastInsertID('order_SEQ');
+        $orderId = $db->getLastInsertID($db->getSchema()->getIdentitySequenceName('order'));
 
         $columnValueQuery = new \yii\db\Query();
         $columnValueQuery->select('created_at')->from('{{order}}')->where(['id' => $orderId]);
@@ -439,44 +437,72 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         ], $records);
     }
 
-    public function testCreateView()
+    public function testCreateView(): void
     {
-        $db = $this->getConnection();
+        $tableName = 'testCreateViewTable';
+        $viewName = 'testCreateView';
 
-        $subquery = (new Query())
-            ->select('bar')
-            ->from('testCreateViewTable')
-            ->where(['>', 'bar', '5']);
+        $db = OciConnection::getConnection();
 
-        if ($db->getSchema()->getTableSchema('testCreateView') !== null) {
-            $db->createCommand()->dropView('testCreateView')->execute();
+        $subquery = (new Query())->select('bar')->from($tableName)->where(['>', 'bar', '5']);
+
+        if ($db->getSchema()->getTableSchema($viewName) !== null) {
+            $db->createCommand()->dropView($viewName)->execute();
         }
 
-        if ($db->getSchema()->getTableSchema('testCreateViewTable')) {
-            $db->createCommand("DROP SEQUENCE testCreateViewTable_SEQ")->execute();
-            $db->createCommand()->dropTable('testCreateViewTable')->execute();
+        if ($db->getSchema()->getTableSchema($tableName) !== null) {
+            $result = $db->createCommand()->dropTable($tableName)->execute();
+
+            $this->assertSame(0, $result);
         }
 
-        $db->createCommand()->createTable('testCreateViewTable', [
-            'id'  => Schema::TYPE_PK,
-            'bar' => Schema::TYPE_INTEGER,
-        ])->execute();
+        if ($db->getSchema()->getTableSequenceName('testCreateViewTable') !== null) {
+            $result = $db->createCommand()->dropSequence('testCreateViewTable')->execute();
 
-        $db->createCommand('CREATE SEQUENCE testCreateViewTable_SEQ START with 1 INCREMENT BY 1')->execute();
+            $this->assertSame(0, $result);
+        }
 
-        $db->createCommand(
-            'INSERT INTO {{testCreateViewTable}} ("id", "bar") VALUES(testCreateTable_SEQ.NEXTVAL, 1)'
+        $resultr = $db->createCommand()->createTable(
+            $tableName,
+            [
+                'id'  => Schema::TYPE_PK,
+                'bar' => Schema::TYPE_INTEGER,
+            ],
         )->execute();
 
-        $db->createCommand(
-            'INSERT INTO {{testCreateViewTable}} ("id", "bar") VALUES(testCreateTable_SEQ.NEXTVAL, 6)'
+        $this->assertSame(0, $resultr);
+
+        $result = $db->createCommand()->createSequence($tableName)->execute();
+
+        $this->assertSame(0, $result);
+
+        $result = $db->createCommand(
+            <<<SQL
+            INSERT INTO [[testCreateViewTable]] ("id", "bar") VALUES([[testCreateViewTable_SEQ.NEXTVAL]], 1)
+            SQL
         )->execute();
 
-        $db->createCommand()->createView('testCreateView', $subquery)->execute();
+        $this->assertSame(1, $result);
 
-        $records = $db->createCommand('SELECT [[bar]] FROM {{testCreateView}}')->queryAll();
+        $result = $db->createCommand(
+            <<<SQL
+            INSERT INTO [[testCreateViewTable]] ("id", "bar") VALUES([[testCreateViewTable_SEQ.NEXTVAL]], 6)
+            SQL
+        )->execute();
 
-        $this->assertEquals([['bar' => 6]], $records);
+        $this->assertSame(1, $result);
+
+        $result = $db->createCommand()->createView($viewName, $subquery)->execute();
+
+        $this->assertSame(0, $result);
+
+        $records = $db->createCommand(
+            <<<SQL
+            SELECT [[bar]] FROM [[testCreateView]]
+            SQL
+        )->queryAll();
+
+        $this->assertSame([['bar' => '6']], $records);
     }
 
     public function testColumnCase()

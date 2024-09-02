@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\oci;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidCallException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
@@ -62,25 +63,72 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     }
 
     /**
-     * Retrieves the sequence name for a given table name.
+     * Retrieves the sequence names for the identity columns of a given table.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name: `tablename_SEQ`.
+     * This method checks the `sequenceName` property of each column in the table schema to find all identity columns'
+     * sequence names.
      *
-     * @return string|null the sequence name for the table. `NULL` if no sequence name.
+     * @param string $table the table name. The name will be properly quoted by the method.
+     *
+     * @return string|null the sequence name for the identity column. `null` is returned if no sequence name is found.
      */
-    public function getTableSequenceName(string $table): string|null
+    public function getIdentitySequenceName(string $table): string|null
     {
-        $sequenceName = $this->db
-            ->createCommand(
-                <<<SQL
-                SELECT * FROM USER_SEQUENCES WHERE SEQUENCE_NAME = :tableName
-                SQL,
-                [':tableName' => "{$table}_SEQ"]
-            )
-            ->queryScalar();
+        $tableSchema = $this->getTableSchema($table);
 
-        /** @var string|null */
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table '{$table}' does not exist.");
+        }
+
+        $sequenceNames = null;
+
+        $columns = $tableSchema->columns;
+
+        foreach ($columns as $column) {
+            if ($column->autoIncrement) {
+                $sequenceNames = $column->sequenceName;
+                break;
+            }
+        }
+
+        return $sequenceNames;
+    }
+
+    /**
+     * Sequence name of table.
+     *
+     * @param string $tableName table name.
+     *
+     * @return string|null whether the sequence exists
+     */
+    public function getTableSequenceName(string $tableName): string|null
+    {
+        $sequenceNameSql = <<<SQL
+        SELECT
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM USER_DEPENDENCIES UD
+                        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
+                    WHERE UT.TABLE_NAME = :tableName AND UD.TYPE = 'TRIGGER' AND UD.REFERENCED_TYPE = 'SEQUENCE'
+                )
+                THEN (
+                    SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
+                    FROM USER_DEPENDENCIES UD
+                        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
+                    WHERE UT.TABLE_NAME = :tableName AND UD.TYPE = 'TRIGGER' AND UD.REFERENCED_TYPE = 'SEQUENCE'
+                )
+                ELSE (
+                    SELECT SEQUENCE_NAME
+                    FROM USER_SEQUENCES
+                    WHERE SEQUENCE_NAME LIKE :tableName || '%'
+                )
+            END AS SEQUENCE_NAME
+        FROM DUAL
+        SQL;
+
+        $sequenceName = $this->db->createCommand($sequenceNameSql, [':tableName' => $tableName])->queryScalar();
+
         return $sequenceName === false ? null : $sequenceName;
     }
 
@@ -338,7 +386,7 @@ SQL;
             A.DATA_DEFAULT,
             COM.COMMENTS AS COLUMN_COMMENT,
             ID.COLUMN_NAME as IDENTITY_COLUMN,
-            ID.IDENTITY_OPTIONS
+            ID.SEQUENCE_NAME
         FROM ALL_TAB_COLUMNS A
             INNER JOIN ALL_OBJECTS B ON B.OWNER = A.OWNER AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
             LEFT JOIN ALL_COL_COMMENTS COM ON (A.OWNER = COM.OWNER AND A.TABLE_NAME = COM.TABLE_NAME AND A.COLUMN_NAME = COM.COLUMN_NAME)
@@ -422,9 +470,22 @@ SQL;
         $c->comment = $column['COLUMN_COMMENT'] === null ? '' : $column['COLUMN_COMMENT'];
         $c->isPrimaryKey = false;
         $c->autoIncrement = isset($column['IDENTITY_COLUMN']) ? true : false;
+        $c->sequenceName = $column['SEQUENCE_NAME'] ?? null;
 
-        $this->extractColumnType($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
-        $this->extractColumnSize($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
+        $this->extractColumnType(
+            $c,
+            $column['DATA_TYPE'],
+            $column['DATA_PRECISION'],
+            $column['DATA_SCALE'],
+            $column['DATA_LENGTH']
+        );
+        $this->extractColumnSize(
+            $c,
+            $column['DATA_TYPE'],
+            $column['DATA_PRECISION'],
+            $column['DATA_SCALE'],
+            $column['DATA_LENGTH']
+        );
 
         $c->phpType = $this->getColumnPhpType($c);
 
@@ -462,30 +523,30 @@ SQL;
     protected function findConstraints($table)
     {
         $sql = <<<'SQL'
-SELECT
-    /*+ PUSH_PRED(C) PUSH_PRED(D) PUSH_PRED(E) */
-    D.CONSTRAINT_NAME,
-    D.CONSTRAINT_TYPE,
-    C.COLUMN_NAME,
-    C.POSITION,
-    D.R_CONSTRAINT_NAME,
-    E.TABLE_NAME AS TABLE_REF,
-    F.COLUMN_NAME AS COLUMN_REF,
-    C.TABLE_NAME
-FROM ALL_CONS_COLUMNS C
-    INNER JOIN ALL_CONSTRAINTS D ON D.OWNER = C.OWNER AND D.CONSTRAINT_NAME = C.CONSTRAINT_NAME
-    LEFT JOIN ALL_CONSTRAINTS E ON E.OWNER = D.R_OWNER AND E.CONSTRAINT_NAME = D.R_CONSTRAINT_NAME
-    LEFT JOIN ALL_CONS_COLUMNS F ON F.OWNER = E.OWNER AND F.CONSTRAINT_NAME = E.CONSTRAINT_NAME AND F.POSITION = C.POSITION
-WHERE
-    C.OWNER = :schemaName
-    AND C.TABLE_NAME = :tableName
-ORDER BY D.CONSTRAINT_NAME, C.POSITION
-SQL;
-        $command = $this->db->createCommand($sql, [
-            ':tableName' => $table->name,
-            ':schemaName' => $table->schemaName,
-        ]);
+        SELECT
+            /*+ PUSH_PRED(C) PUSH_PRED(D) PUSH_PRED(E) */
+            D.CONSTRAINT_NAME,
+            D.CONSTRAINT_TYPE,
+            C.COLUMN_NAME,
+            C.POSITION,
+            D.R_CONSTRAINT_NAME,
+            E.TABLE_NAME AS TABLE_REF,
+            F.COLUMN_NAME AS COLUMN_REF,
+            C.TABLE_NAME
+        FROM ALL_CONS_COLUMNS C
+            INNER JOIN ALL_CONSTRAINTS D ON D.OWNER = C.OWNER AND D.CONSTRAINT_NAME = C.CONSTRAINT_NAME
+            LEFT JOIN ALL_CONSTRAINTS E ON E.OWNER = D.R_OWNER AND E.CONSTRAINT_NAME = D.R_CONSTRAINT_NAME
+            LEFT JOIN ALL_CONS_COLUMNS F ON F.OWNER = E.OWNER AND F.CONSTRAINT_NAME = E.CONSTRAINT_NAME AND F.POSITION = C.POSITION
+        WHERE
+            C.OWNER = :schemaName
+            AND C.TABLE_NAME = :tableName
+        ORDER BY D.CONSTRAINT_NAME, C.POSITION
+        SQL;
+
+        $command = $this->db->createCommand($sql, [':tableName' => $table->name, ':schemaName' => $table->schemaName]);
+
         $constraints = [];
+
         foreach ($command->queryAll() as $row) {
             if ($this->db->slavePdo->getAttribute(\PDO::ATTR_CASE) === \PDO::CASE_LOWER) {
                 $row = array_change_key_case($row, CASE_UPPER);
@@ -494,6 +555,7 @@ SQL;
             if ($row['CONSTRAINT_TYPE'] === 'P') {
                 $table->columns[$row['COLUMN_NAME']]->isPrimaryKey = true;
                 $table->primaryKey[] = $row['COLUMN_NAME'];
+
                 if (empty($table->sequenceName)) {
                     $table->sequenceName = $this->getTableSequenceName($table->name);
                 }

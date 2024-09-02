@@ -99,12 +99,13 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
     }
 
     /**
-     * Autoincrement columns detection should be disabled for Oracle
-     * because there is no way of associating a column with a sequence.
+     * Autoincrement columns detection should be disabled for Oracle because there is no way of associating a column
+     * with a sequence or identity column.
      */
-    public function testAutoincrementDisabled()
+    public function testAutoincrementDisabled(): void
     {
-        $table = $this->getConnection(false)->schema->getTableSchema('order', true);
+        $table = $this->getConnection(false)->schema->getTableSchema('employee', true);
+
         $this->assertFalse($table->columns['id']->autoIncrement);
     }
 
