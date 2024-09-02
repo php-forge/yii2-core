@@ -180,15 +180,15 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 1,
                 [],
                 <<<SQL
-                ALTER SEQUENCE "T_sequence" RESTART START WITH 1 NOCACHE NOCYCLE
+                ALTER SEQUENCE "T_sequence_SEQ" RESTART START WITH 1 NOCACHE NOCYCLE
                 SQL,
             ],
             'with schema' => [
-                'SYSTEM.T_sequence',
+                'YIITEST.T_sequence',
                 1,
                 [],
                 <<<SQL
-                ALTER SEQUENCE "SYSTEM"."T_sequence" RESTART START WITH 1 NOCACHE NOCYCLE
+                ALTER SEQUENCE "YIITEST"."T_sequence_SEQ" RESTART START WITH 1 NOCACHE NOCYCLE
                 SQL,
             ],
             'with options' => [
@@ -199,7 +199,7 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                     'cycle' => true,
                 ],
                 <<<SQL
-                ALTER SEQUENCE "T_sequence" RESTART START WITH 2 CACHE 50 MAXVALUE 9223372036854775807 CYCLE
+                ALTER SEQUENCE "T_sequence_SEQ" RESTART START WITH 2 CACHE 50 MAXVALUE 9223372036854775807 CYCLE
                 SQL,
             ],
         ];
