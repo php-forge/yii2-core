@@ -511,11 +511,15 @@ class Command extends Component
      * For example,
      *
      * ```php
-     * $connection->createCommand()->batchInsert('user', ['name', 'age'], [
-     *     ['Tom', 30],
-     *     ['Jane', 20],
-     *     ['Linda', 25],
-     * ])->execute();
+     * $connection->createCommand()->batchInsert(
+     *     'user',
+     *     ['name', 'age'],
+     *     [
+     *         ['Tom', 30],
+     *         ['Jane', 20],
+     *         ['Linda', 25],
+     *     ]
+     * )->execute();
      * ```
      *
      * The method will properly escape the column names, and quote the values to be inserted.
@@ -525,18 +529,17 @@ class Command extends Component
      * Also note that the created command is not executed until [[execute()]] is called.
      *
      * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column names
-     * @param array|\Generator $rows the rows to be batch inserted into the table
-     * @return $this the command object itself
+     * @param array $columns the column names.
+     * @param iterable $rows the rows to be batch inserted into the table.
+     *
+     * @return static the command object itself.
      */
-    public function batchInsert($table, $columns, $rows)
+    public function batchInsert(string $table, array $columns, iterable $rows): static
     {
-        $table = $this->db->quoteSql($table);
-        $columns = array_map(function ($column) {
-            return $this->db->quoteSql($column);
-        }, $columns);
-
         $params = [];
+
+        $table = $this->db->quoteSql($table);
+        $columns = array_map(fn ($column) => $this->db->quoteSql($column), $columns);
         $sql = $this->db->getQueryBuilder()->batchInsert($table, $columns, $rows, $params);
 
         $this->setRawSql($sql);
@@ -1093,6 +1096,7 @@ class Command extends Component
         }
 
         $column = reset($tableSchema->primaryKey);
+
         $sql = $this->db->getQueryBuilder()->resetAutoIncrement($table, $column, $value);
 
         $result = $this->setSql($sql)->execute();

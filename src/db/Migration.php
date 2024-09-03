@@ -236,15 +236,23 @@ class Migration extends Component implements MigrationInterface
     /**
      * Creates and executes a batch INSERT SQL statement.
      * The method will properly escape the column names, and bind the values to be inserted.
+     *
      * @param string $table the table that new rows will be inserted into.
      * @param array $columns the column names.
-     * @param array $rows the rows to be batch inserted into the table
+     * @param iterable $rows the rows to be batch inserted into the table.
+     *
+     * @return false|int the number of rows affected by the execution. If the insertion is unsuccessful, false will be
+     * returned.
      */
-    public function batchInsert($table, $columns, $rows)
+    public function batchInsert(string $table, array $columns, iterable $rows): false|int
     {
         $time = $this->beginCommand("insert into $table");
-        $this->db->createCommand()->batchInsert($table, $columns, $rows)->execute();
+
+        $result = $this->db->createCommand()->batchInsert($table, $columns, $rows)->execute();
+
         $this->endCommand($time);
+
+        return $result;
     }
 
     /**

@@ -62,6 +62,25 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         }
     }
 
+    public function addTriggerForIdentityColumn(string $table, string $column): false|int
+    {
+        $tableName = $this->db->quoteTableName($table);
+        $triggerName = $this->db->quoteTableName("{$table}_insert_all_TRG");
+        $columnName = $this->db->quoteColumnName($column);
+        $identitySequence = $this->db->quoteTableName($this->db->getSchema()->getIdentitySequenceName($table));
+
+        $sql = <<<SQL
+        CREATE OR REPLACE TRIGGER {$triggerName}
+        BEFORE INSERT ON {$tableName}
+        FOR EACH ROW
+        BEGIN
+            :NEW.$columnName := {$identitySequence}.NEXTVAL;
+        END;
+        SQL;
+
+        return $this->db->createCommand($sql)->execute();
+    }
+
     /**
      * Retrieves the sequence names for the identity columns of a given table.
      *
@@ -105,23 +124,20 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     {
         $sequenceNameSql = <<<SQL
         SELECT
-            CASE
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM USER_TRIGGERS UT
-                    WHERE UT.TABLE_NAME = :tableName AND UT.TRIGGER_TYPE = 'BEFORE' AND UT.TRIGGER_NAME LIKE '%_SEQ'
-                )
-                THEN (
+            COALESCE(
+                (
                     SELECT TRIGGER_NAME AS SEQUENCE_NAME
                     FROM USER_TRIGGERS
-                    WHERE TABLE_NAME = :tableName AND TRIGGER_TYPE = 'BEFORE' AND TRIGGER_NAME LIKE '%_SEQ'
-                )
-                ELSE (
+                    WHERE TABLE_NAME = :tableName AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
+                    FETCH FIRST 1 ROW ONLY
+                ),
+                (
                     SELECT SEQUENCE_NAME
                     FROM USER_SEQUENCES
                     WHERE SEQUENCE_NAME LIKE :tableName || '%'
+                    FETCH FIRST 1 ROW ONLY
                 )
-            END AS SEQUENCE_NAME
+            ) AS SEQUENCE_NAME
         FROM DUAL
         SQL;
 

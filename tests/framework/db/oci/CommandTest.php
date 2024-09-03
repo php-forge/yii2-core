@@ -509,4 +509,39 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
     {
         $this->markTestSkipped('Should be fixed.');
     }
+
+    public function testBatchInsert(): void
+    {
+        $db = $this->getConnection(true);
+        $command = $db->createCommand();
+
+        $result = $db->getSchema()->addTriggerForIdentityColumn('customer', 'id');
+
+        $this->assertSame(0, $result);
+
+        $command->batchInsert(
+            'customer',
+            ['email', 'name', 'address'],
+            [
+                ['t1@example.com', 't1', 't1 address'],
+                ['t2@example.com', null, false],
+            ]
+        );
+
+        $this->assertEquals(2, $command->execute());
+
+        // @see https://github.com/yiisoft/yii2/issues/11693
+        $command = $this->getConnection()->createCommand();
+        $command->batchInsert(
+            'customer',
+            ['email', 'name', 'address'],
+            []
+        );
+
+        $this->assertEquals(0, $command->execute());
+
+        $ids = $db->createCommand('SELECT [[id]] FROM {{customer}}')->queryColumn();
+
+        $this->assertSame(["1", "2", "3"], $ids);
+    }
 }

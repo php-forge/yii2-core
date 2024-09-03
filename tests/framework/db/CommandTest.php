@@ -290,9 +290,10 @@ SQL;
         $this->assertTrue(\is_array($result) && isset($result[0]));
     }
 
-    public function testBatchInsertC()
+    public function testBatchInsert(): void
     {
         $command = $this->getConnection(true)->createCommand();
+
         $command->batchInsert(
             'customer',
             ['email', 'name', 'address'],
@@ -301,15 +302,18 @@ SQL;
                 ['t2@example.com', null, false],
             ]
         );
+
         $this->assertEquals(2, $command->execute());
 
         // @see https://github.com/yiisoft/yii2/issues/11693
         $command = $this->getConnection()->createCommand();
+
         $command->batchInsert(
             'customer',
             ['email', 'name', 'address'],
             []
         );
+
         $this->assertEquals(0, $command->execute());
     }
 

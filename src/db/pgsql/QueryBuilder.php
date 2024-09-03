@@ -372,28 +372,27 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function batchInsert($table, $columns, $rows, &$params = [])
+    public function batchInsert(string $table, array $columns, iterable $rows, array &$params = []): string
     {
         if (empty($rows)) {
             return '';
         }
 
-        $schema = $this->db->getSchema();
-        if (($tableSchema = $schema->getTableSchema($table)) !== null) {
-            $columnSchemas = $tableSchema->columns;
-        } else {
-            $columnSchemas = [];
-        }
+        $tableSchema = $this->db->getTableSchema($table);
 
+        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
         $values = [];
+
         foreach ($rows as $row) {
             $vs = [];
             foreach ($row as $i => $value) {
+
                 if (isset($columns[$i], $columnSchemas[$columns[$i]])) {
                     $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
                 }
+
                 if (is_string($value)) {
-                    $value = $schema->quoteValue($value);
+                    $value = $this->db->quoteValue($value);
                 } elseif (is_float($value)) {
                     // ensure type cast always has . as decimal separator in all locales
                     $value = StringHelper::floatToString($value);
@@ -406,19 +405,22 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 } elseif ($value instanceof ExpressionInterface) {
                     $value = $this->buildExpression($value, $params);
                 }
+
                 $vs[] = $value;
             }
+
             $values[] = '(' . implode(', ', $vs) . ')';
         }
+
         if (empty($values)) {
             return '';
         }
 
         foreach ($columns as $i => $name) {
-            $columns[$i] = $schema->quoteColumnName($name);
+            $columns[$i] = $this->db->quoteColumnName($name);
         }
 
-        return 'INSERT INTO ' . $schema->quoteTableName($table)
-        . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
+        return 'INSERT INTO ' . $this->db->quoteTableName($table)
+            . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
     }
 }

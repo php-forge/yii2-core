@@ -392,47 +392,28 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * Generates a batch INSERT SQL statement.
-     *
-     * For example,
-     *
-     * ```php
-     * $sql = $queryBuilder->batchInsert('user', ['name', 'age'], [
-     *     ['Tom', 30],
-     *     ['Jane', 20],
-     *     ['Linda', 25],
-     * ]);
-     * ```
-     *
-     * Note that the values in each row must match the corresponding column names.
-     *
-     * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column names
-     * @param array|\Generator $rows the rows to be batch inserted into the table
-     * @return string the batch INSERT SQL statement
+     * {@inheritdoc}
      */
-    public function batchInsert($table, $columns, $rows, &$params = [])
+    public function batchInsert(string $table, array $columns, iterable $rows, array &$params = []): string
     {
         if (empty($rows)) {
             return '';
         }
 
-        $schema = $this->db->getSchema();
-        if (($tableSchema = $schema->getTableSchema($table)) !== null) {
-            $columnSchemas = $tableSchema->columns;
-        } else {
-            $columnSchemas = [];
-        }
+        $tableSchema = $this->db->getTableSchema($table);
 
+        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
         $values = [];
+
         foreach ($rows as $row) {
             $vs = [];
             foreach ($row as $i => $value) {
                 if (isset($columns[$i], $columnSchemas[$columns[$i]])) {
                     $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
                 }
+
                 if (is_string($value)) {
-                    $value = $schema->quoteValue($value);
+                    $value = $this->db->quoteValue($value);
                 } elseif (is_float($value)) {
                     // ensure type cast always has . as decimal separator in all locales
                     $value = StringHelper::floatToString($value);
@@ -443,20 +424,22 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 } elseif ($value instanceof ExpressionInterface) {
                     $value = $this->buildExpression($value, $params);
                 }
+
                 $vs[] = $value;
             }
+
             $values[] = '(' . implode(', ', $vs) . ')';
         }
+
         if (empty($values)) {
             return '';
         }
 
         foreach ($columns as $i => $name) {
-            $columns[$i] = $schema->quoteColumnName($name);
+            $columns[$i] = $this->db->quoteColumnName($name);
         }
 
-        $tableAndColumns = ' INTO ' . $schema->quoteTableName($table)
-        . ' (' . implode(', ', $columns) . ') VALUES ';
+        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . ' (' . implode(', ', $columns) . ') VALUES ';
 
         return 'INSERT ALL ' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
     }
