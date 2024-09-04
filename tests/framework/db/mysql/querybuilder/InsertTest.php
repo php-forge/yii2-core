@@ -47,7 +47,9 @@ final class InsertTest extends \yiiunit\framework\db\querybuilder\AbstractInsert
         array $expectedParams
     ): void {
         $this->expectException(NotSupportedException::class);
-        $this->expectExceptionMessage('yii\db\mysql\QueryBuilder::insertWithReturningPks is not supported by Mysql.');
+        $this->expectExceptionMessage(
+            'yii\db\mysql\QueryBuilder::insertWithReturningPks is not supported by MySQL/MariaDB.'
+        );
 
         parent::testInsertWithReturningPks($table, $columns, $params, $expectedSQL, $expectedParams);
     }

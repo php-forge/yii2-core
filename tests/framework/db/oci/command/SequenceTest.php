@@ -22,15 +22,14 @@ final class SequenceTest extends \yiiunit\framework\db\command\AbstractSequence
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\oci\provider\QueryBuilderProvider::createSequence
+     * @dataProvider \yiiunit\framework\db\oci\provider\CommandProvider::createSequence
      */
     public function testExecuteCreateSequence(
         string $table,
         int $start,
         int $increment,
-        array $options,
-        string $expectSQL
+        array $options
     ): void {
-        parent::testExecuteCreateSequence($table, $start, $increment, $options, $expectSQL);
+        parent::testExecuteCreateSequence($table, $start, $increment, $options);
     }
 }

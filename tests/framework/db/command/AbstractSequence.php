@@ -22,8 +22,7 @@ abstract class AbstractSequence extends \yiiunit\TestCase
         string $table,
         int $start,
         int $increment,
-        array $options,
-        string $expectSQL
+        array $options
     ): void {
         $sequenceName = $table . '_SEQ';
 
