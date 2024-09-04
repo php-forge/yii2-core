@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\oci;
 
@@ -25,11 +22,8 @@ use yii\helpers\ArrayHelper;
 /**
  * Schema is the class for retrieving metadata from an Oracle database.
  *
- * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
- * the sequence object.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
+ * sequence object.
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -353,26 +347,38 @@ SQL;
     }
 
     /**
-     * Sequence name of table.
+     * Returns the name of the sequence associated with the table or not.
      *
-     * @param string $tableName
-     * @internal param \yii\db\TableSchema $table->name the table schema
-     * @return string|null whether the sequence exists
+     * @param string $tableOrSequence the table name or sequence name.
+     *
+     * @return string|null whether the sequence exists.
      */
-    protected function getTableSequenceName($tableName)
+    public function getSequenceName(string $tableOrSequence): string|null
     {
-        $sequenceNameSql = <<<'SQL'
-SELECT
-    UD.REFERENCED_NAME AS SEQUENCE_NAME
-FROM USER_DEPENDENCIES UD
-    JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-WHERE
-    UT.TABLE_NAME = :tableName
-    AND UD.TYPE = 'TRIGGER'
-    AND UD.REFERENCED_TYPE = 'SEQUENCE'
-SQL;
-        $sequenceName = $this->db->createCommand($sequenceNameSql, [':tableName' => $tableName])->queryScalar();
-        return $sequenceName === false ? null : $sequenceName;
+        $sql = <<<SQL
+        SELECT
+            COALESCE(
+                (
+                    SELECT TRIGGER_NAME AS SEQUENCE_NAME
+                    FROM USER_TRIGGERS
+                    WHERE TABLE_NAME = :tableOrSequence
+                        AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
+                    FETCH FIRST 1 ROW ONLY
+                ),
+                (
+                    SELECT SEQUENCE_NAME
+                    FROM USER_SEQUENCES
+                    WHERE SEQUENCE_NAME
+                        LIKE :tableOrSequence || '%'
+                    FETCH FIRST 1 ROW ONLY
+                )
+            ) AS SEQUENCE_NAME
+        FROM DUAL
+        SQL;
+
+        $result = $this->db->createCommand($sql, [':tableOrSequence' => $tableOrSequence])->queryScalar();
+
+        return $result === false ? null : $result;
     }
 
     /**
@@ -482,7 +488,7 @@ SQL;
                 $table->columns[$row['COLUMN_NAME']]->isPrimaryKey = true;
                 $table->primaryKey[] = $row['COLUMN_NAME'];
                 if (empty($table->sequenceName)) {
-                    $table->sequenceName = $this->getTableSequenceName($table->name);
+                    $table->sequenceName = $this->getSequenceName($table->name);
                 }
             }
 

@@ -546,6 +546,39 @@ class Command extends Component
     }
 
     /**
+     * Creates a SQL command for creating a new DB sequence.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return static the command object itself.
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): static
+    {
+        $sql = $this->db->getQueryBuilder()->createSequence($table, $start, $increment, $options);
+
+        return $this->setSql($sql);
+    }
+
+    /**
+     * Creates a SQL command for dropping a DB sequence.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     *
+     * @return static the command object itself.
+     */
+    public function dropSequence(string $table): static
+    {
+        $sql = $this->db->getQueryBuilder()->dropSequence($table);
+
+        return $this->setSql($sql);
+    }
+
+    /**
      * Creates a command to insert rows into a database table if
      * they do not already exist (matching unique constraints),
      * or update them if they do.

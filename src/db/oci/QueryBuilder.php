@@ -98,6 +98,59 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * If enabled, the `CACHE` option will be used to cache sequence values for better performance, example
+     * `cache` => `20`, will cache 20 sequence values. If `false` is provided, the `NOCACHE` option will be used.
+     * If enabled, the `CYCLE` option will be used to allow the sequence to restart once the maximal value is reached.
+     * If `false` is provided, the `NOCYCLE` option will be used.
+     * If enabled, the `MAXVALUE` option will be used to set the maximal value for the sequence. If `false` is provided,
+     * for default the `PHP_INT_MAX` value will be used.
+     * If enabled, the `MINVALUE` option will be used to set the minimal value for the sequence. If `false` is provided,
+     * for default the `start` value will be used.
+     *
+     * example:
+     *
+     * ```php
+     * $sql = $queryBuilder->createSequence(
+     *     'user',
+     *      1,
+     *      1,
+     *      [
+     *          'cache' => 20,
+     *          'cycle' => true,
+     *          'maxValue' => 1000,
+     *      ]
+     * );
+     * ```
+     *
+     * @return string the SQL statement for creating the sequence.
+     *
+     * @see https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/CREATE-SEQUENCE.html
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        $cache = $options['cache'] ?? false;
+        $cycle = $options['cycle'] ?? false;
+        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
+        $minValue = $options['minValue'] ?? $start;
+        $sequence = $this->db->quoteTableName("{$table}_SEQ");
+
+        return 'CREATE SEQUENCE ' . $sequence
+            . ' START WITH ' . $start
+            . ' MINVALUE ' . $minValue
+            . ' INCREMENT BY ' . $increment
+            . ' MAXVALUE ' . $maxValue
+            . ($cache !== false ? ' CACHE ' . $cache : ' NOCACHE')
+            . ($cycle !== false ? ' CYCLE' : ' NOCYCLE');
+    }
+
+    /**
      * Builds a SQL statement for renaming a DB table.
      *
      * @param string $table the table to be renamed. The name will be properly quoted by the method.

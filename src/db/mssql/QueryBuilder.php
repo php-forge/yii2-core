@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii\db\mssql;
 
+use SebastianBergmann\CodeCoverage\Report\PHP;
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\Expression;
@@ -90,6 +91,66 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         return $sql;
+    }
+
+    /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * If enabled, the `CACHE` option will be used to cache sequence values for better performance, example
+     * `cache` => `20`, will cache 20 sequence values. If `false` is provided, the `NOCACHE` option will be used.
+     * If enabled, the `CYCLE` option will be used to allow the sequence to restart once the maximal value is reached.
+     * If `false` is provided, the `NOCYCLE` option will be used.
+     * If enabled, the `MINVALUE` option will be used to set the minimal value for the sequence. If `false` is provided,
+     * the `NO MINVALUE` option will be used.
+     * If enabled, the `MAXVALUE` option will be used to set the maximal value for the sequence. If `false` is provided,
+     * for default the `PHP_INT_MAX` value will be used.
+     * If enabled, the `TYPE` option will be used to set the data type for the sequence. If `false` is provided, the
+     * default data type will be used.
+     *
+     * example:
+     *
+     * ```php
+     * $sql = $queryBuilder->createSequence(
+     *     'user',
+     *     1,
+     *     2,
+     *     [
+     *         'cache' => 20,
+     *         'cycle' => true,
+     *         'minValue' => 1,
+     *         'maxValue' => 100,
+     *         'type' => 'bigint',
+     *     ]
+     * );
+     *
+     * @return string the SQL statement for creating the sequence.
+     *
+     * @see https://learn.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver16
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        $cache = $options['cache'] ?? null;
+        $cycle = $options['cycle'] ?? null;
+        $minValue = $options['minValue'] ?? null;
+        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
+        $sequence = $this->db->quoteTableName($table . '_SEQ');
+        $type = $options['type'] ?? null;
+
+        return <<<SQL
+            CREATE SEQUENCE $sequence
+            $type !== null ? AS $type : ''
+            START WITH $start
+            INCREMENT BY $increment
+            $minValue !== null ? MINVALUE $minValue : 'NO MINVALUE'
+            $maxValue !== null ? MAXVALUE $maxValue : 'NO MAXVALUE'
+            $cycle !== null ? CYCLE : 'NO CYCLE'
+            $cache !== null ? CACHE $cache : 'NO CACHE';
+        SQL;
     }
 
     /**

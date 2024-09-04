@@ -128,6 +128,50 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
+     * generated based on the table name: `tablename_SEQ`.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * If enabled, the `CACHE` option will be used to cache sequence values for better performance, example
+     * `cache` => `20`, will cache 20 sequence values. If `false` is provided, the `NOCACHE` option will be used.
+     * If enabled, the `CYCLE` option will be used to allow the sequence to restart once the maximal value is reached.
+     * If `false` is provided, the `NOCYCLE` option will be used.
+     * If enabled, the `MINVALUE` option will be used to set the minimal value for the sequence. If `false` is provided,
+     * the `NO MINVALUE` option will be used. If not provided, the default value will be used.
+     * If enabled, the `MAXVALUE` option will be used to set the maximal value for the sequence. If `false` is provided,
+     * for default the `PHP_INT_MAX` value will be used.
+     * If enabled, the `TYPE` option will be used to set the sequence data type. If not provided, the default value will
+     * be used.
+     *
+     * @return string the SQL statement for creating the sequence.
+     *
+     * @see https://www.postgresql.org/docs/9.5/sql-createsequence.html
+     */
+    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        $cache = $options['cache'] ?? null;
+        $cycle = $options['cycle'] ?? null;
+        $minValue = $options['minValue'] ?? null;
+        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
+        $sequence = $this->db->quoteTableName($table . '_SEQ');
+        $type = $options['type'] ?? null;
+
+        return <<<SQL
+            CREATE SEQUENCE $sequence
+            $type != null ? AS $type : ''
+            INCREMENT BY $increment
+            $minValue != null ? MINVALUE $minValue : NO MINVALUE
+            $maxValue != null ? MAXVALUE $maxValue : NO MAXVALUE
+            START WITH $start
+            $cache != null ? CACHE $cache : NO CACHE
+            $cycle != null ? CYCLE : NO CYCLE
+        SQL;
+    }
+
+    /**
      * Builds a SQL statement for dropping an index.
      * @param string $name the name of the index to be dropped. The name will be properly quoted by the method.
      * @param string $table the table whose index is to be dropped. The name will be properly quoted by the method.
