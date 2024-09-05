@@ -176,8 +176,9 @@ SQL;
     {
         $tableSchema = $this->resolveTableName($table);
 
+        $this->findPrimaryKeys($tableSchema);
+
         if ($this->findColumns($tableSchema)) {
-            $this->findPrimaryKeys($tableSchema);
             $this->findForeignKeys($tableSchema);
 
             return $tableSchema;
