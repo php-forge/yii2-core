@@ -123,15 +123,16 @@ abstract class Schema extends BaseObject
      */
     private $_serverVersion;
 
-
     /**
      * Resolves the table name and schema name (if any).
-     * @param string $name the table name
+     *
+     * @param string $name the table name. The table name may contain schema name if any. Do not quote the table name.
+     *
      * @return TableSchema [[TableSchema]] with resolved table, schema, etc. names.
+     *
      * @throws NotSupportedException if this method is not supported by the DBMS.
-     * @since 2.0.13
      */
-    protected function resolveTableName($name)
+    protected function resolveTableName(string $name): TableSchema
     {
         throw new NotSupportedException(get_class($this) . ' does not support resolving table names.');
     }
@@ -164,10 +165,12 @@ abstract class Schema extends BaseObject
 
     /**
      * Loads the metadata for the specified table.
-     * @param string $name table name
+     *
+     * @param string $table table name.
+     *
      * @return TableSchema|null DBMS-dependent table metadata, `null` if the table does not exist.
      */
-    abstract protected function loadTableSchema($name);
+    abstract protected function loadTableSchema(string $table): TableSchema|null;
 
     /**
      * Creates a column schema for the database.

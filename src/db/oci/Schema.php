@@ -19,6 +19,13 @@ use yii\db\IndexConstraint;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
+use function array_change_key_case;
+use function array_keys;
+use function array_merge;
+use function array_reverse;
+use function count;
+use function implode;
+
 /**
  * Schema is the class for retrieving metadata from an Oracle database.
  *
@@ -46,7 +53,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected array|string $tableQuoteCharacter = '"';
 
-
     /**
      * {@inheritdoc}
      */
@@ -64,36 +70,16 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * {@inheritdoc}
-     */
-    protected function resolveTableName($name)
-    {
-        $resolvedName = new TableSchema();
-        $parts = explode('.', str_replace('"', '', $name));
-        if (isset($parts[1])) {
-            $resolvedName->schemaName = $parts[0];
-            $resolvedName->name = $parts[1];
-        } else {
-            $resolvedName->schemaName = $this->defaultSchema;
-            $resolvedName->name = $name;
-        }
-        $resolvedName->fullName = ($resolvedName->schemaName !== $this->defaultSchema ? $resolvedName->schemaName . '.' : '') . $resolvedName->name;
-        return $resolvedName;
-    }
-
-    /**
-     * {@inheritdoc}
+     *
      * @see https://docs.oracle.com/cd/B28359_01/server.111/b28337/tdpsg_user_accounts.htm
      */
-    protected function findSchemaNames()
+    protected function findSchemaNames(): array
     {
-        static $sql = <<<'SQL'
-SELECT "u"."USERNAME"
-FROM "DBA_USERS" "u"
-WHERE "u"."DEFAULT_TABLESPACE" NOT IN ('SYSTEM', 'SYSAUX')
-ORDER BY "u"."USERNAME" ASC
-SQL;
-
-        return $this->db->createCommand($sql)->queryColumn();
+        return $this->db->createCommand(
+            <<<SQL
+            SELECT [[USERNAME]] FROM [[ALL_USERS]] ORDER BY [[USERNAME]] ASC
+            SQL
+        )->queryColumn();
     }
 
     /**
@@ -145,13 +131,14 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    protected function loadTableSchema($name)
+    protected function loadTableSchema(string $name): TableSchema|null
     {
-        $table = new TableSchema();
-        $this->resolveTableNames($table, $name);
-        if ($this->findColumns($table)) {
-            $this->findConstraints($table);
-            return $table;
+        $tableSchema = $this->resolveTableName($name);
+
+        if ($this->findColumns($tableSchema)) {
+            $this->findConstraints($tableSchema);
+
+            return $tableSchema;
         }
 
         return null;
@@ -272,23 +259,24 @@ SQL;
     }
 
     /**
-     * Resolves the table name and schema name (if any).
-     *
-     * @param TableSchema $table the table metadata object
-     * @param string $name the table name
+     * {@inheritdoc}
      */
-    protected function resolveTableNames($table, $name)
+    protected function resolveTableName(string $name): TableSchema
     {
-        $parts = explode('.', str_replace('"', '', $name));
-        if (isset($parts[1])) {
-            $table->schemaName = $parts[0];
-            $table->name = $parts[1];
+        $tableSchema = new TableSchema();
+
+        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+
+        $tableSchema->name = $parts[0] ?? '';
+        $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
+
+        if ($tableSchema->schemaName !== $this->defaultSchema) {
+            $tableSchema->fullName = implode('.', array_reverse($parts));
         } else {
-            $table->schemaName = $this->defaultSchema;
-            $table->name = $name;
+            $tableSchema->fullName = $tableSchema->name;
         }
 
-        $table->fullName = $table->schemaName !== $this->defaultSchema ? $table->schemaName . '.' . $table->name : $table->name;
+        return $tableSchema;
     }
 
     /**

@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\sqlite;
 
@@ -22,14 +19,18 @@ use yii\db\TableSchema;
 use yii\db\Transaction;
 use yii\helpers\ArrayHelper;
 
+use function explode;
+use function preg_match;
+use function strtolower;
+use function strncmp;
+use function strpos;
+use function trim;
+
 /**
  * Schema is the class for retrieving metadata from a SQLite (2/3) database.
  *
- * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
- * transaction. This can be either [[Transaction::READ_UNCOMMITTED]] or [[Transaction::SERIALIZABLE]].
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * @property-write string $transactionIsolationLevel The transaction isolation level to use for this transaction.
+ * This can be either [[Transaction::READ_UNCOMMITTED]] or [[Transaction::SERIALIZABLE]].
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -78,7 +79,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected array|string $columnQuoteCharacter = '`';
 
-
     /**
      * {@inheritdoc}
      */
@@ -91,15 +91,16 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    protected function loadTableSchema($name)
+    protected function loadTableSchema(string $name): TableSchema|null
     {
-        $table = new TableSchema();
-        $table->name = $name;
-        $table->fullName = $name;
+        $tableSchema = new TableSchema();
 
-        if ($this->findColumns($table)) {
-            $this->findConstraints($table);
-            return $table;
+        $tableSchema->name = $name;
+        $tableSchema->fullName = $name;
+
+        if ($this->findColumns($tableSchema)) {
+            $this->findConstraints($tableSchema);
+            return $tableSchema;
         }
 
         return null;
