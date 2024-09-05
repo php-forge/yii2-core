@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mysql;
 
@@ -21,11 +18,21 @@ use yii\db\IndexConstraint;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
+use function array_reverse;
+use function array_values;
+use function bindec;
+use function implode;
+use function in_array;
+use function preg_match_all;
+use function preg_match;
+use function stripos;
+use function strpos;
+use function strtolower;
+use function trim;
+use function version_compare;
+
 /**
  * Schema is the class for retrieving metadata from a MySQL database (version 4.1.x and 5.x).
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -95,24 +102,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    protected function resolveTableName($name)
-    {
-        $resolvedName = new TableSchema();
-        $parts = explode('.', str_replace('`', '', $name));
-        if (isset($parts[1])) {
-            $resolvedName->schemaName = $parts[0];
-            $resolvedName->name = $parts[1];
-        } else {
-            $resolvedName->schemaName = $this->defaultSchema;
-            $resolvedName->name = $name;
-        }
-        $resolvedName->fullName = ($resolvedName->schemaName !== $this->defaultSchema ? $resolvedName->schemaName . '.' : '') . $resolvedName->name;
-        return $resolvedName;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     protected function findTableNames($schema = '')
     {
         $sql = 'SHOW TABLES';
@@ -126,14 +115,14 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    protected function loadTableSchema($name)
+    protected function loadTableSchema(string $table): TableSchema|null
     {
-        $table = new TableSchema();
-        $this->resolveTableNames($table, $name);
+        $tableSchema = $this->resolveTableName($table);
 
-        if ($this->findColumns($table)) {
-            $this->findConstraints($table);
-            return $table;
+        if ($this->findColumns($tableSchema)) {
+            $this->findConstraints($tableSchema);
+
+            return $tableSchema;
         }
 
         return null;
@@ -262,20 +251,24 @@ SQL;
     }
 
     /**
-     * Resolves the table name and schema name (if any).
-     * @param TableSchema $table the table metadata object
-     * @param string $name the table name
+     * {@inheritdoc}
      */
-    protected function resolveTableNames($table, $name)
+    protected function resolveTableName(string $name): TableSchema
     {
-        $parts = explode('.', str_replace('`', '', $name));
-        if (isset($parts[1])) {
-            $table->schemaName = $parts[0];
-            $table->name = $parts[1];
-            $table->fullName = $table->schemaName . '.' . $table->name;
+        $tableSchema = new TableSchema();
+
+        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+
+        $tableSchema->name = $parts[0] ?? '';
+        $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
+
+        if ($tableSchema->schemaName !== $this->defaultSchema) {
+            $tableSchema->fullName = implode('.', array_reverse($parts));
         } else {
-            $table->fullName = $table->name = $parts[0];
+            $tableSchema->fullName = $tableSchema->name;
         }
+
+        return $tableSchema;
     }
 
     /**

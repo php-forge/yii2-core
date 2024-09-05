@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mssql;
 
@@ -18,11 +15,16 @@ use yii\db\IndexConstraint;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
+use function array_reverse;
+use function explode;
+use function implode;
+use function is_array;
+use function preg_match;
+use function str_replace;
+use function stripos;
+
 /**
  * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
- *
- * @author Timur Ruziev <resurtm@gmail.com>
- * @since 2.0
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -93,41 +95,24 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected array|string $columnQuoteCharacter = ['[', ']'];
 
-
-    /**
-     * Resolves the table name and schema name (if any).
-     * @param string $name the table name
-     * @return TableSchema resolved table, schema, etc. names.
-     */
-    protected function resolveTableName($name)
+    protected function resolveTableName(string $name): TableSchema
     {
-        $resolvedName = new TableSchema();
-        $parts = $this->getTableNameParts($name);
-        $partCount = count($parts);
-        if ($partCount === 4) {
-            // server name, catalog name, schema name and table name passed
-            $resolvedName->catalogName = $parts[1];
-            $resolvedName->schemaName = $parts[2];
-            $resolvedName->name = $parts[3];
-            $resolvedName->fullName = $resolvedName->catalogName . '.' . $resolvedName->schemaName . '.' . $resolvedName->name;
-        } elseif ($partCount === 3) {
-            // catalog name, schema name and table name passed
-            $resolvedName->catalogName = $parts[0];
-            $resolvedName->schemaName = $parts[1];
-            $resolvedName->name = $parts[2];
-            $resolvedName->fullName = $resolvedName->catalogName . '.' . $resolvedName->schemaName . '.' . $resolvedName->name;
-        } elseif ($partCount === 2) {
-            // only schema name and table name passed
-            $resolvedName->schemaName = $parts[0];
-            $resolvedName->name = $parts[1];
-            $resolvedName->fullName = ($resolvedName->schemaName !== $this->defaultSchema ? $resolvedName->schemaName . '.' : '') . $resolvedName->name;
+        $tableSchema = new TableSchema();
+
+        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+
+        $tableSchema->name = $parts[0] ?? '';
+        $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
+        $tableSchema->catalogName = $parts[2] ?? null;
+        $tableSchema->serverName = $parts[3] ?? null;
+
+        if ($tableSchema->catalogName === null && $tableSchema->schemaName === $this->defaultSchema) {
+            $tableSchema->fullName = $parts[0];
         } else {
-            // only table name passed
-            $resolvedName->schemaName = $this->defaultSchema;
-            $resolvedName->fullName = $resolvedName->name = $parts[0];
+            $tableSchema->fullName = implode('.', array_reverse($parts));
         }
 
-        return $resolvedName;
+        return $tableSchema;
     }
 
     /**
@@ -187,14 +172,16 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    protected function loadTableSchema($name)
+    protected function loadTableSchema(string $table): TableSchema|null
     {
-        $table = new TableSchema();
-        $this->resolveTableNames($table, $name);
-        $this->findPrimaryKeys($table);
-        if ($this->findColumns($table)) {
-            $this->findForeignKeys($table);
-            return $table;
+        $tableSchema = $this->resolveTableName($table);
+
+        $this->findPrimaryKeys($tableSchema);
+
+        if ($this->findColumns($tableSchema)) {
+            $this->findForeignKeys($tableSchema);
+
+            return $tableSchema;
         }
 
         return null;
@@ -333,39 +320,6 @@ SQL;
     public function createQueryBuilder()
     {
         return Yii::createObject(QueryBuilder::className(), [$this->db]);
-    }
-
-    /**
-     * Resolves the table name and schema name (if any).
-     * @param TableSchema $table the table metadata object
-     * @param string $name the table name
-     */
-    protected function resolveTableNames($table, $name)
-    {
-        $parts = $this->getTableNameParts($name);
-        $partCount = count($parts);
-        if ($partCount === 4) {
-            // server name, catalog name, schema name and table name passed
-            $table->catalogName = $parts[1];
-            $table->schemaName = $parts[2];
-            $table->name = $parts[3];
-            $table->fullName = $table->catalogName . '.' . $table->schemaName . '.' . $table->name;
-        } elseif ($partCount === 3) {
-            // catalog name, schema name and table name passed
-            $table->catalogName = $parts[0];
-            $table->schemaName = $parts[1];
-            $table->name = $parts[2];
-            $table->fullName = $table->catalogName . '.' . $table->schemaName . '.' . $table->name;
-        } elseif ($partCount === 2) {
-            // only schema name and table name passed
-            $table->schemaName = $parts[0];
-            $table->name = $parts[1];
-            $table->fullName = $table->schemaName !== $this->defaultSchema ? $table->schemaName . '.' . $table->name : $table->name;
-        } else {
-            // only table name passed
-            $table->schemaName = $this->defaultSchema;
-            $table->fullName = $table->name = $parts[0];
-        }
     }
 
     /**
