@@ -55,11 +55,6 @@ class TableSchema extends BaseObject
      * column names.
      */
     public array $columns = [];
-    /**
-     * @var string|null the name of the server that this table belongs to. Defaults to null, meaning no server (or the
-     * current server).
-     */
-    public string|null $serverName = null;
 
     /**
      * Gets the named column metadata.
