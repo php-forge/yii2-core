@@ -461,6 +461,10 @@ SQL;
                 }
             }
 
+            if ($column->isPrimaryKey && $column->autoIncrement) {
+                $table->sequenceName = '';
+            }
+
             $table->columns[$column->name] = $column;
         }
 
