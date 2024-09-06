@@ -324,10 +324,12 @@ SQL;
 
     /**
      * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
+     *
+     * @param array $info column information.
+     *
      * @return ColumnSchema the column schema object
      */
-    protected function loadColumnSchema($info)
+    protected function loadColumnSchema(array $info): ColumnSchema
     {
         $column = $this->createColumnSchema();
 
@@ -337,7 +339,7 @@ SQL;
         $column->enumValues = []; // mssql has only vague equivalents to enum
         $column->isPrimaryKey = null; // primary key will be determined in findColumns() method
         $column->autoIncrement = $info['is_identity'] == 1;
-        $column->isComputed = (bool)$info['is_computed'];
+        $column->isComputed = (bool) $info['is_computed'];
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
         $column->comment = $info['comment'] === null ? '' : $info['comment'];
 
@@ -381,71 +383,84 @@ SQL;
 
     /**
      * Collects the metadata of table columns.
-     * @param TableSchema $table the table metadata
-     * @return bool whether the table exists in the database
+     *
+     * @param TableSchema $table the table metadata.
+     *
+     * @return bool whether the table exists in the database.
      */
-    protected function findColumns($table)
+    protected function findColumns(TableSchema $table): bool
     {
         $columnsTableName = 'INFORMATION_SCHEMA.COLUMNS';
+
         $whereSql = '[t1].[table_name] = ' . $this->db->quoteValue($table->name);
+
         if ($table->catalogName !== null) {
             $columnsTableName = "{$table->catalogName}.{$columnsTableName}";
             $whereSql .= " AND [t1].[table_catalog] = '{$table->catalogName}'";
         }
+
         if ($table->schemaName !== null) {
             $whereSql .= " AND [t1].[table_schema] = '{$table->schemaName}'";
         }
+
         $columnsTableName = $this->quoteTableName($columnsTableName);
 
         $sql = <<<SQL
-SELECT
- [t1].[column_name],
- [t1].[is_nullable],
- CASE WHEN [t1].[data_type] IN ('char','varchar','nchar','nvarchar','binary','varbinary') THEN
-    CASE WHEN [t1].[character_maximum_length] = NULL OR [t1].[character_maximum_length] = -1 THEN
-        [t1].[data_type]
-    ELSE
-        [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[character_maximum_length]))) + ')'
-    END
- ELSE
-    [t1].[data_type]
- END AS 'data_type',
- [t1].[column_default],
- COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsIdentity') AS is_identity,
- COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsComputed') AS is_computed,
- (
-    SELECT CONVERT(VARCHAR, [t2].[value])
-		FROM [sys].[extended_properties] AS [t2]
-		WHERE
-			[t2].[class] = 1 AND
-			[t2].[class_desc] = 'OBJECT_OR_COLUMN' AND
-			[t2].[name] = 'MS_Description' AND
-			[t2].[major_id] = OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[table_name]) AND
-			[t2].[minor_id] = COLUMNPROPERTY(OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[TABLE_NAME]), [t1].[COLUMN_NAME], 'ColumnID')
- ) as comment
-FROM {$columnsTableName} AS [t1]
-WHERE {$whereSql}
-SQL;
+        SELECT
+            [t1].[column_name],
+            [t1].[is_nullable],
+        CASE WHEN [t1].[data_type] IN ('char','varchar','nchar','nvarchar','binary','varbinary') THEN
+        CASE WHEN [t1].[character_maximum_length] = NULL OR [t1].[character_maximum_length] = -1 THEN
+            [t1].[data_type]
+        ELSE
+            [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[character_maximum_length]))) + ')'
+        END
+        WHEN [t1].[data_type] IN ('decimal','numeric') THEN
+        CASE WHEN [t1].[numeric_precision] = NULL OR [t1].[numeric_precision] = -1 THEN
+            [t1].[data_type]
+        ELSE
+            [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[numeric_precision]))) + ',' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[numeric_scale]))) + ')'
+        END
+        ELSE
+            [t1].[data_type]
+        END AS 'data_type',
+        [t1].[column_default],
+        COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsIdentity') AS is_identity,
+        COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsComputed') AS is_computed,
+        (
+            SELECT CONVERT(VARCHAR, [t2].[value])
+            FROM [sys].[extended_properties] AS [t2]
+            WHERE
+                [t2].[class] = 1 AND
+                [t2].[class_desc] = 'OBJECT_OR_COLUMN' AND
+                [t2].[name] = 'MS_Description' AND
+                [t2].[major_id] = OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[table_name]) AND
+                [t2].[minor_id] = COLUMNPROPERTY(OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[TABLE_NAME]), [t1].[COLUMN_NAME], 'ColumnID')
+        ) as comment
+        FROM $columnsTableName AS [t1]
+        WHERE $whereSql
+        SQL;
 
         try {
             $columns = $this->db->createCommand($sql)->queryAll();
+
             if (empty($columns)) {
                 return false;
             }
         } catch (\Exception $e) {
             return false;
         }
+
         foreach ($columns as $column) {
             $column = $this->loadColumnSchema($column);
+
             foreach ($table->primaryKey as $primaryKey) {
                 if (strcasecmp($column->name, $primaryKey) === 0) {
                     $column->isPrimaryKey = true;
                     break;
                 }
             }
-            if ($column->isPrimaryKey && $column->autoIncrement) {
-                $table->sequenceName = '';
-            }
+
             $table->columns[$column->name] = $column;
         }
 
