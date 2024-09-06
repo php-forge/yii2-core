@@ -991,6 +991,18 @@ class Connection extends Component
     }
 
     /**
+     * Checks if a table exists.
+     *
+     * @param string $name table name.
+     *
+     * @return bool whether a table exists in the database.
+     */
+    public function hasTable(string $name): bool
+    {
+        return $this->getSchema()->getTableSchema($name, true) !== null;
+    }
+
+    /**
      * Returns the ID of the last inserted row or sequence value.
      *
      * @param string $sequenceName name of the sequence object (required by some DBMS).

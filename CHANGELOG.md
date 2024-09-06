@@ -27,6 +27,7 @@ Yii Core version 2 Change Log
 - Enh #84: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
 - Enh #86: Remove unnecesary `resolveTableNames()` and refactor `resolveTableName()` in `Schema::class` in `MSSQL`, `MYSQL`, `OCI`, `PGSQL` (@terabytesoftw)
 - Enh #87: Refactor `TableSchema::class` in `MSSQL` (@terabytesoftw)
+- Enh #88: Implement `hasTable()` method in `Connection::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
