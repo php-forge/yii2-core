@@ -22,7 +22,12 @@ abstract class AbstractConnection extends \yiiunit\TestCase
     public function testHasTable(): void
     {
         $tableName = 'T_table';
-        $this->assertFalse($this->db->hasTable($tableName));
+
+        if ($this->db->hasTable($tableName)) {
+            $result = $this->db->createCommand()->dropTable($tableName)->execute();
+
+            $this->assertSame(0, $result);
+        }
 
         $result = $this->db->createCommand()->createTable(
             $tableName,
@@ -33,11 +38,13 @@ abstract class AbstractConnection extends \yiiunit\TestCase
         )->execute();
 
         $this->assertSame(0, $result);
-
         $this->assertTrue($this->db->hasTable($tableName));
+        $this->assertNotNull($this->db->getTableSchema($tableName));
 
         $result = $this->db->createCommand()->dropTable($tableName)->execute();
 
         $this->assertSame(0, $result);
+        $this->assertFalse($this->db->hasTable($tableName));
+        $this->assertNull($this->db->getTableSchema($tableName));
     }
 }
