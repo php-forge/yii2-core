@@ -24,7 +24,12 @@ Yii Core version 2 Change Log
 - Bug #75: Refactor `prepareInsertValues()` method in `QueryBuilder::class` to accept `TableSchema` object (@terabytesoftw)
 - Bug #77: Add support for test `Oracle` 18, 21 (@terabytesoftw)
 - Bug #78: Fix test case for `getSchemaNames()` method in `SchemaTest::class` in `Oracle` (@terabytesoftw)
-- Enh #83: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
+- Enh #84: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
+- Enh #86: Remove unnecesary `resolveTableNames()` and refactor `resolveTableName()` in `Schema::class` in `MSSQL`, `MYSQL`, `OCI`, `PGSQL` (@terabytesoftw)
+- Enh #87: Refactor `TableSchema::class` in `MSSQL` (@terabytesoftw)
+- Enh #88: Implement `hasTable()` method in `Connection::class` (@terabytesoftw)
+- Enh #89: Refactor `AbstractConnection::class` test case for `hasTable()` method (@terabytesoftw)
+- Enh #90: Refactor `findColums()` in  `MSSQL` `Schema::class`, add support for `size` and `precision` for `float` and numeric data type (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

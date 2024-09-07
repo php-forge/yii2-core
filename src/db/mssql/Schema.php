@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\mssql;
 
@@ -18,11 +15,16 @@ use yii\db\IndexConstraint;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
+use function array_reverse;
+use function explode;
+use function implode;
+use function is_array;
+use function preg_match;
+use function str_replace;
+use function stripos;
+
 /**
  * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
- *
- * @author Timur Ruziev <resurtm@gmail.com>
- * @since 2.0
  */
 class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
@@ -93,41 +95,24 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected array|string $columnQuoteCharacter = ['[', ']'];
 
-
-    /**
-     * Resolves the table name and schema name (if any).
-     * @param string $name the table name
-     * @return TableSchema resolved table, schema, etc. names.
-     */
-    protected function resolveTableName($name)
+    protected function resolveTableName(string $name): TableSchema
     {
-        $resolvedName = new TableSchema();
-        $parts = $this->getTableNameParts($name);
-        $partCount = count($parts);
-        if ($partCount === 4) {
-            // server name, catalog name, schema name and table name passed
-            $resolvedName->catalogName = $parts[1];
-            $resolvedName->schemaName = $parts[2];
-            $resolvedName->name = $parts[3];
-            $resolvedName->fullName = $resolvedName->catalogName . '.' . $resolvedName->schemaName . '.' . $resolvedName->name;
-        } elseif ($partCount === 3) {
-            // catalog name, schema name and table name passed
-            $resolvedName->catalogName = $parts[0];
-            $resolvedName->schemaName = $parts[1];
-            $resolvedName->name = $parts[2];
-            $resolvedName->fullName = $resolvedName->catalogName . '.' . $resolvedName->schemaName . '.' . $resolvedName->name;
-        } elseif ($partCount === 2) {
-            // only schema name and table name passed
-            $resolvedName->schemaName = $parts[0];
-            $resolvedName->name = $parts[1];
-            $resolvedName->fullName = ($resolvedName->schemaName !== $this->defaultSchema ? $resolvedName->schemaName . '.' : '') . $resolvedName->name;
+        $tableSchema = new TableSchema();
+
+        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+
+        $tableSchema->name = $parts[0] ?? '';
+        $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
+        $tableSchema->catalogName = $parts[2] ?? null;
+        $tableSchema->serverName = $parts[3] ?? null;
+
+        if ($tableSchema->catalogName === null && $tableSchema->schemaName === $this->defaultSchema) {
+            $tableSchema->fullName = $parts[0];
         } else {
-            // only table name passed
-            $resolvedName->schemaName = $this->defaultSchema;
-            $resolvedName->fullName = $resolvedName->name = $parts[0];
+            $tableSchema->fullName = implode('.', array_reverse($parts));
         }
 
-        return $resolvedName;
+        return $tableSchema;
     }
 
     /**
@@ -187,16 +172,16 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    protected function loadTableSchema($name)
+    protected function loadTableSchema(string $table): TableSchema|null
     {
-        $table = new TableSchema();
+        $tableSchema = $this->resolveTableName($table);
 
-        $this->resolveTableNames($table, $name);
-        $this->findPrimaryKeys($table);
+        $this->findPrimaryKeys($tableSchema);
 
-        if ($this->findColumns($table)) {
-            $this->findForeignKeys($table);
-            return $table;
+        if ($this->findColumns($tableSchema)) {
+            $this->findForeignKeys($tableSchema);
+
+            return $tableSchema;
         }
 
         return null;
@@ -338,44 +323,13 @@ SQL;
     }
 
     /**
-     * Resolves the table name and schema name (if any).
-     * @param TableSchema $table the table metadata object
-     * @param string $name the table name
-     */
-    protected function resolveTableNames($table, $name)
-    {
-        $parts = $this->getTableNameParts($name);
-        $partCount = count($parts);
-        if ($partCount === 4) {
-            // server name, catalog name, schema name and table name passed
-            $table->catalogName = $parts[1];
-            $table->schemaName = $parts[2];
-            $table->name = $parts[3];
-            $table->fullName = $table->catalogName . '.' . $table->schemaName . '.' . $table->name;
-        } elseif ($partCount === 3) {
-            // catalog name, schema name and table name passed
-            $table->catalogName = $parts[0];
-            $table->schemaName = $parts[1];
-            $table->name = $parts[2];
-            $table->fullName = $table->catalogName . '.' . $table->schemaName . '.' . $table->name;
-        } elseif ($partCount === 2) {
-            // only schema name and table name passed
-            $table->schemaName = $parts[0];
-            $table->name = $parts[1];
-            $table->fullName = $table->schemaName !== $this->defaultSchema ? $table->schemaName . '.' . $table->name : $table->name;
-        } else {
-            // only table name passed
-            $table->schemaName = $this->defaultSchema;
-            $table->fullName = $table->name = $parts[0];
-        }
-    }
-
-    /**
      * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
+     *
+     * @param array $info column information.
+     *
      * @return ColumnSchema the column schema object
      */
-    protected function loadColumnSchema($info)
+    protected function loadColumnSchema(array $info): ColumnSchema
     {
         $column = $this->createColumnSchema();
 
@@ -385,7 +339,7 @@ SQL;
         $column->enumValues = []; // mssql has only vague equivalents to enum
         $column->isPrimaryKey = null; // primary key will be determined in findColumns() method
         $column->autoIncrement = $info['is_identity'] == 1;
-        $column->isComputed = (bool)$info['is_computed'];
+        $column->isComputed = (bool) $info['is_computed'];
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
         $column->comment = $info['comment'] === null ? '' : $info['comment'];
 
@@ -429,50 +383,62 @@ SQL;
 
     /**
      * Collects the metadata of table columns.
-     * @param TableSchema $table the table metadata
-     * @return bool whether the table exists in the database
+     *
+     * @param TableSchema $table the table metadata.
+     *
+     * @return bool whether the table exists in the database.
      */
-    protected function findColumns($table)
+    protected function findColumns(TableSchema $table): bool
     {
         $columnsTableName = 'INFORMATION_SCHEMA.COLUMNS';
+
         $whereSql = '[t1].[table_name] = ' . $this->db->quoteValue($table->name);
+
         if ($table->catalogName !== null) {
             $columnsTableName = "{$table->catalogName}.{$columnsTableName}";
             $whereSql .= " AND [t1].[table_catalog] = '{$table->catalogName}'";
         }
+
         if ($table->schemaName !== null) {
             $whereSql .= " AND [t1].[table_schema] = '{$table->schemaName}'";
         }
+
         $columnsTableName = $this->quoteTableName($columnsTableName);
 
         $sql = <<<SQL
         SELECT
             [t1].[column_name],
             [t1].[is_nullable],
-            CASE WHEN [t1].[data_type] IN ('char','varchar','nchar','nvarchar','binary','varbinary') THEN
-                CASE WHEN [t1].[character_maximum_length] IS NULL OR [t1].[character_maximum_length] = -1 THEN
-                    [t1].[data_type]
-                ELSE
-                    [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR, [t1].[character_maximum_length]))) + ')'
-                END
-            ELSE
-                [t1].[data_type]
-            END AS 'data_type',
-            [t1].[column_default],
-            COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsIdentity') AS is_identity,
-            COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsComputed') AS is_computed,
-            (
-                SELECT CONVERT(VARCHAR, [t2].[value])
-                FROM [sys].[extended_properties] AS [t2]
-                WHERE
-                    [t2].[class] = 1 AND
-                    [t2].[class_desc] = 'OBJECT_OR_COLUMN' AND
-                    [t2].[name] = 'MS_Description' AND
-                    [t2].[major_id] = OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[table_name]) AND
-                    [t2].[minor_id] = COLUMNPROPERTY(OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[TABLE_NAME]), [t1].[COLUMN_NAME], 'ColumnID')
-            ) AS comment
-        FROM {$columnsTableName} AS [t1]
-        WHERE {$whereSql}
+        CASE WHEN [t1].[data_type] IN ('char','varchar','nchar','nvarchar','binary','varbinary') THEN
+        CASE WHEN [t1].[character_maximum_length] = NULL OR [t1].[character_maximum_length] = -1 THEN
+            [t1].[data_type]
+        ELSE
+            [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[character_maximum_length]))) + ')'
+        END
+        WHEN [t1].[data_type] IN ('decimal','numeric') THEN
+        CASE WHEN [t1].[numeric_precision] = NULL OR [t1].[numeric_precision] = -1 THEN
+            [t1].[data_type]
+        ELSE
+            [t1].[data_type] + '(' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[numeric_precision]))) + ',' + LTRIM(RTRIM(CONVERT(CHAR,[t1].[numeric_scale]))) + ')'
+        END
+        ELSE
+            [t1].[data_type]
+        END AS 'data_type',
+        [t1].[column_default],
+        COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsIdentity') AS is_identity,
+        COLUMNPROPERTY(OBJECT_ID([t1].[table_schema] + '.' + [t1].[table_name]), [t1].[column_name], 'IsComputed') AS is_computed,
+        (
+            SELECT CONVERT(VARCHAR, [t2].[value])
+            FROM [sys].[extended_properties] AS [t2]
+            WHERE
+                [t2].[class] = 1 AND
+                [t2].[class_desc] = 'OBJECT_OR_COLUMN' AND
+                [t2].[name] = 'MS_Description' AND
+                [t2].[major_id] = OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[table_name]) AND
+                [t2].[minor_id] = COLUMNPROPERTY(OBJECT_ID([t1].[TABLE_SCHEMA] + '.' + [t1].[TABLE_NAME]), [t1].[COLUMN_NAME], 'ColumnID')
+        ) as comment
+        FROM $columnsTableName AS [t1]
+        WHERE $whereSql
         SQL;
 
         try {
@@ -487,6 +453,7 @@ SQL;
 
         foreach ($columns as $column) {
             $column = $this->loadColumnSchema($column);
+
             foreach ($table->primaryKey as $primaryKey) {
                 if (strcasecmp($column->name, $primaryKey) === 0) {
                     $column->isPrimaryKey = true;
