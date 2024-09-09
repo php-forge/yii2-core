@@ -122,7 +122,6 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $columns['tinyint_col']['dbType'] = 'tinyint';
         $columns['smallint_col']['dbType'] = 'smallint';
         $columns['float_col']['dbType'] = 'decimal(4,3)';
-        $columns['float_col']['phpType'] = 'string';
         $columns['float_col']['type'] = 'decimal';
         $columns['float_col2']['dbType'] = 'float';
         $columns['float_col2']['phpType'] = 'double';
