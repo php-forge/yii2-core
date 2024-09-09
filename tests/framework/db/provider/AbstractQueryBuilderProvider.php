@@ -75,7 +75,7 @@ abstract class AbstractQueryBuilderProvider
                 [[null, new Expression('now()')], [null, new Expression('now()')]],
                 'expected' => DbHelper::replaceQuotes(
                     <<<SQL
-                    INSERT INTO {{%type}} ([[float_col]], [[time]]) VALUES (:qp0, now()), (:qp1, now())
+                    INSERT INTO [[type]] ([[float_col]], [[time]]) VALUES (:qp0, now()), (:qp1, now())
                     SQL,
                     static::$driverName,
                 ),
@@ -87,7 +87,7 @@ abstract class AbstractQueryBuilderProvider
                 [[false, new Expression('now()')]],
                 'expected' => DbHelper::replaceQuotes(
                     <<<SQL
-                    INSERT INTO {{%type}} ([[bool_col]], [[time]]) VALUES (:qp0, now())
+                    INSERT INTO [[type]] ([[bool_col]], [[time]]) VALUES (:qp0, now())
                     SQL,
                     static::$driverName,
                 ),

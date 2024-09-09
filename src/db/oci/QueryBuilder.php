@@ -337,24 +337,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
-     */
-    public function batchInsert(string $table, array $columns, iterable|Generator $rows, array &$params = []): string
-    {
-        $table = $this->db->quoteSql($table);
-
-        [$columns, $values] = $this->prepareBatchInsertColumnsAndValues($table, $columns, $rows, $params);
-
-        if (empty($columns) || empty($values)) {
-            return '';
-        }
-
-        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . ' (' . implode(', ', $columns) . ') VALUES ';
-
-        return 'INSERT ALL' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
-    }
-
-    /**
-     * {@inheritdoc}
      * @since 2.0.8
      */
     public function selectExists($rawSql)
@@ -418,5 +400,15 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         return $sql . ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function buildBatchInsertSql(string $table, array $columns, array $values): string
+    {
+        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . ' (' . implode(', ', $columns) . ') VALUES ';
+
+        return 'INSERT ALL' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
     }
 }
