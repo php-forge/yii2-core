@@ -477,13 +477,11 @@ class QueryBuilder extends \yii\base\BaseObject
      */
     public function batchInsert(string $table, array $columns, iterable|Generator $rows, array &$params = []): string
     {
-        if (empty($rows)) {
-            return '';
-        }
+        $table = $this->db->quoteSql($table);
 
         [$columns, $values] = $this->prepareBatchInsertColumnsAndValues($table, $columns, $rows, $params);
 
-        if (empty($values)) {
+        if (empty($columns) || empty($values)) {
             return '';
         }
 
@@ -1803,6 +1801,21 @@ class QueryBuilder extends \yii\base\BaseObject
         return $value;
     }
 
+    /**
+     * Prepares column names and values for batch INSERT SQL statement.
+     *
+     * This method processes the input columns and rows to generate properly formatted and escaped column names and
+     * values for a batch `INSERT` statement.
+     *
+     * @param string $table the name of the table to insert data into.
+     * @param array $columns list of column names.
+     * @param iterable|Generator $rows the rows of data to be inserted.
+     * @param array &$params the binding parameters that will be generated for the `INSERT` statement.
+     *
+     * @return array an array containing two elements:
+     * - The first element is an array of quoted column names.
+     * - The second element is an array of value placeholders for the INSERT statement.
+     */
     protected function prepareBatchInsertColumnsAndValues(
         string $table,
         array $columns,
@@ -1816,37 +1829,43 @@ class QueryBuilder extends \yii\base\BaseObject
         $mappedNames = $this->getNormalizeColumnNames($table, $columns);
 
         $values = [];
+        $processedColumns = [];
 
-        /** @psalm-var array<array-key, array<array-key, string>> $rows */
         foreach ($rows as $row) {
+            if (empty($row)) {
+                continue;
+            }
+
             $placeholders = [];
 
-            foreach ($row as $index => $value) {
-                if (
-                    isset(
-                        $columns[$index],
-                        $mappedNames[$columns[$index]],
-                        $columnSchemas[$mappedNames[$columns[$index]]]
-                    )
-                ) {
-                    /** @psalm-var mixed $value */
-                    $value = $this->getTypecastValue($value, $columnSchemas[$mappedNames[$columns[$index]]]);
+            foreach ($columns as $index => $column) {
+                $value = $row[$index] ?? null;
+
+                if (isset($mappedNames[$column], $columnSchemas[$mappedNames[$column]])) {
+                    $value = $this->getTypecastValue($value, $columnSchemas[$mappedNames[$column]]);
                 }
 
-                if ($value instanceof ExpressionInterface) {
-                    $placeholders[] = $this->buildExpression($value, $params);
-                } else {
-                    $placeholders[] = $this->bindParam($value, $params);
+                $placeholders[] = match (true) {
+                    $value instanceof ExpressionInterface => $this->buildExpression($value, $params),
+                    $value === null => 'DEFAULT',
+                    default => $this->bindParam($value, $params),
+                };
+
+                if (!in_array($column, $processedColumns, true)) {
+                    $processedColumns[] = $column;
                 }
             }
 
-            $values[] = '(' . implode(', ', $placeholders) . ')';
+            if ($placeholders !== []) {
+                $values[] = '(' . implode(', ', $placeholders) . ')';
+            }
         }
 
-        foreach ($columns as $i => $name) {
-            $columns[$i] = $this->db->quoteColumnName($mappedNames[$name]);
-        }
+        $quotedColumns = array_map(
+            fn (string $column): string => $this->db->quoteColumnName($mappedNames[$column]),
+            $processedColumns
+        );
 
-        return [$columns, $values];
+        return [$quotedColumns, $values];
     }
 }

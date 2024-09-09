@@ -340,13 +340,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
      */
     public function batchInsert(string $table, array $columns, iterable|Generator $rows, array &$params = []): string
     {
-        if (empty($rows)) {
-            return '';
-        }
+        $table = $this->db->quoteSql($table);
 
         [$columns, $values] = $this->prepareBatchInsertColumnsAndValues($table, $columns, $rows, $params);
 
-        if (empty($values)) {
+        if (empty($columns) || empty($values)) {
             return '';
         }
 

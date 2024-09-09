@@ -82,8 +82,8 @@ abstract class AbstractCommandProvider
                     static::$driverName,
                 ),
                 'expectedParams' => [
-                    ':qp0' => '0',
-                    ':qp1' => '0.0',
+                    ':qp0' => 0,
+                    ':qp1' => 0.0,
                     ':qp2' => 'Kyiv {{city}}, Ukraine',
                     ':qp3' => false,
                 ],
