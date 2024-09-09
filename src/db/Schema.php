@@ -512,34 +512,24 @@ abstract class Schema extends BaseObject
 
     /**
      * Extracts the PHP type from abstract DB type.
-     * @param ColumnSchema $column the column schema information
-     * @return string PHP type name
+     *
+     * @param ColumnSchema $column the column schema information.
+     *
+     * @return string PHP type name.
      */
-    protected function getColumnPhpType($column)
+    protected function getColumnPhpType(ColumnSchema $column): string
     {
-        static $typeMap = [
-            // abstract type => php type
-            self::TYPE_TINYINT => 'integer',
-            self::TYPE_SMALLINT => 'integer',
-            self::TYPE_INTEGER => 'integer',
-            self::TYPE_BIGINT => 'integer',
-            self::TYPE_BOOLEAN => 'boolean',
-            self::TYPE_FLOAT => 'double',
-            self::TYPE_DOUBLE => 'double',
-            self::TYPE_BINARY => 'resource',
-            self::TYPE_JSON => 'array',
-        ];
-        if (isset($typeMap[$column->type])) {
-            if ($column->type === 'bigint') {
-                return PHP_INT_SIZE === 8 && !$column->unsigned ? 'integer' : 'string';
-            } elseif ($column->type === 'integer') {
-                return PHP_INT_SIZE === 4 && $column->unsigned ? 'string' : 'integer';
-            }
+        $phpType = match ($column->type) {
+            self::TYPE_TINYINT, self::TYPE_SMALLINT, self::TYPE_INTEGER => PHPType::INTEGER,
+            self::TYPE_BIGINT => PHP_INT_SIZE === 8 ? PHPType::INTEGER : PHPType::STRING,
+            self::TYPE_BOOLEAN => PHPType::BOOLEAN,
+            self::TYPE_DECIMAL, self::TYPE_FLOAT, self::TYPE_DOUBLE => PHPType::DOUBLE,
+            self::TYPE_BINARY => PHPType::RESOURCE,
+            self::TYPE_JSON => PHPType::ARRAY,
+            default => PHPType::STRING,
+        };
 
-            return $typeMap[$column->type];
-        }
-
-        return 'string';
+        return $phpType->value;
     }
 
     /**
