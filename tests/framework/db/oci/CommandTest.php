@@ -39,19 +39,6 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         $this->assertEquals(3, $db->getSchema()->getLastInsertID('profile_SEQ'));
     }
 
-    public function batchInsertSqlProvider()
-    {
-        $data = parent::batchInsertSqlProvider();
-        $data['issue11242']['expected'] = 'INSERT ALL  INTO "type" ("int_col", "float_col", "char_col") ' .
-            "VALUES (NULL, NULL, 'Kyiv {{city}}, Ukraine') SELECT 1 FROM SYS.DUAL";
-        $data['wrongBehavior']['expected'] = 'INSERT ALL  INTO "type" ("type"."int_col", "float_col", "char_col") ' .
-            "VALUES ('', '', 'Kyiv {{city}}, Ukraine') SELECT 1 FROM SYS.DUAL";
-        $data['batchInsert binds params from expression']['expected'] = 'INSERT ALL  INTO "type" ("int_col") ' .
-            'VALUES (:qp1) SELECT 1 FROM SYS.DUAL';
-
-        return $data;
-    }
-
     /**
      * Testing the "ORA-01461: can bind a LONG value only for insert into a LONG column"
      *

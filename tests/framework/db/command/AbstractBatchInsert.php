@@ -109,6 +109,21 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         setlocale(LC_NUMERIC, $locale);
     }
 
+    public function testBatchInsertWithCallable(): void
+    {
+        $command = $this->db->createCommand();
+
+        $rows = call_user_func(
+            static function () {
+                yield ['test@email.com', 'test name', 'test address'];
+            }
+        );
+
+        $command->batchInsert('{{customer}}', ['email', 'name', 'address'], $rows);
+
+        $this->assertSame(1, $command->execute());
+    }
+
     public function testBatchInsertWithCallableEmptyRow(): void
     {
         $command = $this->db->createCommand();
@@ -128,6 +143,62 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         );
 
         $this->assertSame(0, $command->execute());
+    }
+
+    public function testBatchInsertWithDuplicates(): void
+    {
+        $command = $this->db->createCommand();
+
+        $command->batchInsert(
+            '{{customer}}',
+            ['email', 'name', 'address'],
+            [['t1@example.com', 'test_name', 'test_address']]
+        );
+
+        $this->assertSame(1, $command->execute());
+
+        $result = (new Query())
+            ->select(['email', 'name', 'address'])
+            ->from('{{customer}}')
+            ->where(['=', '{{email}}', 't1@example.com'])
+            ->one($this->db);
+
+        $this->assertCount(3, $result);
+        $this->assertSame(['email' => 't1@example.com', 'name' => 'test_name', 'address' => 'test_address'], $result);
+    }
+
+    public function testBatchInsertWithManyData(): void
+    {
+        $values = [];
+        $attemptsInsertRows = 200;
+        $command = $this->db->createCommand();
+
+        for ($i = 0; $i < $attemptsInsertRows; $i++) {
+            $values[$i] = ['t' . $i . '@any.com', 't' . $i, 't' . $i . ' address'];
+        }
+
+        $command->batchInsert('{{customer}}', ['email', 'name', 'address'], $values);
+
+        $this->assertSame($attemptsInsertRows, $command->execute());
+
+        $insertedRowsCount = (new Query())->from('{{customer}}')->count(db: $this->db);
+
+        $this->assertGreaterThanOrEqual($attemptsInsertRows, $insertedRowsCount);
+    }
+
+    public function testBatchInsertWithYield(): void
+    {
+        $command = $this->db->createCommand();
+
+        $rows = (
+            static function () {
+                yield ['test@email.com', 'test name', 'test address'];
+            }
+        )();
+
+        $command->batchInsert('{{customer}}', ['email', 'name', 'address'], $rows);
+
+        $this->assertSame(1, $command->execute());
     }
 
     public function testBatchInsertWithYieldEmptyRow(): void
