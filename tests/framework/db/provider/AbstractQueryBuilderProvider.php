@@ -51,7 +51,7 @@ abstract class AbstractQueryBuilderProvider
                 [['no columns passed']],
                 'expected' => DbHelper::replaceQuotes(
                     <<<SQL
-                    INSERT INTO [[customer]] () VALUES (:qp0)
+                    INSERT INTO [[customer]] VALUES (:qp0)
                     SQL,
                     static::$driverName,
                 ),

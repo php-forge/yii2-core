@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\command;
 
+use yii\base\InvalidArgumentException;
 use yii\db\Connection;
 use yii\db\Query;
 
@@ -136,11 +137,7 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
             }
         );
 
-        $command->batchInsert(
-            '{{customer}}',
-            ['email', 'name', 'address'],
-            $rows
-        );
+        $command->batchInsert('{{customer}}', ['email', 'name', 'address'], $rows);
 
         $this->assertSame(0, $command->execute());
     }
@@ -186,6 +183,22 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         $this->assertGreaterThanOrEqual($attemptsInsertRows, $insertedRowsCount);
     }
 
+    public function testBatchInsertWithTableNoExist(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Table not found: "non_existing_table".');
+
+        $command = $this->db->createCommand();
+
+        $command->batchInsert(
+            'non_existing_table',
+            ['email', 'name', 'address'],
+            [['t1@example.com', 'test_name', 'test_address']]
+        );
+
+        $command->execute();
+    }
+
     public function testBatchInsertWithYield(): void
     {
         $command = $this->db->createCommand();
@@ -207,11 +220,7 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
 
         $rows = (static fn () => yield [])();
 
-        $command->batchInsert(
-            '{{customer}}',
-            ['email', 'name', 'address'],
-            $rows
-        );
+        $command->batchInsert('{{customer}}', ['email', 'name', 'address'], $rows);
 
         $this->assertSame(0, $command->execute());
     }

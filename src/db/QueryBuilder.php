@@ -1882,7 +1882,11 @@ class QueryBuilder extends \yii\base\BaseObject
      */
     protected function buildBatchInsertSql(string $table, array $columns, array $values): string
     {
-        return 'INSERT INTO ' . $this->db->quoteTableName($table)
-            . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
+        $columns = match ($columns) {
+            [] => '',
+            default => ' (' . implode(', ', $columns) . ')',
+        };
+
+        return 'INSERT INTO ' . $this->db->quoteTableName($table) . $columns . ' VALUES ' . implode(', ', $values);
     }
 }

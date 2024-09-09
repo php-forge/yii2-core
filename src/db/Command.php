@@ -6,6 +6,7 @@ namespace yii\db;
 
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 
 /**
@@ -537,6 +538,10 @@ class Command extends Component
     public function batchInsert(string $table, array $columns, iterable $rows): static
     {
         $params = [];
+
+        if ($this->db->hasTable($table) === false) {
+            throw new InvalidArgumentException('Table not found: "' . $table . '".');
+        }
 
         $sql = $this->db->getQueryBuilder()->batchInsert($table, $columns, $rows, $params);
 

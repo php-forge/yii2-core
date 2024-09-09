@@ -407,7 +407,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
      */
     protected function buildBatchInsertSql(string $table, array $columns, array $values): string
     {
-        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . ' (' . implode(', ', $columns) . ') VALUES ';
+        $columns = match ($columns) {
+            [] => '',
+            default => ' (' . implode(', ', $columns) . ')',
+        };
+        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . $columns . ' VALUES ';
 
         return 'INSERT ALL' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
     }
