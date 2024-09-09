@@ -208,7 +208,7 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
             "VALUES ('no columns passed') SELECT 1 FROM SYS.DUAL";
 
         $data['bool-false, bool2-null']['expected'] = 'INSERT ALL  INTO "type" ("bool_col", "bool_col2") ' .
-            "VALUES ('', NULL) SELECT 1 FROM SYS.DUAL";
+            "VALUES ('0', NULL) SELECT 1 FROM SYS.DUAL";
 
         $data[3][3] = 'INSERT ALL  INTO {{%type}} ({{%type}}.[[float_col]], [[time]]) ' .
             "VALUES (NULL, now()) SELECT 1 FROM SYS.DUAL";
