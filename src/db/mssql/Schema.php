@@ -98,7 +98,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     {
         $tableSchema = new TableSchema();
 
-        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+        $parts = array_reverse($this->getTableNameParts($name));
 
         $tableSchema->name = $parts[0] ?? '';
         $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
