@@ -237,14 +237,6 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function quoteSimpleTableName($name)
-    {
-        return strpos($name, '"') !== false ? $name : '"' . $name . '"';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function createQueryBuilder()
     {
         return Yii::createObject(QueryBuilder::className(), [$this->db]);
@@ -265,7 +257,7 @@ SQL;
     {
         $tableSchema = new TableSchema();
 
-        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+        $parts = array_reverse($this->getTableNameParts($name));
 
         $tableSchema->name = $parts[0] ?? '';
         $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;

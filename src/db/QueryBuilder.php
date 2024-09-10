@@ -1774,17 +1774,19 @@ class QueryBuilder extends \yii\base\BaseObject
     protected function getNormalizeColumnNames(string $table, array $columns): array
     {
         $normalizedNames = [];
-        $rawTableName = $this->db->getSchema()->getRawTableName($table);
+        $schema = $this->db->getSchema();
+        $rawTableName = $schema->getRawTableName($table);
 
         foreach ($columns as $name) {
-            $parts = $this->db->quoter->getTableNameParts($name, true);
+            $parts = $schema->getTableNameParts($name, true);
 
-            if (count($parts) === 2 && $this->db->getSchema()->getRawTableName($parts[0]) === $rawTableName) {
+            if (count($parts) === 2 && $schema->getRawTableName($parts[0]) === $rawTableName) {
                 $normalizedName = $parts[count($parts) - 1];
             } else {
                 $normalizedName = $name;
             }
-            $normalizedName = $this->db->quoter->ensureColumnName($normalizedName);
+
+            $normalizedName = $this->db->getQuoter()->ensureColumnName($normalizedName);
 
             $normalizedNames[$name] = $normalizedName;
         }
