@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace yii\db;
 
+use Generator;
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\conditions\ConditionInterface;
 use yii\db\conditions\HashCondition;
-use yii\helpers\StringHelper;
 
 /**
  * QueryBuilder builds a SELECT SQL statement based on the specification given as a [[Query]] object.
@@ -482,11 +482,15 @@ class QueryBuilder extends \yii\base\BaseObject
      * For example,
      *
      * ```php
-     * $sql = $queryBuilder->batchInsert('user', ['name', 'age'], [
-     *     ['Tom', 30],
-     *     ['Jane', 20],
-     *     ['Linda', 25],
-     * ]);
+     * $sql = $queryBuilder->batchInsert(
+     *     'user',
+     *     ['name', 'age'],
+     *     [
+     *         ['Tom', 30],
+     *         ['Jane', 20],
+     *         ['Linda', 25],
+     *     ],
+     * );
      * ```
      *
      * Note that the values in each row must match the corresponding column names.
@@ -494,57 +498,27 @@ class QueryBuilder extends \yii\base\BaseObject
      * The method will properly escape the column names, and quote the values to be inserted.
      *
      * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column names
-     * @param array|\Generator $rows the rows to be batch inserted into the table
-     * @param array $params the binding parameters. This parameter exists since 2.0.14
-     * @return string the batch INSERT SQL statement
+     * @param array|Generator $columns the column names
+     * @param iterable $rows the rows to be batch inserted into the table
+     * @param array $params the binding parameters.
+     *
+     * @return string the batch INSERT SQL statement.
      */
-    public function batchInsert($table, $columns, $rows, &$params = [])
+    public function batchInsert(string $table, array $columns, iterable|Generator $rows, array &$params = []): string
     {
         if (empty($rows)) {
             return '';
         }
 
-        $schema = $this->db->getSchema();
-        if (($tableSchema = $schema->getTableSchema($table)) !== null) {
-            $columnSchemas = $tableSchema->columns;
-        } else {
-            $columnSchemas = [];
-        }
+        $table = $this->db->quoteSql($table);
 
-        $values = [];
-        foreach ($rows as $row) {
-            $vs = [];
-            foreach ($row as $i => $value) {
-                if (isset($columns[$i], $columnSchemas[$columns[$i]])) {
-                    $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
-                }
-                if (is_string($value)) {
-                    $value = $schema->quoteValue($value);
-                } elseif (is_float($value)) {
-                    // ensure type cast always has . as decimal separator in all locales
-                    $value = StringHelper::floatToString($value);
-                } elseif ($value === false) {
-                    $value = 0;
-                } elseif ($value === null) {
-                    $value = 'NULL';
-                } elseif ($value instanceof ExpressionInterface) {
-                    $value = $this->buildExpression($value, $params);
-                }
-                $vs[] = $value;
-            }
-            $values[] = '(' . implode(', ', $vs) . ')';
-        }
+        [$columns, $values] = $this->prepareBatchInsertColumnsAndValues($table, $columns, $rows, $params);
+
         if (empty($values)) {
             return '';
         }
 
-        foreach ($columns as $i => $name) {
-            $columns[$i] = $schema->quoteColumnName($name);
-        }
-
-        return 'INSERT INTO ' . $schema->quoteTableName($table)
-            . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
+        return $this->buildBatchInsertSql($table, $columns, $values);
     }
 
     /**
@@ -1857,5 +1831,91 @@ class QueryBuilder extends \yii\base\BaseObject
         }
 
         return $value;
+    }
+
+    /**
+     * Prepares column names and values for batch INSERT SQL statement.
+     *
+     * This method processes the input columns and rows to generate properly formatted and escaped column names and
+     * values for a batch `INSERT` statement.
+     *
+     * @param string $table the name of the table to insert data into.
+     * @param array $columns list of column names.
+     * @param iterable|Generator $rows the rows of data to be inserted.
+     * @param array &$params the binding parameters that will be generated for the `INSERT` statement.
+     *
+     * @return array an array containing two elements:
+     * - The first element is an array of quoted column names.
+     * - The second element is an array of value placeholders for the INSERT statement.
+     */
+    protected function prepareBatchInsertColumnsAndValues(
+        string $table,
+        array $columns,
+        array|Generator $rows,
+        array &$params
+    ): array {
+        $tableSchema = $this->db->getTableSchema($table);
+
+        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
+
+        $mappedNames = $this->getNormalizeColumnNames($table, $columns);
+
+        $values = [];
+
+        foreach ($rows as $row) {
+            if (empty($row)) {
+                continue;
+            }
+
+            $placeholders = [];
+
+            /** @psalm-var array<array-key, array<array-key, string>> $rows */
+            foreach ($row as $index => $value) {
+                if (
+                    isset(
+                        $columns[$index],
+                        $mappedNames[$columns[$index]],
+                        $columnSchemas[$mappedNames[$columns[$index]]]
+                    )
+                ) {
+                    $value = $this->getTypecastValue($value, $columnSchemas[$mappedNames[$columns[$index]]]);
+                }
+
+                $placeholders[] = match ($value instanceof ExpressionInterface) {
+                    true => $this->buildExpression($value, $params),
+                    default => $this->bindParam($value, $params),
+                };
+            }
+
+            $values[] = '(' . implode(', ', $placeholders) . ')';
+        }
+
+        foreach ($columns as $i => $name) {
+            $columns[$i] = $this->db->quoteColumnName($mappedNames[$name]);
+        }
+
+        return [$columns, $values];
+    }
+
+    /**
+     * Constructs the SQL statement for a batch `INSERT` operation.
+     *
+     * This method is responsible for generating the SQL for inserting multiple rows into a table.
+     * It quotes the table name and columns, and formats the values for the SQL statement.
+     *
+     * @param string $table the table that new rows will be inserted into.
+     * @param array $columns the column names.
+     * @param array $values the rows to be inserted, formatted as an array of value strings.
+     *
+     * @return string the batch `INSERT` SQL statement.
+     */
+    protected function buildBatchInsertSql(string $table, array $columns, array $values): string
+    {
+        $columns = match ($columns) {
+            [] => '',
+            default => ' (' . implode(', ', $columns) . ')',
+        };
+
+        return 'INSERT INTO ' . $this->db->quoteTableName($table) . $columns . ' VALUES ' . implode(', ', $values);
     }
 }
