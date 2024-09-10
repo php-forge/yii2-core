@@ -421,14 +421,15 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Splits full table name into parts
-     * @param string $name
-     * @return array
-     * @since 2.0.22
+     * Splits full table name into parts.
+     *
+     * @param string $name the table name.
+     *
+     * @return array the table name parts.
      */
-    protected function getTableNameParts($name)
+    protected function getTableNameParts(string $name): array
     {
-        return explode('.', $name);
+        return $this->db->getQuoter()->getTableNameParts($name);
     }
 
     /**
@@ -455,9 +456,9 @@ abstract class Schema extends BaseObject
      * If the column name contains prefix, the prefix will also be properly quoted.
      * If the column name is already quoted or contains '(', '[[' or '{{', then this method will do nothing.
      *
-     * @param string $name column name
+     * @param string $name column name.
      *
-     * @return string the properly quoted column name
+     * @return string the properly quoted column name.
      */
     public function quoteColumnName(string $name): string
     {
@@ -475,7 +476,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleTableName($name)
     {
-        return $this->db->quoter->quoteSimpleTableName($name);
+        return $this->db->getQuoter()->quoteSimpleTableName($name);
     }
 
     /**
@@ -507,7 +508,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteValue($str)
     {
-        return $this->db->quoter->quoteValue($str);
+        return $this->db->getQuoter()->quoteValue($str);
     }
 
     /**

@@ -18,7 +18,6 @@ use yii\helpers\ArrayHelper;
 use function array_reverse;
 use function explode;
 use function implode;
-use function is_array;
 use function preg_match;
 use function str_replace;
 use function stripos;
@@ -113,25 +112,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         }
 
         return $tableSchema;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @param string $name
-     * @return array
-     * @since 2.0.22
-     */
-    protected function getTableNameParts($name)
-    {
-        $parts = [$name];
-        preg_match_all('/([^.\[\]]+)|\[([^\[\]]+)\]/', $name, $matches);
-        if (isset($matches[0]) && is_array($matches[0]) && !empty($matches[0])) {
-            $parts = $matches[0];
-        }
-
-        $parts = str_replace(['[', ']'], '', $parts);
-
-        return $parts;
     }
 
     /**
@@ -734,18 +714,6 @@ SQL;
         }
 
         return $result[$returnType];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function quoteColumnName(string $name): string
-    {
-        if (preg_match('/^\[.*\]$/', $name)) {
-            return $name;
-        }
-
-        return parent::quoteColumnName($name);
     }
 
     /**
