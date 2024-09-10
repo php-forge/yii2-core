@@ -6,12 +6,31 @@ namespace yiiunit\framework\db\oci\provider;
 
 use yii\db\Expression;
 use yii\db\Query;
+use yiiunit\support\DbHelper;
 
 use function array_replace;
 
 final class QueryBuilderProvider extends \yiiunit\framework\db\provider\AbstractQueryBuilderProvider
 {
     protected static string $driverName = 'oci';
+
+    public static function batchInsert(): array
+    {
+        $batchInsert = parent::batchInsert();
+
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['simple']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['escape-danger-chars']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['customer3']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, bool2-null']['expected']);
+
+        $batchInsert['wrong']['expected'] = <<<SQL
+        INSERT ALL INTO "type" ("float_col", "time") VALUES (:qp0, now()) INTO "type" ("float_col", "time") VALUES (:qp1, now()) SELECT 1 FROM SYS.DUAL
+        SQL;
+
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, time-now()']['expected']);
+
+        return $batchInsert;
+    }
 
     public static function insert(): array
     {

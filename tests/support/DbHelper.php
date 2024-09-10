@@ -15,6 +15,16 @@ use function trim;
 final class DbHelper
 {
     /**
+     * Changes the SQL query for Oracle batch insert.
+     *
+     * @param string $str string SQL query to change.
+     */
+    public static function changeSqlForOracleBatchInsert(string &$str): void
+    {
+        $str = str_replace('INSERT INTO', 'INSERT ALL INTO', $str) . ' SELECT 1 FROM SYS.DUAL';
+    }
+
+    /**
      * Loads the fixture into the database.
      */
     public static function loadFixture(Connection $db, string $fixture): void

@@ -31,6 +31,7 @@ Yii Core version 2 Change Log
 - Enh #89: Refactor `AbstractConnection::class` test case for `hasTable()` method (@terabytesoftw)
 - Enh #90: Refactor `findColums()` in  `MSSQL` `Schema::class`, add support for `size` and `precision` for `float` and numeric data type (@terabytesoftw)
 - Enh #91: Add enum `PHPType::class` and  refactor `getColumnPhpType()` method in `Schema::class` (@terabytesoftw)
+- Enh #92: Refactor `batchInsert()` method in `Command::class`, and `QueryBuilder::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
