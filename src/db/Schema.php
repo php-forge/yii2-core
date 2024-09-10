@@ -424,12 +424,13 @@ abstract class Schema extends BaseObject
      * Splits full table name into parts.
      *
      * @param string $name the table name.
+     * @param bool $withColumn whether to quote the column name.
      *
      * @return array the table name parts.
      */
-    protected function getTableNameParts(string $name): array
+    public function getTableNameParts(string $name, bool $withColumn = false): array
     {
-        return $this->db->getQuoter()->getTableNameParts($name);
+        return $this->db->getQuoter()->getTableNameParts($name, $withColumn);
     }
 
     /**
