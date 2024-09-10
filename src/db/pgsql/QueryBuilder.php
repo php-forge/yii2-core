@@ -6,15 +6,10 @@ namespace yii\db\pgsql;
 
 use yii\base\InvalidArgumentException;
 use yii\db\Expression;
-use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
-use yii\helpers\StringHelper;
 
 /**
  * QueryBuilder is the query builder for PostgreSQL databases.
- *
- * @author Gevik Babakhani <gevikb@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -367,60 +362,5 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         return $insertSql
             . ' ON CONFLICT (' . implode(', ', $uniqueNames) . ') DO UPDATE SET ' . implode(', ', $updates);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function batchInsert(string $table, array $columns, iterable $rows, array &$params = []): string
-    {
-        if (empty($rows)) {
-            return '';
-        }
-
-        $tableSchema = $this->db->getTableSchema($table);
-
-        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
-        $values = [];
-
-        foreach ($rows as $row) {
-            $vs = [];
-            foreach ($row as $i => $value) {
-
-                if (isset($columns[$i], $columnSchemas[$columns[$i]])) {
-                    $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
-                }
-
-                if (is_string($value)) {
-                    $value = $this->db->quoteValue($value);
-                } elseif (is_float($value)) {
-                    // ensure type cast always has . as decimal separator in all locales
-                    $value = StringHelper::floatToString($value);
-                } elseif ($value === true) {
-                    $value = 'TRUE';
-                } elseif ($value === false) {
-                    $value = 'FALSE';
-                } elseif ($value === null) {
-                    $value = 'NULL';
-                } elseif ($value instanceof ExpressionInterface) {
-                    $value = $this->buildExpression($value, $params);
-                }
-
-                $vs[] = $value;
-            }
-
-            $values[] = '(' . implode(', ', $vs) . ')';
-        }
-
-        if (empty($values)) {
-            return '';
-        }
-
-        foreach ($columns as $i => $name) {
-            $columns[$i] = $this->db->quoteColumnName($name);
-        }
-
-        return 'INSERT INTO ' . $this->db->quoteTableName($table)
-            . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
     }
 }

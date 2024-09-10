@@ -7,7 +7,6 @@ namespace yii\db\oci;
 use PDO;
 use yii\db\Exception;
 use yii\db\Expression;
-use yii\helpers\StringHelper;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
 use yii\db\TableSchema;
@@ -393,59 +392,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
-     */
-    public function batchInsert(string $table, array $columns, iterable $rows, array &$params = []): string
-    {
-        if (empty($rows)) {
-            return '';
-        }
-
-        $tableSchema = $this->db->getTableSchema($table);
-
-        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
-        $values = [];
-
-        foreach ($rows as $row) {
-            $vs = [];
-            foreach ($row as $i => $value) {
-                if (isset($columns[$i], $columnSchemas[$columns[$i]])) {
-                    $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
-                }
-
-                if (is_string($value)) {
-                    $value = $this->db->quoteValue($value);
-                } elseif (is_float($value)) {
-                    // ensure type cast always has . as decimal separator in all locales
-                    $value = StringHelper::floatToString($value);
-                } elseif ($value === false) {
-                    $value = 0;
-                } elseif ($value === null) {
-                    $value = 'NULL';
-                } elseif ($value instanceof ExpressionInterface) {
-                    $value = $this->buildExpression($value, $params);
-                }
-
-                $vs[] = $value;
-            }
-
-            $values[] = '(' . implode(', ', $vs) . ')';
-        }
-
-        if (empty($values)) {
-            return '';
-        }
-
-        foreach ($columns as $i => $name) {
-            $columns[$i] = $this->db->quoteColumnName($name);
-        }
-
-        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . ' (' . implode(', ', $columns) . ') VALUES ';
-
-        return 'INSERT ALL ' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
-    }
-
-    /**
-     * {@inheritdoc}
      * @since 2.0.8
      */
     public function selectExists($rawSql)
@@ -509,5 +455,19 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         return $sql . ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function buildBatchInsertSql(string $table, array $columns, array $values): string
+    {
+        $columns = match ($columns) {
+            [] => '',
+            default => ' (' . implode(', ', $columns) . ')',
+        };
+        $tableAndColumns = ' INTO ' . $this->db->quoteTableName($table) . $columns . ' VALUES ';
+
+        return 'INSERT ALL' . $tableAndColumns . implode($tableAndColumns, $values) . ' SELECT 1 FROM SYS.DUAL';
     }
 }

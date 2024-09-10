@@ -1,9 +1,6 @@
 <?php
-/**
- * @link https://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license https://www.yiiframework.com/license/
- */
+
+declare(strict_types=1);
 
 namespace yii\db\sqlite;
 
@@ -15,13 +12,9 @@ use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\Query;
 use yii\db\QueryInterface;
-use yii\helpers\StringHelper;
 
 /**
  * QueryBuilder is the query builder for SQLite databases.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -152,66 +145,14 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function batchInsert(string $table, array $columns, iterable $rows, array &$params = []): string
-    {
-        if (empty($rows)) {
-            return '';
-        }
-
-        // SQLite supports batch insert natively since 3.7.11
-        // https://www.sqlite.org/releaselog/3_7_11.html
-        if (version_compare($this->db->serverVersion, '3.7.11', '>=')) {
-            return parent::batchInsert($table, $columns, $rows, $params);
-        }
-
-        $tableSchema = $this->db->getTableSchema($table);
-
-        $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
-        $values = [];
-
-        foreach ($rows as $row) {
-            $vs = [];
-
-            foreach ($row as $i => $value) {
-                if (isset($columnSchemas[$columns[$i]])) {
-                    $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
-                }
-
-                if (is_string($value)) {
-                    $value = $this->db->quoteValue($value);
-                } elseif (is_float($value)) {
-                    // ensure type cast always has . as decimal separator in all locales
-                    $value = StringHelper::floatToString($value);
-                } elseif ($value === false) {
-                    $value = 0;
-                } elseif ($value === null) {
-                    $value = 'NULL';
-                } elseif ($value instanceof ExpressionInterface) {
-                    $value = $this->buildExpression($value, $params);
-                }
-
-                $vs[] = $value;
-            }
-
-            $values[] = implode(', ', $vs);
-        }
-
-        if (empty($values)) {
-            return '';
-        }
-
-        foreach ($columns as $i => $name) {
-            $columns[$i] = $this->db->quoteColumnName($name);
-        }
-
-        return 'INSERT INTO ' . $this->db->quoteTableName($table)
-            . ' (' . implode(', ', $columns) . ') SELECT ' . implode(' UNION SELECT ', $values);
-    }
-
-    /**
-     * {@inheritdoc}
+     * Creates a SQL statement for resetting the sequence value of a table's primary key.
+     * The sequence will be reset such that the primary key of the next new row inserted
+     * will have the specified value or 1.
+     * @param string $tableName the name of the table whose primary key sequence will be reset
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
+     * the next new row's primary key will have a value 1.
+     * @return string the SQL statement for resetting sequence
+     * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
      */
     public function resetAutoIncrement(string $table, string $column, int|null $value = null): string
     {

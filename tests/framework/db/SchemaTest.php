@@ -410,7 +410,7 @@ abstract class SchemaTest extends DatabaseTestCase
             'numeric_col' => [
                 'type' => 'decimal',
                 'dbType' => 'decimal(5,2)',
-                'phpType' => 'string',
+                'phpType' => 'double',
                 'allowNull' => true,
                 'autoIncrement' => false,
                 'enumValues' => null,

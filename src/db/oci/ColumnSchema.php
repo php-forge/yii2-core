@@ -24,4 +24,13 @@ class ColumnSchema extends \yii\db\ColumnSchema
 
         return parent::dbTypecast($value);
     }
+
+    protected function typecast($value)
+    {
+        if ($this->phpType === 'string' && is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        return parent::typecast($value);
+    }
 }

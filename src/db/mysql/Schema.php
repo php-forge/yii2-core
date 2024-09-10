@@ -8,6 +8,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
+use yii\db\ColumnSchema;
 use yii\db\Constraint;
 use yii\db\ConstraintFinderInterface;
 use yii\db\ConstraintFinderTrait;
@@ -15,6 +16,7 @@ use yii\db\Exception;
 use yii\db\Expression;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\PHPType;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
@@ -651,5 +653,20 @@ SQL;
         }
 
         return $result;
+    }
+
+    protected function getColumnPhpType(ColumnSchema $column): string
+    {
+        if ($column->unsigned) {
+            if ($column->type === self::TYPE_INTEGER && PHP_INT_SIZE === 4) {
+                return PHPType::STRING->value;
+            }
+
+            if ($column->type === self::TYPE_BIGINT && PHP_INT_SIZE === 8) {
+                return PHPType::STRING->value;
+            }
+        }
+
+        return parent::getColumnPhpType($column);
     }
 }

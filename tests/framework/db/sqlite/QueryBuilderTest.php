@@ -106,23 +106,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
         $this->markTestSkipped('Comments are not supported in SQLite');
     }
 
-    public function batchInsertProvider()
-    {
-        $data = parent::batchInsertProvider();
-        $data['escape-danger-chars']['expected'] = "INSERT INTO `customer` (`address`) VALUES ('SQL-danger chars are escaped: ''); --')";
-        return $data;
-    }
-
-    public function testBatchInsertOnOlderVersions()
-    {
-        $db = $this->getConnection();
-        if (version_compare($db->pdo->getAttribute(\PDO::ATTR_SERVER_VERSION), '3.7.11', '>=')) {
-            $this->markTestSkipped('This test is only relevant for SQLite < 3.7.11');
-        }
-        $sql = $this->getQueryBuilder()->batchInsert('{{customer}} t', ['t.id', 't.name'], [[1, 'a'], [2, 'b']]);
-        $this->assertEquals("INSERT INTO {{customer}} t (`t`.`id`, `t`.`name`) SELECT 1, 'a' UNION SELECT 2, 'b'", $sql);
-    }
-
     public function testRenameTable()
     {
         $sql = $this->getQueryBuilder()->renameTable('table_from', 'table_to');

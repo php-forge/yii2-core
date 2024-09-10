@@ -538,8 +538,10 @@ class Command extends Component
     {
         $params = [];
 
-        $table = $this->db->quoteSql($table);
-        $columns = array_map(fn ($column) => $this->db->quoteSql($column), $columns);
+        if ($this->db->hasTable($table) === false) {
+            throw new InvalidArgumentException('Table not found: "' . $table . '".');
+        }
+
         $sql = $this->db->getQueryBuilder()->batchInsert($table, $columns, $rows, $params);
 
         $this->setRawSql($sql);
