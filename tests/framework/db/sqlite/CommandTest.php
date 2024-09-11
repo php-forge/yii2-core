@@ -153,7 +153,7 @@ SQL;
     public function testResetSequenceExceptionTableNoExist()
     {
         $this->expectException('yii\base\InvalidArgumentException');
-        $this->expectExceptionMessage('Table not found: no_exist_table');
+        $this->expectExceptionMessage("Table not found: 'no_exist_table'.");
 
         $db = $this->getConnection();
         $db->createCommand()->resetSequence('no_exist_table', 5)->execute();
