@@ -350,13 +350,17 @@ SQL;
 
     /**
      * Collects the metadata of table columns.
-     * @param TableSchema $table the table metadata
-     * @return bool whether the table exists in the database
-     * @throws \Exception if DB query fails
+     *
+     * @param TableSchema $table the table metadata.
+     *
+     * @return bool whether the table exists in the database.
+     *
+     * @throws \Exception if DB query fails.
      */
-    protected function findColumns($table)
+    protected function findColumns(TableSchema $tableSchema): bool
     {
-        $sql = 'SHOW FULL COLUMNS FROM ' . $this->quoteTableName($table->fullName);
+        $sql = 'SHOW FULL COLUMNS FROM ' . $this->quoteTableName($tableSchema->fullName);
+
         try {
             $columns = $this->db->createCommand($sql)->queryAll();
         } catch (\Exception $e) {
@@ -370,7 +374,7 @@ SQL;
         }
 
 
-        $jsonColumns = $this->getJsonColumns($table);
+        $jsonColumns = $this->getJsonColumns($tableSchema);
 
         foreach ($columns as $info) {
             if ($this->db->slavePdo->getAttribute(\PDO::ATTR_CASE) !== \PDO::CASE_LOWER) {
@@ -382,11 +386,13 @@ SQL;
             }
 
             $column = $this->loadColumnSchema($info);
-            $table->columns[$column->name] = $column;
+            $tableSchema->columns[$column->name] = $column;
+
             if ($column->isPrimaryKey) {
-                $table->primaryKey[] = $column->name;
+                $tableSchema->primaryKey[] = $column->name;
+
                 if ($column->autoIncrement) {
-                    $table->sequenceName = '';
+                    $tableSchema->sequenceName = $column->name;
                 }
             }
         }

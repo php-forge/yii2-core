@@ -64,7 +64,7 @@ class Command extends \yii\db\Command
 
         foreach ($tablePrimaryKeys as $name) {
             if ($tableSchema->getColumn($name)?->autoIncrement) {
-                $result[$name] = $this->db->getLastInsertID((string) $tableSchema->sequenceName);
+                $result[$name] = $this->db->getLastInsertID($name);
 
                 continue;
             }

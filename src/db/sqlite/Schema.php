@@ -222,26 +222,32 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * Collects the table column metadata.
-     * @param TableSchema $table the table metadata
-     * @return bool whether the table exists in the database
+     *
+     * @param TableSchema $table the table metadata.
+     *
+     * @return bool whether the table exists in the database.
      */
-    protected function findColumns($table)
+    protected function findColumns(TableSchema $table): bool
     {
         $sql = 'PRAGMA table_info(' . $this->quoteSimpleTableName($table->name) . ')';
         $columns = $this->db->createCommand($sql)->queryAll();
+
         if (empty($columns)) {
             return false;
         }
 
         foreach ($columns as $info) {
             $column = $this->loadColumnSchema($info);
+
             $table->columns[$column->name] = $column;
+
             if ($column->isPrimaryKey) {
                 $table->primaryKey[] = $column->name;
             }
         }
+
         if (count($table->primaryKey) === 1 && !strncasecmp($table->columns[$table->primaryKey[0]]->dbType, 'int', 3)) {
-            $table->sequenceName = '';
+            $table->sequenceName = $table->primaryKey;
             $table->columns[$table->primaryKey[0]]->autoIncrement = true;
         }
 
@@ -305,20 +311,22 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
-     * @return ColumnSchema the column schema object
+     *
+     * @param array $info column information.
+     *
+     * @return ColumnSchema the column schema object.
      */
-    protected function loadColumnSchema($info)
+    protected function loadColumnSchema(array $info): ColumnSchema
     {
         $column = $this->createColumnSchema();
+
         $column->name = $info['name'];
         $column->allowNull = !$info['notnull'];
         $column->isPrimaryKey = $info['pk'] != 0;
-
         $column->dbType = strtolower($info['type']);
         $column->unsigned = strpos($column->dbType, 'unsigned') !== false;
-
         $column->type = self::TYPE_STRING;
+
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = strtolower($matches[1]);
             if (isset($this->typeMap[$type])) {

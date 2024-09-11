@@ -188,33 +188,32 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * Creates a SQL statement for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or 1.
-     * @param string $tableName the name of the table whose primary key sequence will be reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have a value 1.
-     * @return string the SQL statement for resetting sequence
-     * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
+     * {@inheritdoc}
      */
-    public function resetSequence($tableName, $value = null)
+    public function resetSequence(string $tableName, mixed $value = null): string
     {
-        $table = $this->db->getTableSchema($tableName);
-        if ($table !== null && $table->sequenceName !== null) {
-            $tableName = $this->db->quoteTableName($tableName);
-            if ($value === null) {
-                $key = $this->db->quoteColumnName(reset($table->primaryKey));
-                $value = "(SELECT COALESCE(MAX({$key}),0) FROM {$tableName})+1";
-            } else {
-                $value = (int) $value;
-            }
+        $tableSchema = $this->db->getTableSchema($tableName);
 
-            return "DBCC CHECKIDENT ('{$tableName}', RESEED, {$value})";
-        } elseif ($table === null) {
-            throw new InvalidArgumentException("Table not found: $tableName");
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
         }
 
-        throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.");
+        if ($tableSchema !== null && $tableSchema->sequenceName !== null) {
+            $tableName = $this->db->quoteTableName($tableName);
+            $autoIncrementColumn = $this->db->quoteColumnName($tableSchema->sequenceName);
+
+            if ($value === null) {
+                $value = <<<SQL
+                (SELECT COALESCE(MAX({$autoIncrementColumn}),0) FROM {$tableName})+1
+                SQL;
+            }
+
+            return <<<SQL
+            DBCC CHECKIDENT ({$tableName}, RESEED, {$value})
+            SQL;
+        }
+
+        throw new InvalidArgumentException("There is not an auto-incremental column in the table '$tableName'.");
     }
 
     /**

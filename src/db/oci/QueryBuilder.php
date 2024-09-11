@@ -144,28 +144,30 @@ class QueryBuilder extends \yii\db\QueryBuilder
     public function executeResetSequence($table, $value = null)
     {
         $tableSchema = $this->db->getTableSchema($table);
+
         if ($tableSchema === null) {
-            throw new InvalidArgumentException("Unknown table: $table");
+            throw new InvalidArgumentException("Table not found: '$table'.");
         }
+
         if ($tableSchema->sequenceName === null) {
             throw new InvalidArgumentException("There is no sequence associated with table: $table");
         }
 
-        if ($value !== null) {
-            $value = (int) $value;
-        } else {
-            if (count($tableSchema->primaryKey) > 1) {
-                throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: $table");
-            }
-            // use master connection to get the biggest PK value
-            $value = $this->db->useMaster(function (Connection $db) use ($tableSchema) {
-                return $db->createCommand(
-                    'SELECT MAX("' . $tableSchema->primaryKey[0] . '") FROM "' . $tableSchema->name . '"'
-                )->queryScalar();
-            }) + 1;
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException("Can't reset sequence for composite primary key in table: $table");
         }
 
-        //Oracle needs at least two queries to reset sequence (see adding transactions and/or use alter method to avoid grants' issue?)
+        if ($value === null) {
+            // use master connection to get the biggest PK value
+            $value = $this->db->useMaster(
+                static fn (Connection $db) => $db->createCommand(
+                    'SELECT MAX("' . $tableSchema->primaryKey[0] . '") FROM "' . $tableSchema->name . '"'
+                )->queryScalar() + 1
+            );
+        }
+
+        // Oracle needs at least two queries to reset sequence
+        // (see adding transactions and/or use alter method to avoid grants' issue?)
         $this->db->createCommand('DROP SEQUENCE "' . $tableSchema->sequenceName . '"')->execute();
         $this->db->createCommand('CREATE SEQUENCE "' . $tableSchema->sequenceName . '" START WITH ' . $value
             . ' INCREMENT BY 1 NOMAXVALUE NOCACHE')->execute();
