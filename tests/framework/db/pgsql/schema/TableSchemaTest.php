@@ -29,7 +29,7 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $tableName = 'T_autoincrement';
         $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
             true => 'INT GENERATED ALWAYS AS IDENTITY',
-            default => 'id SERIAL',
+            default => 'SERIAL',
         };
 
         if ($this->db->hasTable($tableName)) {
@@ -65,7 +65,7 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $tableName = 'T_autoincrement_with_multiple_keys';
         $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
             true => 'INT GENERATED ALWAYS AS IDENTITY',
-            default => 'id SERIAL',
+            default => 'SERIAL',
         };
 
         if ($this->db->hasTable($tableName)) {
@@ -103,7 +103,7 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $tableName = 'T_autoincrement_with_pk';
         $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
             true => 'INT GENERATED ALWAYS AS IDENTITY',
-            default => 'id SERIAL',
+            default => 'SERIAL',
         };
 
         if ($this->db->hasTable($tableName)) {
@@ -139,7 +139,7 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $tableName = 'T_autoincrement_with_pk_composite';
         $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
             true => 'INT GENERATED ALWAYS AS IDENTITY',
-            default => 'id SERIAL',
+            default => 'SERIAL',
         };
 
         if ($this->db->hasTable($tableName)) {
