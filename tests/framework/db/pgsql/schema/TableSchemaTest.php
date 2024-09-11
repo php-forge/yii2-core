@@ -24,6 +24,14 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $this->db = PgsqlConnection::getConnection();
     }
 
+    public function tearDown(): void
+    {
+        $this->db->close();
+        $this->db = null;
+
+        parent::tearDown();
+    }
+
     public function testAutoIncrement(): void
     {
         $tableName = 'T_autoincrement';
