@@ -159,7 +159,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             if ($value === null) {
                 $value = $this->db->createCommand(
                     <<<SQL
-                    SELECT MAX([[{$autoIncrementColumn}]]) FROM {$tableName}
+                    SELECT MAX({$autoIncrementColumn}) FROM {$tableName}
                     SQL
                 )->queryScalar() + 1;
             }
