@@ -31,4 +31,33 @@ final class CommandProvider extends \yiiunit\framework\db\provider\AbstractComma
 
         return $batchInsert;
     }
+
+    public static function executeResetSequence(): array
+    {
+        $rows = parent::executeResetSequence();
+
+        $rows['value with zero'] = [
+            '{{%reset_sequence}}',
+            [
+                ['name' => 'name1'],
+                ['name' => 'name2'],
+                ['name' => 'name3'],
+            ],
+            [0, 1, 2],
+            0,
+        ];
+
+        $rows['value negative'] = [
+            '{{%reset_sequence}}',
+            [
+                ['name' => 'name1'],
+                ['name' => 'name2'],
+                ['name' => 'name3'],
+            ],
+            [-5, -4, -3],
+            -5,
+        ];
+
+        return $rows;
+    }
 }

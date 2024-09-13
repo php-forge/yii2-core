@@ -190,30 +190,21 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function resetSequence(string $tableName, mixed $value = null): string
+    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
     {
-        $tableSchema = $this->db->getTableSchema($tableName);
+        return <<<SQL
+        SELECT COALESCE(MAX({$this->db->quoteColumnName($columnPK)}),0) FROM {$this->db->quoteTableName($tableName)}
+        SQL;
+    }
 
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        if ($tableSchema !== null && $tableSchema->sequenceName !== null) {
-            $tableName = $this->db->quoteTableName($tableName);
-            $autoIncrementColumn = $this->db->quoteColumnName($tableSchema->sequenceName);
-
-            if ($value === null) {
-                $value = <<<SQL
-                (SELECT COALESCE(MAX({$autoIncrementColumn}),0) FROM {$tableName})+1
-                SQL;
-            }
-
-            return <<<SQL
-            DBCC CHECKIDENT ({$tableName}, RESEED, {$value})
-            SQL;
-        }
-
-        throw new InvalidArgumentException("There is not an auto-incremental column in the table '$tableName'.");
+    /**
+     * {@inheritdoc}
+     */
+    public function resetSequence(string $tableOrSequenceName, string $columnPK, int|null $value = null): string
+    {
+        return <<<SQL
+        DBCC CHECKIDENT ({$this->db->quoteTableName($tableOrSequenceName)}, RESEED, {$value})
+        SQL;
     }
 
     /**

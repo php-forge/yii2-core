@@ -121,6 +121,36 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
         ];
     }
 
+    public static function resetSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_seq',
+                'id',
+                1,
+                <<<SQL
+                DBCC CHECKIDENT ([T_seq], RESEED, 1)
+                SQL,
+            ],
+            'with value 0' => [
+                'T_seq',
+                'id',
+                0,
+                <<<SQL
+                DBCC CHECKIDENT ([T_seq], RESEED, 0)
+                SQL,
+            ],
+            'with value negative' => [
+                'T_seq',
+                'id',
+                -5,
+                <<<SQL
+                DBCC CHECKIDENT ([T_seq], RESEED, -5)
+                SQL,
+            ],
+        ];
+    }
+
     public static function upsert(): array
     {
         $concreteData = [

@@ -34,6 +34,20 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
         ];
     }
 
+    public static function resetSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_seq',
+                'id',
+                1,
+                <<<SQL
+                ALTER TABLE `T_seq` AUTO_INCREMENT=1
+                SQL,
+            ],
+        ];
+    }
+
     public static function upsert(): array
     {
         $concreteData = [

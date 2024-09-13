@@ -161,26 +161,21 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function resetSequence(string $tableName, mixed $value = null): string
+    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
     {
-        $table = $this->db->getTableSchema($tableName);
+        return <<<SQL
+        (SELECT COALESCE(MAX({$this->db->quoteColumnName($columnPK)}),0) FROM {$this->db->quoteTableName($tableName)})
+        SQL;
+    }
 
-        if ($table !== null && $table->sequenceName !== null) {
-            // c.f. https://www.postgresql.org/docs/8.1/functions-sequence.html
-            $sequence = $this->db->quoteTableName(reset($table->sequenceName));
-            $tableName = $this->db->quoteTableName($tableName);
-
-            if ($value === null) {
-                $key = $this->db->quoteColumnName(reset($table->primaryKey));
-                $value = "(SELECT COALESCE(MAX({$key}),0) FROM {$tableName})+1";
-            }
-
-            return "SELECT SETVAL('$sequence',$value,false)";
-        } elseif ($table === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.");
+    /**
+     * {@inheritdoc}
+     */
+    public function resetSequence(string $tableOrSequenceName, string $columnPK, int|null $value = null): string
+    {
+        return <<<SQL
+        SELECT SETVAL({$this->db->quoteValue($tableOrSequenceName)},{$value},false)
+        SQL;
     }
 
     /**

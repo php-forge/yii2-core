@@ -2,22 +2,18 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\db\mssql\schema;
+namespace yiiunit\framework\db\schema;
 
-use Exception;
-use yii\db\Connection;
 use yiiunit\support\MssqlConnection;
 
 /**
  * @group db
  * @group mssql
  * @group schema
- * @group tableschema
+ * @group table-schema
  */
-final class TableSchemaTest extends \yiiunit\TestCase
+final class TableSchemaTest extends \yiiunit\framework\db\schema\AbstractTableSchema
 {
-    private Connection|null $db = null;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,122 +21,46 @@ final class TableSchemaTest extends \yiiunit\TestCase
         $this->db = MssqlConnection::getConnection();
     }
 
-    public function testAutoIncrement(): void
+    public function testSequenceName(): void
     {
-        $tableName = 'T_autoincrement';
+        $this->columnsSchema = [
+            'id' => 'INT IDENTITY',
+            'name' => 'NVARCHAR(128)',
+        ];
 
-        if ($this->db->hasTable($tableName)) {
-            $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-            $this->assertSame(0, $result);
-        }
-
-        $result = $this->db->createCommand()->createTable(
-            $tableName,
-            [
-                'id' => 'INT IDENTITY',
-                'name' => 'NVARCHAR(128)',
-            ],
-        )->execute();
-
-        $this->assertSame(0, $result);
-
-        $table = $this->db->getTableSchema($tableName);
-
-        $this->assertNotNull($table);
-
-        $this->assertSame('id', $table->sequenceName);
-
-        $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-        $this->assertSame(0, $result);
+        parent::testSequenceName();
     }
 
-    public function testAutoIncrementWithMultipleKeys(): void
+    public function testSequenceNameWithMultipleKeys(): void
     {
-        $tableName = 'T_autoincrement_with_multiple_keys';
+        $this->columnsSchema = [
+            'id1' => 'INT IDENTITY',
+            'id2' => 'INT IDENTITY',
+            'name' => 'NVARCHAR(128)',
+        ];
 
-        if ($this->db->hasTable($tableName)) {
-            $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-            $this->assertSame(0, $result);
-        }
-
-        $this->expectException(Exception::class);
-
-        $this->db->createCommand()->createTable(
-            $tableName,
-            [
-                'id1' => 'INT IDENTITY',
-                'id2' => 'INT IDENTITY',
-                'name' => 'NVARCHAR(128)',
-            ],
-        )->execute();
+        parent::testSequenceNameWithMultipleKeys();
     }
 
-    public function testAutoIncrementWithPrimaryKey(): void
+    public function testSequenceNameWithPrimaryKey(): void
     {
-        $tableName = 'T_autoincrement_with_pk';
+        $this->columnsSchema = [
+            'id' => 'INT IDENTITY PRIMARY KEY',
+            'name' => 'NVARCHAR(128)',
+        ];
 
-        if ($this->db->hasTable($tableName)) {
-            $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-            $this->assertSame(0, $result);
-        }
-
-        $result = $this->db->createCommand()->createTable(
-            $tableName,
-            [
-                'id' => 'INT IDENTITY PRIMARY KEY',
-                'name' => 'NVARCHAR(128)',
-            ],
-        )->execute();
-
-        $this->assertSame(0, $result);
-
-        $table = $this->db->getTableSchema($tableName);
-
-        $this->assertNotNull($table);
-
-        $this->assertSame(['id'], $table->primaryKey);
-        $this->assertSame('id', $table->sequenceName);
-
-        $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-        $this->assertSame(0, $result);
+        parent::testSequenceNameWithPrimaryKey();
     }
 
-    public function testAutoIncrementWithPrimaryKeyComposite(): void
+    public function testSequenceNameWithPrimaryKeyComposite(): void
     {
-        $tableName = 'T_autoincrement_with_pk_composite';
+        $this->columnsSchema = [
+            'id1' => 'INT IDENTITY',
+            'id2' => 'INT',
+            'name' => 'NVARCHAR(128)',
+            'PRIMARY KEY (id1, id2)',
+        ];
 
-        if ($this->db->hasTable($tableName)) {
-            $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-            $this->assertSame(0, $result);
-        }
-
-        $result = $this->db->createCommand()->createTable(
-            $tableName,
-            [
-                'id1' => 'INT IDENTITY',
-                'id2' => 'INT',
-                'PRIMARY KEY (id1, id2)',
-                'name' => 'NVARCHAR(128)',
-            ],
-        )->execute();
-
-        $this->assertSame(0, $result);
-
-        $table = $this->db->getTableSchema($tableName);
-
-        $this->assertNotNull($table);
-
-        $this->assertSame(['id1', 'id2'], $table->primaryKey);
-        $this->assertSame('id1', $table->sequenceName);
-
-        $result = $this->db->createCommand()->dropTable($tableName)->execute();
-
-        $this->assertSame(0, $result);
+        parent::testSequenceNameWithPrimaryKeyComposite();
     }
 }

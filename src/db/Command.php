@@ -9,6 +9,8 @@ use yii\base\Component;
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 
+use function reset;
+
 /**
  * Command represents a SQL statement to be executed against a database.
  *
@@ -979,36 +981,101 @@ class Command extends Component
     }
 
     /**
-     * Creates a SQL command for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence will be reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
-     * @return $this the command object itself
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
-     */
-    public function resetSequence($table, $value = null)
-    {
-        $sql = $this->db->getQueryBuilder()->resetSequence($table, $value);
-
-        return $this->setSql($sql);
-    }
-
-    /**
      * Executes a db command resetting the sequence value of a table's primary key.
+     *
      * Reason for execute is that some databases (Oracle) need several queries to do so.
-     * The sequence is reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence is reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
-     * @since 2.0.16
+     *
+     * The sequence is reset such that the primary key of the next new row inserted will have the specified value or the
+     * maximum existing `value + 1`.
+     *
+     * Not support primary key with multiple columns (composite key).
+     *
+     * @param string $tableName the name of the table whose primary key (auto-increment column) sequence is reset.
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
+     * row's primary key will have the maximum existing `value + 1`.
+     *
+     * @return int|false the number of rows affected by the execution or false if the sequence is not reset.
+     *
+     * @throws InvalidArgumentException if the table does not exist.
+     * @throws InvalidArgumentException if the table has a composite primary key.
+     * @throws NotSupportedException if this is not supported by the underlying DBMS.
      */
-    public function executeResetSequence($table, $value = null)
+    public function executeResetSequence(string $tableName, int|null $value = null): false|int
     {
-        return $this->db->getQueryBuilder()->executeResetSequence($table, $value);
+        $tableSchema = $this->db->getTableSchema($tableName);
+        $driverName = $this->db->driverName;
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        if (in_array($driverName, ['mysql', 'pgsql', 'sqlite'], true) && $value < 0) {
+            throw new InvalidArgumentException("The value must be greater than '0'.");
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->db->useMaster(
+                // use master connection to get the biggest PK value
+                static fn (Connection $db) => $db->createCommand(
+                    $db->getQueryBuilder()->getMaxPrimaryKeyValue($tableName, $columnPK)
+                )->queryScalar() + 1
+            );
+        }
+
+        if (in_array($driverName, ['mysql', 'pgsql', 'sqlite'], true) && $value === 0) {
+            $value = 1;
+        }
+
+        if ($value !== null && $driverName === 'sqlite') {
+            $value = $value - 1;
+        }
+
+        // Oracle needs at least two queries to reset a sequence
+        // (see adding transactions and/or use alter method to avoid grants' issue?)
+        if ($driverName === 'oci' && $tableSchema->columns[$columnPK]->autoIncrement === false) {
+            $sequenceName = $this->db->quoteTableName($tableSchema->sequenceName);
+            $this->db->createCommand(
+                <<<SQL
+                DROP SEQUENCE {$sequenceName}
+                SQL
+            )->execute();
+
+            return $this->db->createCommand(
+                <<<SQL
+                CREATE SEQUENCE {$sequenceName} START WITH {$value} INCREMENT BY 1 NOMAXVALUE NOCYCLE NOCACHE
+                SQL
+            )->execute();
+        }
+
+        $tableOrSequenceName = match ($driverName) {
+            'pgsql' => $tableSchema->sequenceName[$columnPK],
+            default => $tableSchema->fullName,
+        };
+
+        $sql = $this->db->getQueryBuilder()->resetSequence($tableOrSequenceName, $columnPK, $value);
+        $result = $this->setSql($sql)->execute();
+
+        if ($driverName === 'sqlite' && $result === 0) {
+            $result = $this->insert('sqlite_sequence', ['name' => $tableSchema->fullName,'seq' => $value])->execute();
+
+            if ($result === 0) {
+                return false;
+            }
+        }
+
+        return 0;
     }
 
     /**

@@ -558,7 +558,10 @@ SQL;
             $column = $this->loadColumnSchema($column);
 
             $table->columns[$column->name] = $column;
-            $table->sequenceName[$column->name] = $column->sequenceName;
+
+            if ($column->sequenceName !== null) {
+                $table->sequenceName[$column->name] = $column->sequenceName;
+            }
 
             if ($column->isPrimaryKey) {
                 $table->primaryKey[] = $column->name;

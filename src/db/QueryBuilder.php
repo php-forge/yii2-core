@@ -171,6 +171,19 @@ class QueryBuilder extends \yii\base\BaseObject
     }
 
     /**
+     * Generates the SQL query to retrieve the maximum primary key value from a table and increment it by 1.
+     *
+     * @param string $tableName the name of the table from which to retrieve the maximum primary key value.
+     * @param string $columnPK the name of the primary key column.
+     *
+     * @return string The SQL query to select the maximum value of the primary key column and increment it.
+     */
+    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
+    {
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support upsert statements.');
+    }
+
+    /**
      * Setter for [[expressionBuilders]] property.
      *
      * @param string[] $builders array of builders that should be merged with the pre-defined ones
@@ -1099,38 +1112,27 @@ class QueryBuilder extends \yii\base\BaseObject
     }
 
     /**
-     * Creates a SQL statement for resetting the sequence value of a table's with auto-increment column.
+     * Creates an SQL statement for resetting the sequence value of a table's primary key (auto-increment column).
      *
-     * The sequence will be reset such that the auto-incremental column of the next new row inserted will have the
-     * specified value or the maximum existing `value + 1`.
+     * The sequence will be reset such that the primary key (auto-increment column) of the next new row inserted will
+     * have the specified value, or the maximum existing value plus 1.
      *
-     * @param string $table the name of the table whose auto-incremental column's sequence will be reset
-     * @param mixed $value the value for the auto-incremental column of the next new row inserted. If this is not set,
-     * the next new row's auto-incremental column will have the maximum existing `value + 1`.
+     * Does not support primary keys with multiple columns (composite keys).
      *
-     * @return string the SQL statement for resetting auto-incremental column's sequence
+     * @param string $tableOrSequenceName the name of the table or sequence to be reset.
+     * The name will be properly quoted by the method.
+     * In PostgreSQL, this must be the sequence name.
+     * @param string $columnPK the name of the primary key column (auto-increment column).
+     * @param int|null $value the value for the auto-increment column of the next new row inserted. If not set, the next
+     * row's auto-increment column will have the maximum existing value plus 1.
+     *
+     * @return string the SQL statement for resetting the auto-increment column's sequence.
      *
      * @throws NotSupportedException if this is not supported by the underlying DBMS.
      */
-    public function resetSequence(string $tableName, mixed $value = null): string
+    public function resetSequence(string $tableOrSequenceName, string $columnPK, int|null $value = null): string
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support resetting sequence.');
-    }
-
-    /**
-     * Execute a SQL statement for resetting the sequence value of a table's primary key.
-     * Reason for execute is that some databases (Oracle) need several queries to do so.
-     * The sequence is reset such that the primary key of the next new row inserted
-     * will have the specified value or the maximum existing value +1.
-     * @param string $table the name of the table whose primary key sequence is reset
-     * @param array|string|null $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have the maximum existing value +1.
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
-     * @since 2.0.16
-     */
-    public function executeResetSequence($table, $value = null)
-    {
-        $this->db->createCommand()->resetSequence($table, $value)->execute();
     }
 
     /**

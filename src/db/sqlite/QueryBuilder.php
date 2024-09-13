@@ -147,34 +147,21 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function resetSequence(string $tableName, mixed $value = null): string
+    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
     {
-        $tableSchema = $this->db->getTableSchema($tableName);
+        return <<<SQL
+        SELECT MAX({$this->db->quoteColumnName($columnPK)}) FROM {$this->db->quoteTableName($tableName)}
+        SQL;
+    }
 
-        if ($tableSchema !== null && $tableSchema->primaryKey !== []) {
-            $tableName = $this->db->quoteTableName($tableName);
-
-            if ($value === null) {
-                $autoIncrementColumn = $this->db->quoteColumnName(reset($tableSchema->primaryKey));
-                $value = $this->db->useMaster(
-                    static fn(Connection $db) => $db
-                        ->createCommand(
-                            <<<SQL
-                            SELECT MAX($autoIncrementColumn) FROM $tableName
-                            SQL
-                        )
-                        ->queryScalar()
-                );
-            } else {
-                $value = (int) $value - 1;
-            }
-
-            return "UPDATE sqlite_sequence SET seq='$value' WHERE name='{$tableSchema->name}'";
-        } elseif ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.'");
+    /**
+     * {@inheritdoc}
+     */
+    public function resetSequence(string $tableOrSequenceName, string $columnPK, int|null $value = null): string
+    {
+        return <<<SQL
+        UPDATE sqlite_sequence SET [[seq]]='$value' WHERE [[name]]='$tableOrSequenceName'
+        SQL;
     }
 
     /**

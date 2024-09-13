@@ -318,23 +318,6 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
         ];
     }
 
-    public function testResetSequence(): void
-    {
-        $qb = $this->getQueryBuilder();
-
-        $expected = "DBCC CHECKIDENT ([item], RESEED, (SELECT COALESCE(MAX([id]),0) FROM [item])+1)";
-
-        $sql = $qb->resetSequence('item');
-
-        $this->assertSame($expected, $sql);
-
-        $expected = "DBCC CHECKIDENT ([item], RESEED, 4)";
-
-        $sql = $qb->resetSequence('item', 4);
-
-        $this->assertSame($expected, $sql);
-    }
-
     public function upsertProvider()
     {
         $concreteData = [
