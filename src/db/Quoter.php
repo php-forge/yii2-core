@@ -36,44 +36,113 @@ class Quoter
     ) {
     }
 
-    public function getTableNameParts(string $name, bool $withColumn = false): array
+    /**
+     * Returns the table prefix to be used for table names.
+     *
+     * @return string the table prefix to be used for table names.
+     */
+    public function getTablePrefix(): string
     {
-        $parts = explode('.', $name);
+        return $this->tablePrefix;
+    }
+
+    /**
+     * Splits full table name into parts.
+     *
+     * @param string $name the full name of the table.
+     *
+     * @return array the table name parts.
+     *
+     * @psalm-return string[] the table name parts.
+     */
+    public function getTableNameParts(string $tableName, bool $withColumn = false): array
+    {
+        $parts = explode('.', $tableName);
 
         return $this->unquoteParts($parts, $withColumn);
     }
 
-    public function ensureColumnName(string $name): string
+    /**
+     * Returns the actual name of a given table name.
+     *
+     * This method strips off curly brackets from the given table name and replaces the percentage character '%' with
+     * [[Connection::tablePrefix]].
+     *
+     * @param string $tableName the table name to be converted.
+     *
+     * @return string the real name of the given table name.
+     */
+    public function getRawTableName(string $tableName): string
     {
-        if (strrpos($name, '.') !== false) {
-            $parts = explode('.', $name);
-            $name = $parts[count($parts) - 1];
-        }
-
-        return preg_replace('|^\[\[([_\w\-. ]+)\]\]$|', '\1', $name);
+        return preg_replace_callback(
+            '/\{\{(.*?)\}\}/',
+            function ($matches) {
+                return strtr($matches[1], ['%' => $this->tablePrefix]);
+            },
+            $tableName
+        );
     }
 
-    public function quoteColumnName(string $name): string
+    /**
+     * Ensures name of the column is wrapped with `[[ and ]]`.
+     *
+     * @param string $columnName the name to quote.
+     *
+     * @return string the quoted name.
+     */
+    public function ensureColumnName(string $columnName): string
     {
-        if (str_contains($name, '(') || str_contains($name, '[[')) {
-            return $name;
+        if (strrpos($columnName, '.') !== false) {
+            $parts = explode('.', $columnName);
+            $columnName = $parts[count($parts) - 1];
         }
 
-        if (($pos = strrpos($name, '.')) !== false) {
-            $prefix = $this->quoteTableName(substr($name, 0, $pos)) . '.';
-            $name = substr($name, $pos + 1);
+        return preg_replace('|^\[\[([_\w\-. ]+)\]\]$|', '\1', $columnName);
+    }
+
+    /**
+     * Quotes a column name for use in a query.
+     *
+     * If the column name has a prefix, it quotes the prefix.
+     * If the column name is already quoted or has '(', '[[' or '{{', then this method does nothing.
+     *
+     * @param string $columnName the column name to quote.
+     *
+     * @return string the quoted column name.
+     *
+     * {@see quoteSimpleColumnName()}
+     */
+    public function quoteColumnName(string $columnName): string
+    {
+        if (str_contains($columnName, '(') || str_contains($columnName, '[[')) {
+            return $columnName;
+        }
+
+        if (($pos = strrpos($columnName, '.')) !== false) {
+            $prefix = $this->quoteTableName(substr($columnName, 0, $pos)) . '.';
+            $columnName = substr($columnName, $pos + 1);
         } else {
             $prefix = '';
         }
 
-        if (str_contains($name, '{{')) {
-            return $name;
+        if (str_contains($columnName, '{{')) {
+            return $columnName;
         }
 
-        return $prefix . $this->quoteSimpleColumnName($name);
+        return $prefix . $this->quoteSimpleColumnName($columnName);
     }
 
-    public function quoteSimpleColumnName(string $name): string
+    /**
+     * Quotes a simple column name for use in a query.
+     *
+     * A simple column name should contain the column name only without any prefix. If the column name is already quoted
+     * or is the asterisk character '*', this method will do nothing.
+     *
+     * @param string $columnName the column name to quote.
+     *
+     * @return string the quoted column name.
+     */
+    public function quoteSimpleColumnName(string $columnName): string
     {
         if (is_string($this->columnQuoteCharacter)) {
             $startingCharacter = $endingCharacter = $this->columnQuoteCharacter;
@@ -81,11 +150,21 @@ class Quoter
             [$startingCharacter, $endingCharacter] = $this->columnQuoteCharacter;
         }
 
-        return $name === '*' || str_contains($name, $startingCharacter) ? $name : $startingCharacter . $name
-            . $endingCharacter;
+        return $columnName === '*' || str_contains($columnName, $startingCharacter)
+            ? $columnName : $startingCharacter . $columnName . $endingCharacter;
     }
 
-    public function quoteSimpleTableName(string $name): string
+    /**
+     * Quotes a simple table name for use in a query.
+     *
+     * A simple table name should contain the table name only without any schema prefix. If the table name is already
+     * quoted, this method will do nothing.
+     *
+     * @param string $tableName the table name to quote.
+     *
+     * @return string the quoted table name.
+     */
+    public function quoteSimpleTableName(string $tableName): string
     {
         if (is_string($this->tableQuoteCharacter)) {
             $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
@@ -93,9 +172,23 @@ class Quoter
             [$startingCharacter, $endingCharacter] = $this->tableQuoteCharacter;
         }
 
-        return str_contains($name, $startingCharacter) ? $name : $startingCharacter . $name . $endingCharacter;
+        return str_contains($tableName, $startingCharacter)
+            ? $tableName : $startingCharacter . $tableName . $endingCharacter;
     }
 
+    /**
+     * Processes an SQL statement by quoting table and column names that are inside within double brackets.
+     *
+     * Tokens inside within double curly brackets are treated as table names, while tokens inside within double square
+     * brackets are column names. They will be quoted as such.
+     *
+     * Also, the percentage character "%" at the beginning or ending of a table name will be replaced with
+     * [[Connection::tablePrefix]].
+     *
+     * @param string $sql the SQL statement to quote.
+     *
+     * @return string the quoted SQL statement.
+     */
     public function quoteSql(string $sql): string
     {
         return preg_replace_callback(
@@ -111,21 +204,34 @@ class Quoter
         );
     }
 
-    public function quoteTableName(string $name): string
+    /**
+     * Quotes a table name for use in a query.
+     *
+     * If the table name has a schema prefix, then it will also quote the prefix.
+     *
+     * If the table name is already quoted or has `(` or `{{`, then this method will do nothing.
+     *
+     * @param string $tableName the table name to quote.
+     *
+     * @return string The quoted table name.
+     *
+     * {@see quoteSimpleTableName()}
+     */
+    public function quoteTableName(string $tableName): string
     {
-        if (str_starts_with($name, '(') && str_ends_with($name, ')')) {
-            return $name;
+        if (str_starts_with($tableName, '(') && str_ends_with($tableName, ')')) {
+            return $tableName;
         }
 
-        if (str_contains($name, '{{')) {
-            return $name;
+        if (str_contains($tableName, '{{')) {
+            return $tableName;
         }
 
-        if (!str_contains($name, '.')) {
-            return $this->quoteSimpleTableName($name);
+        if (!str_contains($tableName, '.')) {
+            return $this->quoteSimpleTableName($tableName);
         }
 
-        $parts = $this->getTableNameParts($name);
+        $parts = $this->getTableNameParts($tableName);
 
         foreach ($parts as $i => $part) {
             $parts[$i] = $this->quoteSimpleTableName($part);
@@ -134,6 +240,17 @@ class Quoter
         return implode('.', $parts);
     }
 
+    /**
+     * Quotes a string value for use in a query.
+     *
+     * Note: That if the parameter isn't a string, it will be returned without change.
+     * Attention: The usage of this method isn't safe.
+     * Use prepared statements.
+     *
+     * @param mixed $value the value to quote.
+     *
+     * @return mixed the quoted value.
+     */
     public function quoteValue(mixed $value): mixed
     {
         if (!is_string($value)) {
@@ -147,7 +264,18 @@ class Quoter
         return '\'' . str_replace('\'', '\'\'', addcslashes($value, "\000\032")) . '\'';
     }
 
-    public function unquoteSimpleColumnName(string $name): string
+    /**
+     * Unquotes a simple column name.
+     *
+     * A simple column name should contain the column name only without any prefix.
+     *
+     * If the column name isn't quoted or is the asterisk character '*', this method will do nothing.
+     *
+     * @param string $columnName the column name to unquote.
+     *
+     * @return string The unquoted column name.
+     */
+    public function unquoteSimpleColumnName(string $columnName): string
     {
         if (is_string($this->columnQuoteCharacter)) {
             $startingCharacter = $this->columnQuoteCharacter;
@@ -155,10 +283,21 @@ class Quoter
             $startingCharacter = $this->columnQuoteCharacter[0];
         }
 
-        return !str_contains($name, $startingCharacter) ? $name : substr($name, 1, -1);
+        return !str_contains($columnName, $startingCharacter) ? $columnName : substr($columnName, 1, -1);
     }
 
-    public function unquoteSimpleTableName(string $name): string
+    /**
+     * Unquotes a simple table name.
+     *
+     * A simple table name should contain the table name only without any schema prefix.
+     *
+     * If the table name isn't quoted, this method will do nothing.
+     *
+     * @param string $tableName the table name to unquote.
+     *
+     * @return string the unquoted table name.
+     */
+    public function unquoteSimpleTableName(string $tableName): string
     {
         if (is_string($this->tableQuoteCharacter)) {
             $startingCharacter = $this->tableQuoteCharacter;
@@ -166,7 +305,7 @@ class Quoter
             $startingCharacter = $this->tableQuoteCharacter[0];
         }
 
-        return !str_contains($name, $startingCharacter) ? $name : substr($name, 1, -1);
+        return !str_contains($tableName, $startingCharacter) ? $tableName : substr($tableName, 1, -1);
     }
 
     /**
