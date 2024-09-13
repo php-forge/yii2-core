@@ -435,20 +435,17 @@ abstract class Schema extends BaseObject
 
     /**
      * Returns the actual name of a given table name.
-     * This method will strip off curly brackets from the given table name
-     * and replace the percentage character '%' with [[Connection::tablePrefix]].
-     * @param string $name the table name to be converted
-     * @return string the real name of the given table name
+     *
+     * This method will strip off curly brackets from the given table name and replace the percentage character '%' with
+     * [[Connection::tablePrefix]].
+     *
+     * @param string $tableName the table name to be converted.
+     *
+     * @return string the real name of the given table name.
      */
-    public function getRawTableName($name)
+    public function getRawTableName(string $tableName): string
     {
-        if (strpos($name, '{{') !== false) {
-            $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
-
-            return str_replace('%', $this->db->tablePrefix, $name);
-        }
-
-        return $name;
+        return $this->db->getQuoter()->getRawTableName($tableName);
     }
 
     /**
@@ -630,10 +627,13 @@ abstract class Schema extends BaseObject
                 $cache = $schemaCache;
             }
         }
+
         $rawName = $this->getRawTableName($name);
+
         if (!isset($this->_tableMetadata[$rawName])) {
             $this->loadTableMetadataFromCache($cache, $rawName);
         }
+
         if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
             $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
             $this->saveTableMetadataToCache($cache, $rawName);
