@@ -34,7 +34,7 @@ Yii Core version 2 Change Log
 - Enh #92: Refactor `batchInsert()` method in `Command::class`, and `QueryBuilder::class` (@terabytesoftw)
 - Bug #93: Use `Quoter::class` insted of specific methods in `Schema::class` for `MSSQL`, `OCI` (@terabytesoftw)
 - Enh #95: Move `getRawTableName()` to `Quoter::class`, and better arguments naming in `Quoter::class` (@terabytesoftw)
-
+- Bug #96: Remove unnecesary `testUpsert()`, move to separate directory `command` and `querybuilder` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

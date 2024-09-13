@@ -15,8 +15,6 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
 {
     public $driverName = 'mysql';
 
-    protected $upsertTestCharCast = 'CONVERT([[address]], CHAR)';
-
     public function testAddDropCheckSeveral()
     {
         $db = $this->getConnection(false);
