@@ -13,23 +13,23 @@ use function preg_match_all;
  */
 final class Quoter extends \yii\db\Quoter
 {
-    public function getTableNameParts(string $name, bool $withColumn = false): array
+    public function getTableNameParts(string $tableName, bool $withColumn = false): array
     {
-        if (preg_match_all('/([^.\[\]]+)|\[([^\[\]]+)]/', $name, $matches)) {
+        if (preg_match_all('/([^.\[\]]+)|\[([^\[\]]+)]/', $tableName, $matches)) {
             $parts = array_slice($matches[0], -4, 4);
         } else {
-            $parts = [$name];
+            $parts = [$tableName];
         }
 
         return $this->unquoteParts($parts, $withColumn);
     }
 
-    public function quoteColumnName(string $name): string
+    public function quoteColumnName(string $columnName): string
     {
-        if (preg_match('/^\[.*]$/', $name)) {
-            return $name;
+        if (preg_match('/^\[.*]$/', $columnName)) {
+            return $columnName;
         }
 
-        return parent::quoteColumnName($name);
+        return parent::quoteColumnName($columnName);
     }
 }

@@ -12,9 +12,9 @@ use function explode;
  */
 final class Quoter extends \yii\db\Quoter
 {
-    public function getTableNameParts(string $name, bool $withColumn = false): array
+    public function getTableNameParts(string $tableName, bool $withColumn = false): array
     {
-        $parts = array_slice(explode('.', $name), -2, 2);
+        $parts = array_slice(explode('.', $tableName), -2, 2);
 
         return $this->unquoteParts($parts, $withColumn);
     }

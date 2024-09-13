@@ -11,8 +11,8 @@ use function str_contains;
  */
 final class Quoter extends \yii\db\Quoter
 {
-    public function quoteSimpleTableName(string $name): string
+    public function quoteSimpleTableName(string $tableName): string
     {
-        return str_contains($name, '"') ? $name : '"' . $name . '"';
+        return str_contains($tableName, '"') ? $tableName : '"' . $tableName . '"';
     }
 }
