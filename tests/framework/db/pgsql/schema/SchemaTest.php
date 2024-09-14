@@ -22,11 +22,11 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->columnsSchema = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
             true => [
                 'id' => 'INT GENERATED ALWAYS AS IDENTITY',
-                'name' => 'varchar(128)',
+                'name' => 'VARCHAR(128)',
             ],
-            false => [
-                'id' => 'serial PRIMARY KEY',
-                'name' => 'varchar(128)',
+            default => [
+                'id' => 'SERIAL PRIMARY KEY',
+                'name' => 'VARCHAR(128)',
             ],
         };
     }
