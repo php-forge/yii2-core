@@ -36,8 +36,8 @@ Yii Core version 2 Change Log
 - Enh #95: Move `getRawTableName()` to `Quoter::class`, and better arguments naming in `Quoter::class` (@terabytesoftw)
 - Bug #96: Remove unnecesary `testUpsert()`, move to separate directory `command` and `querybuilder` (@terabytesoftw)
 - Enh #97: Add `getNextAutoIncrementValue()` method in `Schema::class` (@terabytesoftw)
-- Enh #98: Add support for identity columns, fix `sequenceName` and `autoIncrement` in `ColumnSchema::class` in `Oci` (@terabytesoftw)
-- Bug #99: Fix `sequenceName` and `autoIncrement` in `TableSchema::class` in `PgSQL`.
+- Enh #98: Add support for identity columns, fix `sequenceName` and `autoIncrement` in `ColumnSchema::class` for `Oci` (@terabytesoftw)
+- Bug #99: Fix `sequenceName` and `autoIncrement` in `TableSchema::class` in `PgSQL` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
