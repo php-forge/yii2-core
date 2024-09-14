@@ -613,8 +613,6 @@ SQL;
         /** @var ColumnSchema $column */
         $column = $this->createColumnSchema();
 
-        var_dump($info);
-
         $column->allowNull = $info['is_nullable'];
         $column->autoIncrement = $info['is_autoinc'];
         $column->comment = $info['column_comment'];
