@@ -35,6 +35,7 @@ Yii Core version 2 Change Log
 - Bug #93: Use `Quoter::class` insted of specific methods in `Schema::class` for `MSSQL`, `OCI` (@terabytesoftw)
 - Enh #95: Move `getRawTableName()` to `Quoter::class`, and better arguments naming in `Quoter::class` (@terabytesoftw)
 - Bug #96: Remove unnecesary `testUpsert()`, move to separate directory `command` and `querybuilder` (@terabytesoftw)
+- Enh #97: Add `getNextAutoIncrementValue()` method in `Schema::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
