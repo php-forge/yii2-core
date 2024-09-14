@@ -37,6 +37,7 @@ Yii Core version 2 Change Log
 - Bug #96: Remove unnecesary `testUpsert()`, move to separate directory `command` and `querybuilder` (@terabytesoftw)
 - Enh #97: Add `getNextAutoIncrementValue()` method in `Schema::class` (@terabytesoftw)
 - Enh #98: Add support for identity columns, fix `sequenceName` and `autoIncrement` in `ColumnSchema::class` in `Oracle` (@terabytesoftw)
+- Enh #99: Add the logic to check for table existence and auto-incremental column in `getNextAutoIncrementValue()` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
