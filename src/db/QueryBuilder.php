@@ -171,19 +171,6 @@ class QueryBuilder extends \yii\base\BaseObject
     }
 
     /**
-     * Generates the SQL query to retrieve the maximum primary key value from a table and increment it by 1.
-     *
-     * @param string $tableName the name of the table from which to retrieve the maximum primary key value.
-     * @param string $columnPK the name of the primary key column.
-     *
-     * @return string The SQL query to select the maximum value of the primary key column and increment it.
-     */
-    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
-    {
-        throw new NotSupportedException($this->db->getDriverName() . ' does not support upsert statements.');
-    }
-
-    /**
      * Setter for [[expressionBuilders]] property.
      *
      * @param string[] $builders array of builders that should be merged with the pre-defined ones
