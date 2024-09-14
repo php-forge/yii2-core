@@ -457,7 +457,7 @@ SQL;
 
         $orIdentity = '';
 
-        if (version_compare($this->db->serverVersion, '12.0', '>=')) {
+        if (version_compare($this->db->serverVersion, '10.0', '>=')) {
             $orIdentity = 'OR attidentity != \'\'';
         }
 

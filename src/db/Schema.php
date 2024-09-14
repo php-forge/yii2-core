@@ -6,6 +6,7 @@ namespace yii\db;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
@@ -433,6 +434,18 @@ abstract class Schema extends BaseObject
      */
     public function getNextAutoIncrementValue(string $tableName, string $columnPK): int
     {
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
+            throw new InvalidArgumentException(
+                "Column '$columnPK' is not an auto-incremental column in table '$tableName'."
+            );
+        }
+
         $sql = <<<SQL
         SELECT COALESCE(MAX({$this->db->quoteColumnName($columnPK)}), 0) + 1
         FROM {$this->db->quoteTableName($tableName)}
