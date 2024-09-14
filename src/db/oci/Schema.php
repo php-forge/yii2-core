@@ -273,40 +273,51 @@ SQL;
 
     /**
      * Collects the table column metadata.
-     * @param TableSchema $table the table schema
-     * @return bool whether the table exists
+     *
+     * @param TableSchema $table the table schema.
+     *
+     * @return bool whether the table exists.
      */
-    protected function findColumns($table)
+    protected function findColumns(TableSchema $table): bool
     {
         $sql = <<<'SQL'
-SELECT
-    A.COLUMN_NAME,
-    A.DATA_TYPE,
-    A.DATA_PRECISION,
-    A.DATA_SCALE,
-    (
-      CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
-        ELSE A.DATA_LENGTH
-      END
-    ) AS DATA_LENGTH,
-    A.NULLABLE,
-    A.DATA_DEFAULT,
-    COM.COMMENTS AS COLUMN_COMMENT
-FROM ALL_TAB_COLUMNS A
-    INNER JOIN ALL_OBJECTS B ON B.OWNER = A.OWNER AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
-    LEFT JOIN ALL_COL_COMMENTS COM ON (A.OWNER = COM.OWNER AND A.TABLE_NAME = COM.TABLE_NAME AND A.COLUMN_NAME = COM.COLUMN_NAME)
-WHERE
-    A.OWNER = :schemaName
-    AND B.OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')
-    AND B.OBJECT_NAME = :tableName
-ORDER BY A.COLUMN_ID
-SQL;
+        SELECT
+            A.COLUMN_NAME,
+            A.DATA_TYPE,
+            A.DATA_PRECISION,
+            A.DATA_SCALE,
+            (
+                CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
+                    ELSE A.DATA_LENGTH
+                END
+            ) AS DATA_LENGTH,
+            A.NULLABLE,
+            A.DATA_DEFAULT,
+            COM.COMMENTS AS COLUMN_COMMENT,
+            A.IDENTITY_COLUMN
+        FROM ALL_TAB_COLUMNS A
+            INNER JOIN ALL_OBJECTS B
+                ON B.OWNER = A.OWNER
+                AND LTRIM(B.OBJECT_NAME) = LTRIM(A.TABLE_NAME)
+            LEFT JOIN ALL_COL_COMMENTS COM
+                ON (A.OWNER = COM.OWNER
+                AND A.TABLE_NAME = COM.TABLE_NAME
+                AND A.COLUMN_NAME = COM.COLUMN_NAME)
+        WHERE
+            A.OWNER = :schemaName
+            AND B.OBJECT_TYPE IN ('TABLE', 'VIEW', 'MATERIALIZED VIEW')
+            AND B.OBJECT_NAME = :tableName
+        ORDER BY A.COLUMN_ID
+        SQL;
 
         try {
-            $columns = $this->db->createCommand($sql, [
-                ':tableName' => $table->name,
-                ':schemaName' => $table->schemaName,
-            ])->queryAll();
+            $columns = $this->db->createCommand(
+                $sql,
+                [
+                    ':tableName' => $table->name,
+                    ':schemaName' => $table->schemaName,
+                ],
+            )->queryAll();
         } catch (\Exception $e) {
             return false;
         }
@@ -319,7 +330,17 @@ SQL;
             if ($this->db->slavePdo->getAttribute(\PDO::ATTR_CASE) === \PDO::CASE_LOWER) {
                 $column = array_change_key_case($column, CASE_UPPER);
             }
+
             $c = $this->createColumn($column);
+
+            if ($c->autoIncrement) {
+                preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
+
+                if (isset($matches[1])) {
+                    $table->sequenceName = $matches[1];
+                }
+            }
+
             $table->columns[$c->name] = $c;
         }
 
@@ -374,19 +395,34 @@ SQL;
     /**
      * Creates ColumnSchema instance.
      *
-     * @param array $column
-     * @return ColumnSchema
+     * @param array $column column metadata.
+     *
+     * @return ColumnSchema column schema instance.
      */
-    protected function createColumn($column)
+    protected function createColumn(array $column): ColumnSchema
     {
         $c = $this->createColumnSchema();
+
         $c->name = $column['COLUMN_NAME'];
         $c->allowNull = $column['NULLABLE'] === 'Y';
         $c->comment = $column['COLUMN_COMMENT'] === null ? '' : $column['COLUMN_COMMENT'];
         $c->isPrimaryKey = false;
-        $this->extractColumnType($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
-        $this->extractColumnSize($c, $column['DATA_TYPE'], $column['DATA_PRECISION'], $column['DATA_SCALE'], $column['DATA_LENGTH']);
+        $c->autoIncrement = $column['IDENTITY_COLUMN'] === 'YES';
 
+        $this->extractColumnType(
+            $c,
+            $column['DATA_TYPE'],
+            $column['DATA_PRECISION'],
+            $column['DATA_SCALE'],
+            $column['DATA_LENGTH']
+        );
+        $this->extractColumnSize(
+            $c,
+            $column['DATA_TYPE'],
+            $column['DATA_PRECISION'],
+            $column['DATA_SCALE'],
+            $column['DATA_LENGTH']
+        );
         $c->phpType = $this->getColumnPhpType($c);
 
         if (!$c->isPrimaryKey) {
@@ -394,6 +430,7 @@ SQL;
                 $c->defaultValue = null;
             } else {
                 $defaultValue = (string) $column['DATA_DEFAULT'];
+
                 if ($c->type === 'timestamp' && $defaultValue === 'CURRENT_TIMESTAMP') {
                     $c->defaultValue = new Expression('CURRENT_TIMESTAMP');
                 } else {
