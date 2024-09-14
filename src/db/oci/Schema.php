@@ -280,7 +280,7 @@ SQL;
      */
     protected function findColumns(TableSchema $table): bool
     {
-        $sql = <<<'SQL'
+        $sql = <<<SQL
         SELECT
             A.COLUMN_NAME,
             A.DATA_TYPE,
