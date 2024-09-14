@@ -421,6 +421,27 @@ abstract class Schema extends BaseObject
     }
 
     /**
+     * Gets the next auto-increment value for the specified table's primary key.
+     *
+     * This method retrieves the maximum value of the specified primary key column from the given table and adds 1 to
+     * it. If the table is empty, it returns 1.
+     *
+     * @param string $tableName the name of the table.
+     * @param string $columnPK the name of the primary key column.
+     *
+     * @return int the next auto-increment value for the primary key column.
+     */
+    public function getNextAutoIncrementValue(string $tableName, string $columnPK): int
+    {
+        $sql = <<<SQL
+        SELECT COALESCE(MAX({$this->db->quoteColumnName($columnPK)}), 0) + 1 FROM {$this->db->quoteTableName($tableName)}
+        SQL;
+
+        // use master connection to get the next auto-increment value
+        return $this->db->useMaster(static fn (Connection $db) => (int) $db->createCommand($sql)->queryScalar());
+    }
+
+    /**
      * Splits full table name into parts.
      *
      * @param string $name the table name.

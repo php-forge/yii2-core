@@ -1026,12 +1026,7 @@ class Command extends Component
         $columnPK = reset($tableSchema->primaryKey);
 
         if ($value === null) {
-            $value = $this->db->useMaster(
-                // use master connection to get the biggest PK value
-                static fn (Connection $db) => $db->createCommand(
-                    $db->getQueryBuilder()->getMaxPrimaryKeyValue($tableName, $columnPK)
-                )->queryScalar() + 1
-            );
+            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
         }
 
         if (in_array($driverName, ['mysql', 'pgsql', 'sqlite'], true) && $value === 0) {

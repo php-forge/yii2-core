@@ -147,16 +147,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function getMaxPrimaryKeyValue(string $tableName, string $columnPK): string
-    {
-        return <<<SQL
-        SELECT MAX({$this->db->quoteColumnName($columnPK)}) FROM {$this->db->quoteTableName($tableName)}
-        SQL;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function resetSequence(string $tableOrSequenceName, string $columnPK, int|null $value = null): string
     {
         return <<<SQL
