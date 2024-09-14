@@ -12,8 +12,6 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
     protected Connection|null $db = null;
     protected array $columnsSchema = [];
 
-    abstract protected function ensureSequenceName(string $sequenceName): void;
-
     public function testSequenceName(): void
     {
         $tableName = 'T_sequence_name';
@@ -27,8 +25,20 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
         $tableSchema = $this->db->getTableSchema($tableName);
 
         $this->assertNotNull($tableSchema);
-        $this->assertEmpty($tableSchema->primaryKey);
-        $this->ensureSequenceName($tableSchema->sequenceName);
+
+        // In MySQL, SQLite, columns with auto-increment (`AUTOINCREMENT`) must be primary keys
+        match ($this->db->driverName) {
+            'mysql', 'sqlite' => $this->assertSame(['id'], $tableSchema->primaryKey),
+            default => $this->assertEmpty($tableSchema->primaryKey),
+        };
+
+        // MySQL, SQLite does not support sequences
+        match ($this->db->getDriverName()) {
+            'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
+            'pgsql' => $this->assertSame('T_sequence_name_id_seq', $tableSchema->sequenceName['id']),
+            default => $this->assertEmpty($tableSchema->sequenceName),
+        };
+
         $this->ensureNoTable($tableName);
     }
 
@@ -55,7 +65,15 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
         $tableSchema = $this->db->getTableSchema($tableName);
 
         $this->assertNotNull($tableSchema);
-        $this->ensureSequenceName($tableSchema->sequenceName);
+        $this->assertSame(['id'], $tableSchema->primaryKey);
+
+        // MySQL, SQLite does not support sequences
+        match ($this->db->getDriverName()) {
+            'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
+            'pgsql' => $this->assertSame('T_sequence_name_with_pk_id_seq', $tableSchema->sequenceName['id']),
+            default => $this->assertEmpty($tableSchema->sequenceName),
+        };
+
         $this->ensureNoTable($tableName);
     }
 
@@ -73,11 +91,17 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
 
         $this->assertNotNull($tableSchema);
         $this->assertSame(['id1', 'id2'], $tableSchema->primaryKey);
-        $this->ensureSequenceName($tableSchema->sequenceName);
+
+        // MySQL, SQLite does not support sequences
+        match ($this->db->driverName) {
+            'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
+            default => $this->assertEmpty($tableSchema->sequenceName),
+        };
+
         $this->ensureNoTable($tableName);
     }
 
-    private function ensureNoTable(string $tableName): void
+    protected function ensureNoTable(string $tableName): void
     {
         if ($this->db->hasTable($tableName)) {
             $result = $this->db->createCommand()->dropTable($tableName)->execute();
