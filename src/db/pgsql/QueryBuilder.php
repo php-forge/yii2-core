@@ -160,30 +160,37 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * Creates a SQL statement for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or 1.
-     * @param string $tableName the name of the table whose primary key sequence will be reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have a value 1.
-     * @return string the SQL statement for resetting sequence
+     * The sequence will be reset such that the primary key of the next new row inserted will have the specified value
+     * or 1.
+     *
+     * @param string $tableName the name of the table whose primary key sequence will be reset.
+     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set, the next new
+     * row's primary key will have a value 1.
+     *
+     * @return string the SQL statement for resetting sequence.
+     *
      * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
      */
     public function resetSequence($tableName, $value = null)
     {
-        $table = $this->db->getTableSchema($tableName);
-        if ($table !== null && $table->sequenceName !== null) {
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema !== null && $tableSchema->sequenceName !== null) {
+            $pk = reset($tableSchema->primaryKey);
+
             // c.f. https://www.postgresql.org/docs/8.1/functions-sequence.html
-            $sequence = $this->db->quoteTableName($table->sequenceName);
+            $sequence = $this->db->quoteTableName($tableSchema->sequenceName[$pk]);
             $tableName = $this->db->quoteTableName($tableName);
+
             if ($value === null) {
-                $key = $this->db->quoteColumnName(reset($table->primaryKey));
+                $key = $this->db->quoteColumnName($pk);
                 $value = "(SELECT COALESCE(MAX({$key}),0) FROM {$tableName})+1";
             } else {
                 $value = (int) $value;
             }
 
             return "SELECT SETVAL('$sequence',$value,false)";
-        } elseif ($table === null) {
+        } elseif ($tableSchema === null) {
             throw new InvalidArgumentException("Table not found: $tableName");
         }
 
