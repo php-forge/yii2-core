@@ -543,7 +543,7 @@ SQL;
 
         if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
             throw new InvalidArgumentException(
-                "There is no primary key or sequence associated with table '$tableName'."
+                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
             );
         }
 

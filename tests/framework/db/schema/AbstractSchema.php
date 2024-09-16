@@ -156,6 +156,34 @@ abstract class AbstractSchema extends TestCase
         $this->ensureNoTable($tableName);
     }
 
+    public function testResetSequenceWithNotTableExist(): void
+    {
+        $tableName = '{{%reset_sequence}}';
+
+        $this->ensureNoTable($tableName);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Table not found: '{$tableName}'.");
+
+        $this->db->getSchema()->resetSequence($tableName, 1);
+    }
+
+    public function testResetSequenceWithTableNotPrimaryKey(): void
+    {
+        $tableName = '{{%reset_sequence}}';
+
+        $this->ensureNoTable($tableName);
+
+        $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
+
+        $this->assertSame(0, $result);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("There is no primary key or sequence associated with table 'reset_sequence'.");
+
+        $this->db->getSchema()->resetSequence($tableName, 1);
+    }
+
     protected function ensureNoTable(string $tableName): void
     {
         if ($this->db->hasTable($tableName)) {
