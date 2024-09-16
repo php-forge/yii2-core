@@ -727,9 +727,6 @@ SQL;
 
     /**
      * {@inheritdoc}
-     *
-     * Note:
-     * - `SQLSRV` add 1 to the value to set the next auto increment value.
      */
     public function resetSequence(string $tableName, int|null $value = null): int
     {
@@ -755,10 +752,8 @@ SQL;
             $value = $this->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
         }
 
-        $valueSequence = $value - 1;
-
         $sql = <<<SQL
-        DBCC CHECKIDENT ({$this->quoteTableName($tableSchema->fullName)}, RESEED, {$valueSequence})
+        DBCC CHECKIDENT ({$this->quoteTableName($tableSchema->fullName)}, RESEED, {$value})
         SQL;
 
         $this->db->createCommand($sql)->execute();

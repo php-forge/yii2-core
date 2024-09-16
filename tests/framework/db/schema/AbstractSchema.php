@@ -144,7 +144,10 @@ abstract class AbstractSchema extends TestCase
             SQL
         )->queryColumn();
 
-        $this->assertEquals([1, 2, 3, 7, 8, 9], $ids);
+        match ($this->db->driverName) {
+            'sqlsrv' => $this->assertEquals([1, 2, 3, 8, 9, 10], $ids),
+            default => $this->assertEquals([1, 2, 3, 7, 8, 9], $ids),
+        };
 
         $this->ensureNoTable($tableName);
     }
