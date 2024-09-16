@@ -20,16 +20,15 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
         $this->db = PgsqlConnection::getConnection();
 
-        $this->columnsSchema = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
-            true => [
-                'id' => 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY',
-                'name' => 'VARCHAR(128)',
-            ],
-            default => [
-                'id' => 'SERIAL PRIMARY KEY',
-                'name' => 'VARCHAR(128)',
-            ],
+        $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
+            true => 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY',
+            default => 'SERIAL PRIMARY KEY',
         };
+
+        $this->columnsSchema = [
+            'id' => $columnId,
+            'name' => 'VARCHAR(128)',
+        ];
     }
 
     /**
@@ -52,6 +51,23 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         ];
 
         parent::testResetSequenceWithTableNotPrimaryKey();
+    }
+
+    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    {
+        $columnId = match (version_compare($this->db->serverVersion, '10.0', '>=')) {
+            true => 'INT GENERATED ALWAYS AS IDENTITY',
+            default => 'SERIAL',
+        };
+
+        $this->columnsSchema = [
+            'id' => $columnId,
+            'user_id' => 'INT',
+            'name' => 'VARCHAR(128)',
+            'PRIMARY KEY (id, user_id)',
+        ];
+
+        parent::testResetSequenceWithTablePrimaryKeyComposite();
     }
 
     public function testResetSequenceWithValueNegative(): void

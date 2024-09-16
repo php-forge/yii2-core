@@ -48,6 +48,18 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::testResetSequenceWithTableNotPrimaryKey();
     }
 
+    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    {
+        $this->columnsSchema = [
+            'id' => 'INTEGER',
+            'user_id' => 'INTEGER',
+            'name' => 'TEXT',
+            'PRIMARY KEY (id, user_id)',
+        ];
+
+        parent::testResetSequenceWithTablePrimaryKeyComposite();
+    }
+
     public function testResetSequenceWithValueNegative(): void
     {
         $tableName = '{{%reset_sequence}}';

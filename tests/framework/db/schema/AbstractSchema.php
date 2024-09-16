@@ -184,6 +184,22 @@ abstract class AbstractSchema extends TestCase
         $this->db->getSchema()->resetSequence($tableName, 1);
     }
 
+    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    {
+        $tableName = '{{%reset_sequence}}';
+
+        $this->ensureNoTable($tableName);
+
+        $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
+
+        $this->assertSame(0, $result);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('This method does not support tables with composite primary keys.');
+
+        $this->db->getSchema()->resetSequence($tableName, 1);
+    }
+
     protected function ensureNoTable(string $tableName): void
     {
         if ($this->db->hasTable($tableName)) {

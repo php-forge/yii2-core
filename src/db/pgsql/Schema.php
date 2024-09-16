@@ -275,8 +275,8 @@ SQL;
      * {@inheritdoc}
      *
      * Note:
-     * - `PgSQL` not support value negative for auto increment column.
-     * - `PgSQL` auto-increment value must be greater than zero.
+     * - `PostgreSQL` not support value negative for auto increment column.
+     * - `PostgreSQL` auto-increment value must be greater than zero.
      */
     public function resetSequence(string $tableName, int|null $value = null): int
     {

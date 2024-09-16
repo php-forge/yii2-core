@@ -522,6 +522,10 @@ SQL;
      * {@inheritdoc}
      *
      * Note:
+     * - `MySQL` does not support sequences as in other databases like `Oracle` or `PostgreSQL`. Instead, it uses
+     *    auto-increment columns to generate unique sequential values for a primary key column automatically.
+     *    Auto-increment columns are often used as a replacement for sequences to handle the generation of unique
+     *    identifiers.
      * - `MySQL` not support value negative for auto increment column.
      * - `MySQL` auto-increment value must be greater than zero.
      */
@@ -541,7 +545,7 @@ SQL;
             throw new InvalidArgumentException("Table not found: '$tableName'.");
         }
 
-        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
+        if (empty($tableSchema->primaryKey)) {
             throw new InvalidArgumentException(
                 "There is no primary key or sequence associated with table '$tableSchema->fullName'."
             );

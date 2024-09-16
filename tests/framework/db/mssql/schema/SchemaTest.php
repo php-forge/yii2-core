@@ -46,4 +46,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
         parent::testResetSequenceWithTableNotPrimaryKey();
     }
+
+    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    {
+        $this->columnsSchema = [
+            'id' => 'INT IDENTITY',
+            'user_id' => 'INT',
+            'name' => 'NVARCHAR(128)',
+            'PRIMARY KEY (id, user_id)',
+        ];
+
+        parent::testResetSequenceWithTablePrimaryKeyComposite();
+    }
 }
