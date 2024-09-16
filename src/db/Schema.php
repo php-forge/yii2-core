@@ -6,6 +6,7 @@ namespace yii\db;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
@@ -20,22 +21,18 @@ use function strpos;
  *
  * Schema represents the database schema information that is DBMS specific.
  *
- * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
- * the sequence object.
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
+ * sequence object.
  * @property-read QueryBuilder $queryBuilder The query builder for this connection.
  * @property-read string[] $schemaNames All schema names in the database, except system schemas.
  * @property-read string $serverVersion Server version as a string.
  * @property-read string[] $tableNames All table names in the database.
  * @property-read TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element
  * is an instance of [[TableSchema]] or its child class.
- * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
- * transaction. This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
- * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific
- * syntax to be used after `SET TRANSACTION ISOLATION LEVEL`.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Sergey Makinen <sergey@makinen.ru>
- * @since 2.0
+ * @property-write string $transactionIsolationLevel The transaction isolation level to use for this transaction.
+ * This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
+ * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific syntax
+ *  to be used after `SET TRANSACTION ISOLATION LEVEL`.
  */
 abstract class Schema extends BaseObject
 {
@@ -421,32 +418,65 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Splits full table name into parts
-     * @param string $name
-     * @return array
-     * @since 2.0.22
+     * Gets the next auto-increment value for the specified table's primary key.
+     *
+     * This method retrieves the maximum value of the specified primary key column from the given table and adds 1 to
+     * it. If the table is empty, it returns 1.
+     *
+     * @param string $tableName the name of the table.
+     * @param string $columnPK the name of the primary key column.
+     *
+     * @return int the next auto-increment value for the primary key column.
      */
-    protected function getTableNameParts($name)
+    public function getNextAutoIncrementValue(string $tableName, string $columnPK): int
     {
-        return explode('.', $name);
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
+            throw new InvalidArgumentException(
+                "Column '$columnPK' is not an auto-incremental column in table '$tableName'."
+            );
+        }
+
+        $sql = <<<SQL
+        SELECT COALESCE(MAX({$this->db->quoteColumnName($columnPK)}), 0) + 1
+        FROM {$this->db->quoteTableName($tableName)}
+        SQL;
+
+        // use master connection to get the next auto-increment value
+        return $this->db->useMaster(static fn (Connection $db) => (int) $db->createCommand($sql)->queryScalar());
+    }
+
+    /**
+     * Splits full table name into parts.
+     *
+     * @param string $name the table name.
+     * @param bool $withColumn whether to quote the column name.
+     *
+     * @return array the table name parts.
+     */
+    public function getTableNameParts(string $name, bool $withColumn = false): array
+    {
+        return $this->db->getQuoter()->getTableNameParts($name, $withColumn);
     }
 
     /**
      * Returns the actual name of a given table name.
-     * This method will strip off curly brackets from the given table name
-     * and replace the percentage character '%' with [[Connection::tablePrefix]].
-     * @param string $name the table name to be converted
-     * @return string the real name of the given table name
+     *
+     * This method will strip off curly brackets from the given table name and replace the percentage character '%' with
+     * [[Connection::tablePrefix]].
+     *
+     * @param string $tableName the table name to be converted.
+     *
+     * @return string the real name of the given table name.
      */
-    public function getRawTableName($name)
+    public function getRawTableName(string $tableName): string
     {
-        if (strpos($name, '{{') !== false) {
-            $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
-
-            return str_replace('%', $this->db->tablePrefix, $name);
-        }
-
-        return $name;
+        return $this->db->getQuoter()->getRawTableName($tableName);
     }
 
     /**
@@ -455,9 +485,9 @@ abstract class Schema extends BaseObject
      * If the column name contains prefix, the prefix will also be properly quoted.
      * If the column name is already quoted or contains '(', '[[' or '{{', then this method will do nothing.
      *
-     * @param string $name column name
+     * @param string $name column name.
      *
-     * @return string the properly quoted column name
+     * @return string the properly quoted column name.
      */
     public function quoteColumnName(string $name): string
     {
@@ -475,7 +505,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleTableName($name)
     {
-        return $this->db->quoter->quoteSimpleTableName($name);
+        return $this->db->getQuoter()->quoteSimpleTableName($name);
     }
 
     /**
@@ -507,7 +537,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteValue($str)
     {
-        return $this->db->quoter->quoteValue($str);
+        return $this->db->getQuoter()->quoteValue($str);
     }
 
     /**
@@ -628,10 +658,13 @@ abstract class Schema extends BaseObject
                 $cache = $schemaCache;
             }
         }
+
         $rawName = $this->getRawTableName($name);
+
         if (!isset($this->_tableMetadata[$rawName])) {
             $this->loadTableMetadataFromCache($cache, $rawName);
         }
+
         if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
             $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
             $this->saveTableMetadataToCache($cache, $rawName);

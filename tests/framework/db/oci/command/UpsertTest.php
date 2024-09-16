@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\db\oci\querybuilder;
+namespace yiiunit\framework\db\oci\command;
 
 use yii\db\QueryInterface;
 use yiiunit\support\OciConnection;
@@ -10,10 +10,10 @@ use yiiunit\support\OciConnection;
 /**
  * @group db
  * @group oci
- * @group querybuilder
+ * @group command
  * @group upsert
  */
-final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert
+final class UpsertTest extends \yiiunit\framework\db\command\AbstractUpsert
 {
     public function setup(): void
     {
@@ -25,13 +25,11 @@ final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert
     /**
      * @dataProvider \yiiunit\framework\db\oci\provider\QueryBuilderProvider::upsert
      */
-    public function testUpsert(
+    public function testExecuteUpsert(
         string $tableName,
         array|QueryInterface $insertColumns,
-        array|bool $updateColumns,
-        string $expectedSQL,
-        array $expectedParams,
+        array|bool $updateColumns
     ): void {
-        parent::testUpsert($tableName, $insertColumns, $updateColumns, $expectedSQL, $expectedParams);
+        parent::testExecuteUpsert($tableName, $insertColumns, $updateColumns);
     }
 }

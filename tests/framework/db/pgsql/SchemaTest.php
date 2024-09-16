@@ -207,22 +207,6 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $this->assertFalse($table->getColumn('default_false')->defaultValue);
     }
 
-    public function testSequenceName()
-    {
-        $connection = $this->getConnection();
-
-        $sequenceName = $connection->schema->getTableSchema('item')->sequenceName;
-
-        $connection->createCommand('ALTER TABLE "item" ALTER COLUMN "id" SET DEFAULT nextval(\'item_id_seq_2\')')->execute();
-
-        $connection->schema->refreshTableSchema('item');
-        $this->assertEquals('item_id_seq_2', $connection->schema->getTableSchema('item')->sequenceName);
-
-        $connection->createCommand('ALTER TABLE "item" ALTER COLUMN "id" SET DEFAULT nextval(\'' .  $sequenceName . '\')')->execute();
-        $connection->schema->refreshTableSchema('item');
-        $this->assertEquals($sequenceName, $connection->schema->getTableSchema('item')->sequenceName);
-    }
-
     public function testGeneratedValues()
     {
         if (version_compare($this->getConnection(false)->getServerVersion(), '12.0', '<')) {

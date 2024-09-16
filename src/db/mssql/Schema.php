@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
 use yii\db\ConstraintFinderInterface;
@@ -18,7 +19,6 @@ use yii\helpers\ArrayHelper;
 use function array_reverse;
 use function explode;
 use function implode;
-use function is_array;
 use function preg_match;
 use function str_replace;
 use function stripos;
@@ -99,7 +99,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     {
         $tableSchema = new TableSchema();
 
-        $parts = array_reverse($this->db->getQuoter()->getTableNameParts($name));
+        $parts = array_reverse($this->getTableNameParts($name));
 
         $tableSchema->name = $parts[0] ?? '';
         $tableSchema->schemaName = $parts[1] ?? $this->defaultSchema;
@@ -113,25 +113,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         }
 
         return $tableSchema;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @param string $name
-     * @return array
-     * @since 2.0.22
-     */
-    protected function getTableNameParts($name)
-    {
-        $parts = [$name];
-        preg_match_all('/([^.\[\]]+)|\[([^\[\]]+)\]/', $name, $matches);
-        if (isset($matches[0]) && is_array($matches[0]) && !empty($matches[0])) {
-            $parts = $matches[0];
-        }
-
-        $parts = str_replace(['[', ']'], '', $parts);
-
-        return $parts;
     }
 
     /**
@@ -461,8 +442,8 @@ SQL;
                 }
             }
 
-            if ($column->isPrimaryKey && $column->autoIncrement) {
-                $table->sequenceName = '';
+            if ($column->autoIncrement) {
+                $table->sequenceName = $column->name;
             }
 
             $table->columns[$column->name] = $column;
@@ -739,20 +720,44 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function quoteColumnName(string $name): string
+    public function createColumnSchemaBuilder($type, $length = null)
     {
-        if (preg_match('/^\[.*\]$/', $name)) {
-            return $name;
-        }
-
-        return parent::quoteColumnName($name);
+        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createColumnSchemaBuilder($type, $length = null)
+    public function resetSequence(string $tableName, int|null $value = null): int
     {
-        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+        }
+
+        $sql = <<<SQL
+        DBCC CHECKIDENT ({$this->quoteTableName($tableSchema->fullName)}, RESEED, {$value})
+        SQL;
+
+        $this->db->createCommand($sql)->execute();
+
+        return $value;
     }
 }

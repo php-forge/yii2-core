@@ -146,44 +146,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function dropSequence(string $sequenceName): string
-    {
-        throw new NotSupportedException(__METHOD__ . ' is not supported by MySQL/MariaDB.');
-    }
-
-    /**
-     * Creates a SQL statement for resetting the sequence value of a table's primary key.
-     * The sequence will be reset such that the primary key of the next new row inserted
-     * will have the specified value or 1.
-     * @param string $tableName the name of the table whose primary key sequence will be reset
-     * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
-     * the next new row's primary key will have a value 1.
-     * @return string the SQL statement for resetting sequence
-     * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
-     */
-    public function resetSequence($tableName, $value = null)
-    {
-        $table = $this->db->getTableSchema($tableName);
-        if ($table !== null && $table->sequenceName !== null) {
-            $tableName = $this->db->quoteTableName($tableName);
-            if ($value === null) {
-                $key = reset($table->primaryKey);
-                $value = $this->db->createCommand("SELECT MAX(`$key`) FROM $tableName")->queryScalar() + 1;
-            } else {
-                $value = (int) $value;
-            }
-
-            return "ALTER TABLE $tableName AUTO_INCREMENT=$value";
-        } elseif ($table === null) {
-            throw new InvalidArgumentException("Table not found: $tableName");
-        }
-
-        throw new InvalidArgumentException("There is no sequence associated with table '$tableName'.");
-    }
-
-    /**
      * Builds a SQL statement for enabling or disabling integrity check.
      * @param bool $check whether to turn on or off the integrity check.
      * @param string $schema the schema of the tables. Meaningless for MySQL.

@@ -914,9 +914,20 @@ class Connection extends Component
         throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
     }
 
+    /**
+     * Returns the Quoter instance for the current database connection.
+     *
+     * If the quoter has not been initialized yet, it will create one based on the database driver and schema.
+     * The method checks the `quoterMap` to determine the configuration for the quoter. If the quoter is already
+     * initialized, it returns the existing instance.
+     *
+     * If prefix has been changed, the quoter will be re-created.
+     *
+     * @return Quoter the quoter instance configured for quoting database identifiers (table and column names).
+     */
     public function getQuoter(): Quoter
     {
-        if ($this->_quoter === null) {
+        if ($this->_quoter === null || $this->_quoter->getTablePrefix() !== $this->tablePrefix) {
             $driver = $this->getDriverName();
             $schema = $this->getSchema();
 
