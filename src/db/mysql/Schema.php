@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\mysql;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
@@ -386,7 +387,7 @@ SQL;
             if ($column->isPrimaryKey) {
                 $table->primaryKey[] = $column->name;
                 if ($column->autoIncrement) {
-                    $table->sequenceName = '';
+                    $table->sequenceName = $column->name;
                 }
             }
         }
@@ -515,6 +516,58 @@ SQL;
     public function createColumnSchemaBuilder($type, $length = null)
     {
         return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Note:
+     * - `MySQL` does not support sequences as in other databases like `Oracle` or `PostgreSQL`. Instead, it uses
+     *    auto-increment columns to generate unique sequential values for a primary key column automatically.
+     *    Auto-increment columns are often used as a replacement for sequences to handle the generation of unique
+     *    identifiers.
+     * - `MySQL` not support value negative for auto increment column.
+     * - `MySQL` auto-increment value must be greater than zero.
+     */
+    public function resetSequence(string $tableName, int|null $value = null): int
+    {
+        if ($value < 0) {
+            throw new InvalidArgumentException("The value must be greater than '0'.");
+        }
+
+        if ($value === 0) {
+            $value = 1;
+        }
+
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+        }
+
+        $sql = <<<SQL
+        ALTER TABLE {$this->db->quoteTableName($tableSchema->fullName)} AUTO_INCREMENT={$value}
+        SQL;
+
+        $this->db->createCommand($sql)->execute();
+
+        return $value;
     }
 
     /**

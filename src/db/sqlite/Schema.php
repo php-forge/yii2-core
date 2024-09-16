@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\sqlite;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
 use yii\db\ColumnSchema;
@@ -241,7 +242,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             }
         }
         if (count($table->primaryKey) === 1 && !strncasecmp($table->columns[$table->primaryKey[0]]->dbType, 'int', 3)) {
-            $table->sequenceName = '';
+            $table->sequenceName = $table->primaryKey[0];
             $table->columns[$table->primaryKey[0]]->autoIncrement = true;
         }
 
@@ -378,6 +379,69 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             default:
                 throw new NotSupportedException(get_class($this) . ' only supports transaction isolation levels READ UNCOMMITTED and SERIALIZABLE.');
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Note:
+     * - `MySQL` does not support sequences as in other databases like `Oracle` or `PostgreSQL`. Instead, it uses
+     *    auto-increment columns to generate unique sequential values for a primary key column automatically.
+     *    Auto-increment columns are often used as a replacement for sequences to handle the generation of unique
+     *    identifiers.
+     * - `SQLite` not support value negative for auto increment column.
+     * - `SQLite` auto-increment value must be greater than zero.
+     * - `SQLite` add 1 to the value to set the next auto increment value.
+     */
+    public function resetSequence(string $tableName, int|null $value = null): int
+    {
+        if ($value < 0) {
+            throw new InvalidArgumentException("The value must be greater than '0'.");
+        }
+
+        if ($value === 0) {
+            $value = 1;
+        }
+
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+        }
+
+        $valueSequence = $value - 1;
+
+        $sql = <<<SQL
+        UPDATE sqlite_sequence SET [[seq]]=$valueSequence WHERE [[name]]={$this->quoteValue($tableSchema->fullName)}
+        SQL;
+
+        $result = $this->db->createCommand($sql)->execute();
+
+        // if the table not have row in sqlite_sequence, insert it with the value.
+        if ($result === 0) {
+            $this->db
+                ->createCommand()
+                ->insert('sqlite_sequence', ['name' => $tableSchema->fullName,'seq' => $valueSequence])
+                ->execute();
+        }
+
+        return $value;
     }
 
     /**

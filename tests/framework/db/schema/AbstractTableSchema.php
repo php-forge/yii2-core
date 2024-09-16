@@ -32,11 +32,10 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
             default => $this->assertEmpty($tableSchema->primaryKey),
         };
 
-        // MySQL, SQLite does not support sequences
-        match ($this->db->getDriverName()) {
+        match ($this->db->driverName) {
             'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
             'pgsql' => $this->assertSame('T_sequence_name_id_seq', $tableSchema->sequenceName['id']),
-            default => $this->assertEmpty($tableSchema->sequenceName),
+            default => $this->assertSame('id', $tableSchema->sequenceName),
         };
 
         $this->ensureNoTable($tableName);
@@ -67,11 +66,10 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
         $this->assertNotNull($tableSchema);
         $this->assertSame(['id'], $tableSchema->primaryKey);
 
-        // MySQL, SQLite does not support sequences
         match ($this->db->getDriverName()) {
             'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
             'pgsql' => $this->assertSame('T_sequence_name_with_pk_id_seq', $tableSchema->sequenceName['id']),
-            default => $this->assertEmpty($tableSchema->sequenceName),
+            default => $this->assertSame('id', $tableSchema->sequenceName),
         };
 
         $this->ensureNoTable($tableName);
@@ -92,10 +90,10 @@ abstract class AbstractTableSchema extends \yiiunit\TestCase
         $this->assertNotNull($tableSchema);
         $this->assertSame(['id1', 'id2'], $tableSchema->primaryKey);
 
-        // MySQL, SQLite does not support sequences
         match ($this->db->driverName) {
             'oci' => $this->assertStringContainsString('ISEQ$$_', $tableSchema->sequenceName),
-            default => $this->assertEmpty($tableSchema->sequenceName),
+            'sqlite' => $this->assertEmpty($tableSchema->sequenceName),
+            default => $this->assertSame('id1', $tableSchema->sequenceName),
         };
 
         $this->ensureNoTable($tableName);
