@@ -121,28 +121,6 @@ abstract class Schema extends BaseObject
     private $_serverVersion;
 
     /**
-     * Resets the sequence value of a table's primary key.
-     *
-     * This method executes a database command to reset the sequence. It's implemented at the schema level because some
-     * databases (e.g., Oracle) may require multiple queries to reset a sequence.
-     *
-     * The sequence is reset so that the primary key of the next new row inserted will have either the specified value
-     * or the maximum existing value plus one.
-     *
-     * @param string $tableName The name of the table whose primary key sequence will be reset.
-     * @param int|null $value The value for the primary key of the next new row to be inserted.
-     * If not set, the next new row's primary key will be the maximum existing value plus one.
-     *
-     * @return int The value for the primary key of the next new row to be inserted.
-     *
-     * @throws NotSupportedException if sequence resetting is not supported by the underlying DBMS.
-     */
-    public function resetSequence(string $tableName, ?int $value = null): int
-    {
-        throw new NotSupportedException($this->db->driverName . ' does not support resetting sequence.');
-    }
-
-    /**
      * Resolves the table name and schema name (if any).
      *
      * @param string $name the table name. The table name may contain schema name if any. Do not quote the table name.
