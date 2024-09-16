@@ -86,7 +86,11 @@ abstract class AbstractSchema extends TestCase
 
         $result = $this->db->getSchema()->resetSequence($tableName, $value);
 
-        $this->assertSame($value ?? 1, $result);
+        if (in_array($this->db->driverName, ['mysql', 'pgsql', 'sqlite']) && $value === 0) {
+            $this->assertSame(1, $result);
+        } else {
+            $this->assertSame($value ?? 1, $result);
+        }
 
         foreach ($insertRows as $inserRow) {
             $result = $this->db->createCommand()->insert($tableName, $inserRow)->execute();

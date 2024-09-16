@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\sqlite\schema;
 
+use yii\base\InvalidArgumentException;
 use yiiunit\support\SqliteConnection;
 
 /**
@@ -35,5 +36,15 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         int|null $value = null
     ): void {
         parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
+    }
+
+    public function testResetSequenceWithValueNegative(): void
+    {
+        $tableName = '{{%reset_sequence}}';
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("The value must be greater than '0'.");
+
+        $this->db->getSchema()->resetSequence($tableName, -1);
     }
 }
