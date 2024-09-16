@@ -126,14 +126,17 @@ class ActiveFixture extends BaseActiveFixture
 
     /**
      * Removes all existing data from the specified table and resets sequence number to 1 (if any).
+     *
      * This method is called before populating fixture data into the table associated with this fixture.
      */
     protected function resetTable()
     {
-        $table = $this->getTableSchema();
-        $this->db->createCommand()->delete($table->fullName)->execute();
-        if ($table->sequenceName !== null) {
-            $this->db->createCommand()->executeResetSequence($table->fullName, 1);
+        $tableSchema = $this->getTableSchema();
+
+        $this->db->createCommand()->delete($tableSchema->fullName)->execute();
+
+        if ($tableSchema->sequenceName !== null) {
+            $this->db->getSchema()->resetSequence($tableSchema->fullName, 1);
         }
     }
 

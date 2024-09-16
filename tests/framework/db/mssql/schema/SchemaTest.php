@@ -24,4 +24,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
         $this->db = MssqlConnection::getConnection();
     }
+
+    /**
+     * @dataProvider \yiiunit\framework\db\mssql\provider\SchemaProvider::resetSequence
+     */
+    public function testResetSequence(
+        string $tableName,
+        array $insertRows,
+        array $expectedIds,
+        int|null $value = null
+    ): void {
+        parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
+    }
 }

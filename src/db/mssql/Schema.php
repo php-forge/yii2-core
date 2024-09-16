@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
 use yii\db\ConstraintFinderInterface;
@@ -441,8 +442,8 @@ SQL;
                 }
             }
 
-            if ($column->isPrimaryKey && $column->autoIncrement) {
-                $table->sequenceName = '';
+            if ($column->autoIncrement) {
+                $table->sequenceName = $column->name;
             }
 
             $table->columns[$column->name] = $column;
@@ -722,5 +723,46 @@ SQL;
     public function createColumnSchemaBuilder($type, $length = null)
     {
         return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Note:
+     * - `SQLSRV` add 1 to the value to set the next auto increment value.
+     */
+    public function resetSequence(string $tableName, int|null $value = null): int
+    {
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+        }
+
+        $valueSequence = $value - 1;
+
+        $sql = <<<SQL
+        DBCC CHECKIDENT ({$this->quoteTableName($tableSchema->fullName)}, RESEED, {$valueSequence})
+        SQL;
+
+        $this->db->createCommand($sql)->execute();
+
+        return $value;
     }
 }

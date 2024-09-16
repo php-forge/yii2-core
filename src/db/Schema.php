@@ -21,22 +21,18 @@ use function strpos;
  *
  * Schema represents the database schema information that is DBMS specific.
  *
- * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
- * the sequence object.
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
+ * sequence object.
  * @property-read QueryBuilder $queryBuilder The query builder for this connection.
  * @property-read string[] $schemaNames All schema names in the database, except system schemas.
  * @property-read string $serverVersion Server version as a string.
  * @property-read string[] $tableNames All table names in the database.
  * @property-read TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element
  * is an instance of [[TableSchema]] or its child class.
- * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
- * transaction. This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
- * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific
- * syntax to be used after `SET TRANSACTION ISOLATION LEVEL`.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Sergey Makinen <sergey@makinen.ru>
- * @since 2.0
+ * @property-write string $transactionIsolationLevel The transaction isolation level to use for this transaction.
+ * This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
+ * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific syntax
+ *  to be used after `SET TRANSACTION ISOLATION LEVEL`.
  */
 abstract class Schema extends BaseObject
 {
@@ -123,6 +119,28 @@ abstract class Schema extends BaseObject
      * @var string server version as a string.
      */
     private $_serverVersion;
+
+    /**
+     * Resets the sequence value of a table's primary key.
+     *
+     * This method executes a database command to reset the sequence. It's implemented at the schema level because some
+     * databases (e.g., Oracle) may require multiple queries to reset a sequence.
+     *
+     * The sequence is reset so that the primary key of the next new row inserted will have either the specified value
+     * or the maximum existing value plus one.
+     *
+     * @param string $tableName The name of the table whose primary key sequence will be reset.
+     * @param int|null $value The value for the primary key of the next new row to be inserted.
+     * If not set, the next new row's primary key will be the maximum existing value plus one.
+     *
+     * @return int The value for the primary key of the next new row to be inserted.
+     *
+     * @throws NotSupportedException if sequence resetting is not supported by the underlying DBMS.
+     */
+    public function resetSequence(string $tableName, ?int $value = null): int
+    {
+        throw new NotSupportedException($this->db->driverName . ' does not support resetting sequence.');
+    }
 
     /**
      * Resolves the table name and schema name (if any).

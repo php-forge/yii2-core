@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii\db\pgsql;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
@@ -268,6 +269,56 @@ SQL;
     protected function loadTableDefaultValues($tableName)
     {
         throw new NotSupportedException('PostgreSQL does not support default value constraints.');
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Note:
+     * - `PgSQL` not support value negative for auto increment column.
+     * - `PgSQL` auto-increment value must be greater than zero.
+     */
+    public function resetSequence(string $tableName, int|null $value = null): int
+    {
+        if ($value < 0) {
+            throw new InvalidArgumentException("The value must be greater than '0'.");
+        }
+
+        if ($value === 0) {
+            $value = 1;
+        }
+
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
+            throw new InvalidArgumentException(
+                "There is no primary key or sequence associated with table '$tableName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($value === null) {
+            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+        }
+
+        $sequenceName = $this->db->quoteValue($tableSchema->sequenceName[$columnPK]) ?? null;
+
+        $sql = <<<SQL
+        SELECT SETVAL($sequenceName,{$value},false)
+        SQL;
+
+        $this->db->createCommand($sql)->execute();
+
+        return $value;
     }
 
     /**
