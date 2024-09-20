@@ -96,8 +96,9 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name: `tablename_SEQ`.
+     * @param string $tableName the table name.
+     * The name will be properly quoted by the method.
+     * The sequence name will be generated based on the table name: `tablename_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -132,25 +133,33 @@ class QueryBuilder extends \yii\db\QueryBuilder
      *
      * @see https://learn.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver16
      */
-    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    public function createSequence(string $tableName, int $start = 1, int $increment = 1, array $options = []): string
     {
-        $cache = $options['cache'] ?? null;
-        $cycle = $options['cycle'] ?? null;
-        $minValue = $options['minValue'] ?? null;
-        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
-        $sequence = $this->db->quoteTableName($table . '_SEQ');
-        $type = $options['type'] ?? null;
+        $types = ['tinyint', 'smallint', 'int', 'bigint', 'decimal'];
 
-        return <<<SQL
-            CREATE SEQUENCE $sequence
-            $type !== null ? AS $type : ''
+        $type = isset($options['type']) && in_array($options['type'], $types, true)
+            ? 'AS ' . $options['type'] : '';
+        $minValue = isset($options['minValue']) && is_int($options['minValue'])
+            ? 'MINVALUE ' . $options['minValue'] : 'NO MINVALUE';
+        $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
+            ? 'MAXVALUE ' . $options['maxValue'] : 'NO MAXVALUE';
+        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
+        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NO CACHE';
+        $sequence = $this->db->quoteTableName($tableName . '_SEQ');
+
+        $sql = <<<SQL
+        CREATE SEQUENCE $sequence
+            $type
             START WITH $start
             INCREMENT BY $increment
-            $minValue !== null ? MINVALUE $minValue : 'NO MINVALUE'
-            $maxValue !== null ? MAXVALUE $maxValue : 'NO MAXVALUE'
-            $cycle !== null ? CYCLE : 'NO CYCLE'
-            $cache !== null ? CACHE $cache : 'NO CACHE';
+            $minValue
+            $maxValue
+            $cycle
+            $cache
         SQL;
+
+        //remove line blanks heredoc, preserve the original formatting
+        return preg_replace('/^\h*\v+/m', '', $sql);
     }
 
     /**

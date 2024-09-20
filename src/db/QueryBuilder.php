@@ -173,8 +173,9 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name: `tablename_SEQ`.
+     * @param string $tableName the table name.
+     * The name will be properly quoted by the method.
+     * The sequence name will be generated based on the table name: `tablename_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -189,14 +190,21 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Creates an `DROP SEQUENCE` SQL statement.
      *
-     * @param string $sequenceName the name of the sequence to be dropped.
+     * @param string $tableName the table name.
      * The name will be properly quoted by the method.
+     * The sequence name will be generated based on the table name: `tablename_SEQ`.
      *
      * @return string the SQL statement for dropping the sequence.
      */
-    public function dropSequence(string $sequenceName): string
+    public function dropSequence(string $tableName): string
     {
-        return 'DROP SEQUENCE ' . $this->db->quoteTableName($sequenceName);
+        if (str_contains($tableName, '_SEQ') === false) {
+            $tableName .= '_SEQ';
+        }
+
+        return <<<SQL
+        DROP SEQUENCE {$this->db->quoteTableName($tableName)}
+        SQL;
     }
 
     /**

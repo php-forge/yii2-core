@@ -13,6 +13,254 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
 {
     protected static string $driverName = 'sqlsrv';
 
+    public static function createSequence(): array
+    {
+        return [
+            'simple' => [
+                'test_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as type tinyint' => [
+                'test_sequence',
+                1,
+                1,
+                ['type' => 'tinyint'],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    AS tinyint
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as type smallint' => [
+                'test_sequence',
+                1,
+                1,
+                ['type' => 'smallint'],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    AS smallint
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as type int' => [
+                'test_sequence',
+                1,
+                1,
+                ['type' => 'int'],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    AS int
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as type bigint' => [
+                'test_sequence',
+                1,
+                1,
+                ['type' => 'bigint'],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    AS bigint
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as type decimal' => [
+                'test_sequence',
+                1,
+                1,
+                ['type' => 'decimal'],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    AS decimal
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as start' => [
+                'test_sequence',
+                10,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 10
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as start with value negative' => [
+                'test_sequence',
+                -10,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH -10
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as increment' => [
+                'test_sequence',
+                1,
+                10,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 10
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as increment negative' => [
+                'test_sequence',
+                1,
+                -10,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY -10
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as minvalue' => [
+                'test_sequence',
+                1,
+                1,
+                ['minValue' => 10],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    MINVALUE 10
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as maxvalue' => [
+                'test_sequence',
+                1,
+                1,
+                ['maxValue' => 10],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    MAXVALUE 10
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as maxvalue PHP_INT_MAX' => [
+                'test_sequence',
+                1,
+                1,
+                ['maxValue' => PHP_INT_MAX],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    MAXVALUE 9223372036854775807
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as cycle' => [
+                'test_sequence',
+                1,
+                1,
+                ['cycle' => true],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    CYCLE
+                    NO CACHE
+                SQL,
+            ],
+            'as cache' => [
+                'test_sequence',
+                1,
+                1,
+                ['cache' => 50],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    CACHE 50
+                SQL,
+            ],
+        ];
+    }
+
+    public static function dropSequence(): array
+    {
+        return [
+            'simple' => [
+                'test_sequence',
+                <<<SQL
+                DROP SEQUENCE [test_sequence_SEQ]
+                SQL,
+            ],
+        ];
+    }
+
     public static function insert(): array
     {
         $insert = parent::insert();
