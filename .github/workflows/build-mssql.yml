@@ -46,7 +46,7 @@ jobs:
 
             mssql:
               - version: server:2017-latest
-                mssql-tool: /opt/mssql-tools/bin/sqlcmd
+                mssql-tool: /opt/mssql-tools18/bin/sqlcmd -C
               - version: server:2019-latest
                 mssql-tool: /opt/mssql-tools18/bin/sqlcmd -C
               - version: server:2022-latest
