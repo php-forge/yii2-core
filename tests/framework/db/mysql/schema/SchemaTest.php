@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\schema;
 
 use yii\base\InvalidArgumentException;
+use yii\base\NotSupportedException;
 use yiiunit\support\MysqlConnection;
 
 /**
@@ -36,6 +37,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         int|null $value = null
     ): void {
         parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
+    }
+
+    public function testGetSequenceName(): void
+    {
+        $tableName = '{{%sequence_test}}';
+
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('mysql does not support getting sequence name.');
+
+        $this->db->getSchema()->getSequenceName($tableName);
     }
 
     public function testResetSequenceWithTableNotPrimaryKey(): void

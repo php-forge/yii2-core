@@ -611,6 +611,22 @@ abstract class Schema extends BaseObject
     }
 
     /**
+     * Returns the name of the sequence object.
+     *
+     * @param string $sequenceName the sequence name.
+     * The name may contain schema name if any.
+     * The name will be properly quoted by the method.
+     *
+     * @return string|false the name of the sequence object. False is returned if the sequence does not exist.
+     *
+     * @throws NotSupportedException if this method is not supported by the DBMS.
+     */
+    public function getSequenceName(string $sequenceName): false|string
+    {
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support getting sequence name.');
+    }
+
+    /**
      * Returns the cache key for the specified table name.
      * @param string $name the table name.
      * @return mixed the cache key.

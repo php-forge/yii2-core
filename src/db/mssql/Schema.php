@@ -728,6 +728,22 @@ SQL;
     /**
      * {@inheritdoc}
      */
+    public function getSequenceName(string $sequenceName): false|string
+    {
+        if (str_contains($sequenceName, '_SEQ') === false) {
+            $sequenceName .= '_SEQ';
+        }
+
+        $sql = <<<SQL
+        SELECT [name] FROM [sys].[sequences] WHERE [name] = :sequenceName
+        SQL;
+
+        return $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryScalar();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function resetSequence(string $tableName, int|null $value = null): int
     {
         $tableSchema = $this->db->getTableSchema($tableName);

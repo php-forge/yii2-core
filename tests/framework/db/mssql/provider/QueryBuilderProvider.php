@@ -31,14 +31,13 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                     NO CACHE
                 SQL,
             ],
-            'as type tinyint' => [
-                'test_sequence',
+            'with suffix _SEQ' => [
+                'test_sequence_SEQ',
                 1,
                 1,
-                ['type' => 'tinyint'],
+                [],
                 <<<SQL
                 CREATE SEQUENCE [test_sequence_SEQ]
-                    AS tinyint
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE

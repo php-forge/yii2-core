@@ -19,7 +19,7 @@ abstract class AbstractCreateSequence extends \yiiunit\TestCase
     }
 
     public function testGenerateSQL(
-        string $tableName,
+        string $sequenceName,
         int $start,
         int $increment,
         array $options,
@@ -27,6 +27,6 @@ abstract class AbstractCreateSequence extends \yiiunit\TestCase
     ): void {
         $qb = $this->db->getQueryBuilder();
 
-        $this->assertSame($expectedSQL, $qb->createSequence($tableName, $start, $increment, $options));
+        $this->assertSame($expectedSQL, $qb->createSequence($sequenceName, $start, $increment, $options));
     }
 }

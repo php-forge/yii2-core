@@ -349,13 +349,9 @@ SQL;
     }
 
     /**
-     * Returns the name of the sequence associated with the table or not.
-     *
-     * @param string $tableOrSequence the table name or sequence name.
-     *
-     * @return string|null whether the sequence exists.
+     * {@inheritdoc}
      */
-    public function getSequenceName(string $tableOrSequence): string|null
+    public function getSequenceName(string $sequenceName): false|string
     {
         $sql = <<<SQL
         SELECT
@@ -363,7 +359,7 @@ SQL;
                 (
                     SELECT TRIGGER_NAME AS SEQUENCE_NAME
                     FROM USER_TRIGGERS
-                    WHERE TABLE_NAME = :tableOrSequence
+                    WHERE TABLE_NAME = :tableName
                         AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
                     FETCH FIRST 1 ROW ONLY
                 ),
@@ -371,16 +367,14 @@ SQL;
                     SELECT SEQUENCE_NAME
                     FROM USER_SEQUENCES
                     WHERE SEQUENCE_NAME
-                        LIKE :tableOrSequence || '%'
+                        LIKE :tableName || '%'
                     FETCH FIRST 1 ROW ONLY
                 )
             ) AS SEQUENCE_NAME
         FROM DUAL
         SQL;
 
-        $result = $this->db->createCommand($sql, [':tableOrSequence' => $tableOrSequence])->queryScalar();
-
-        return $result === false ? null : $result;
+        return $this->db->createCommand($sql, [':tableName' => $sequenceName])->queryScalar();
     }
 
     /**

@@ -25,12 +25,12 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
      * @dataProvider \yiiunit\framework\db\mssql\provider\QueryBuilderProvider::createSequence
      */
     public function testGenerateSQL(
-        string $tableName,
+        string $sequenceName,
         int $start,
         int $increment,
         array $options,
         string $expectedSQL
     ): void {
-        parent::testGenerateSQL($tableName, $start, $increment, $options, $expectedSQL);
+        parent::testGenerateSQL($sequenceName, $start, $increment, $options, $expectedSQL);
     }
 }
