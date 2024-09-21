@@ -38,9 +38,9 @@ Yii Core version 2 Change Log
 - Enh #97: Add `getNextAutoIncrementValue()` method in `Schema::class` (@terabytesoftw)
 - Enh #98: Add support for identity columns, fix `sequenceName` and `autoIncrement` in `ColumnSchema::class` in `Oracle` (@terabytesoftw)
 - Enh #99: Add the logic to check for table existence and auto-incremental column in `getNextAutoIncrementValue()` (@terabytesoftw)
-- Enh #98: Add support for identity columns, fix `sequenceName` and `autoIncrement` in `ColumnSchema::class` for `Oci` (@terabytesoftw)
-- Bug #99: Fix `sequenceName` and `autoIncrement` in `TableSchema::class` in `PgSQL` (@terabytesoftw)
-- Enh #100: Move method `resetSequence()` from `QueryBuilder::class` to `Schema::class` (@terabytesoftw)
+- Bug #100: Fix `sequenceName` and `autoIncrement` in `TableSchema::class` in `PgSQL` (@terabytesoftw)
+- Enh #101: Move method `resetSequence()` from `QueryBuilder::class` to `Schema::class` (@terabytesoftw)
+- Enh #102: Better naming `resetSequence()` to `resetAutoIncrementPK()` and `getNextAutoIncrementValue()` to `getNextAutoIncrementPKValue()` in `Schema::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

@@ -275,10 +275,10 @@ SQL;
      * {@inheritdoc}
      *
      * Note:
-     * - `PostgreSQL` not support value negative for auto increment column.
-     * - `PostgreSQL` auto-increment value must be greater than zero.
+     * - `PostgreSQL` not support value negative for auto increment primary key column.
+     * - `PostgreSQL` auto-increment primary key value must be greater than zero.
      */
-    public function resetSequence(string $tableName, int|null $value = null): int
+    public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
     {
         if ($value < 0) {
             throw new InvalidArgumentException("The value must be greater than '0'.");
@@ -288,26 +288,10 @@ SQL;
             $value = 1;
         }
 
-        $tableSchema = $this->db->getTableSchema($tableName);
-
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
-            throw new InvalidArgumentException(
-                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
-            );
-        }
-
-        if (count($tableSchema->primaryKey) > 1) {
-            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
-        }
-
-        $columnPK = reset($tableSchema->primaryKey);
+        [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
 
         if ($value === null) {
-            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+            $value = $this->db->getSchema()->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
         $sequenceName = $this->db->quoteValue($tableSchema->sequenceName[$columnPK]) ?? null;

@@ -428,7 +428,7 @@ abstract class Schema extends BaseObject
      *
      * @return int the next auto-increment value for the primary key column.
      */
-    public function getNextAutoIncrementValue(string $tableName, string $columnPK): int
+    public function getNextAutoIncrementPKValue(string $tableName, string $columnPK): int
     {
         $tableSchema = $this->getTableSchema($tableName);
 
@@ -786,5 +786,42 @@ abstract class Schema extends BaseObject
     public function getTableQuoteCharacter(): array|string
     {
         return $this->tableQuoteCharacter;
+    }
+
+    /**
+     * Validates the table and retrieves auto-incremental primary key column.
+     *
+     * @param string $tableName The name of the table to validate.
+     *
+     * @return array An array containing the table schema and the auto-incremental primary key column name.
+     *
+     * @throws InvalidArgumentException if the table is not found or doesn't have a suitable auto-incremental primary
+     * key.
+     */
+    protected function validateTableAndAutoIncrementPK(string $tableName): array
+    {
+        $tableSchema = $this->db->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$tableName'.");
+        }
+
+        if (empty($tableSchema->primaryKey)) {
+            throw new InvalidArgumentException(
+                "There is no primary key associated with table '$tableSchema->fullName'."
+            );
+        }
+
+        if (count($tableSchema->primaryKey) > 1) {
+            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
+        }
+
+        $columnPK = reset($tableSchema->primaryKey);
+
+        if ($this->db->getDriverName() !== 'oci' && $tableSchema->columns[$columnPK]->autoIncrement === false) {
+            throw new InvalidArgumentException("The column '$columnPK' is not an auto-incremental column.");
+        }
+
+        return [$tableSchema, $columnPK];
     }
 }

@@ -23,14 +23,14 @@ abstract class AbstractSchema extends TestCase
 
     public function testGetNextAutoIncrementValue(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
         $this->assertSame(0, $result);
-        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementValue($tableName, 'id'));
+        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementPKValue($tableName, 'id'));
 
         $result = $this->db->createCommand()->insert($tableName, ['name' => 'test_1'])->execute();
 
@@ -39,14 +39,14 @@ abstract class AbstractSchema extends TestCase
         $result = $this->db->createCommand()->insert($tableName, ['name' => 'test_2'])->execute();
 
         $this->assertSame(1, $result);
-        $this->assertSame(3, $this->db->getSchema()->getNextAutoIncrementValue($tableName, 'id'));
+        $this->assertSame(3, $this->db->getSchema()->getNextAutoIncrementPKValue($tableName, 'id'));
 
         $this->ensureNoTable($tableName);
     }
 
     public function testGetNextAutoIncrementValueWithNoColumnAutoIncrement(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -55,22 +55,22 @@ abstract class AbstractSchema extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Column 'name' is not an auto-incremental column in table '{$tableName}'.");
 
-        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementValue($tableName, 'name'));
+        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementPKValue($tableName, 'name'));
     }
 
     public function testGetNextAutoIncrementValueWithNoTableExist(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Table not found: '{$tableName}'.");
 
-        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementValue($tableName, 'id'));
+        $this->assertSame(1, $this->db->getSchema()->getNextAutoIncrementPKValue($tableName, 'id'));
     }
 
-    public function testResetSequence(
+    public function testResetAutoIncrementPK(
         string $tableName,
         array $insertRows,
         array $expectedIds,
@@ -84,7 +84,7 @@ abstract class AbstractSchema extends TestCase
 
         $this->assertSame(0, $result);
 
-        $result = $this->db->getSchema()->resetSequence($tableName, $value);
+        $result = $this->db->getSchema()->resetAutoIncrementPK($tableName, $value);
 
         if (in_array($this->db->driverName, ['mysql', 'pgsql', 'sqlite']) && $value === 0) {
             $this->assertSame(1, $result);
@@ -116,9 +116,9 @@ abstract class AbstractSchema extends TestCase
         $this->ensureNoTable($tableName);
     }
 
-    public function testResetSequenceWithData(): void
+    public function testResetAutoIncrementPKWithData(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
@@ -132,7 +132,7 @@ abstract class AbstractSchema extends TestCase
             $this->assertSame(1, $result);
         }
 
-        $result = $this->db->getSchema()->resetSequence($tableName, 7);
+        $result = $this->db->getSchema()->resetAutoIncrementPK($tableName, 7);
 
         $this->assertSame(7, $result);
 
@@ -156,21 +156,21 @@ abstract class AbstractSchema extends TestCase
         $this->ensureNoTable($tableName);
     }
 
-    public function testResetSequenceWithNotTableExist(): void
+    public function testResetAutoIncrementPKWithNotTableExist(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Table not found: '{$tableName}'.");
 
-        $this->db->getSchema()->resetSequence($tableName, 1);
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
     }
 
-    public function testResetSequenceWithTableNotPrimaryKey(): void
+    public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
@@ -179,14 +179,14 @@ abstract class AbstractSchema extends TestCase
         $this->assertSame(0, $result);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("There is no primary key or sequence associated with table 'reset_sequence'.");
+        $this->expectExceptionMessage("There is no primary key associated with table 'reset_autoincrement_pk'.");
 
-        $this->db->getSchema()->resetSequence($tableName, 1);
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
     }
 
-    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    public function testResetAutoIncrementPKWithTablePrimaryKeyComposite(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_autoincrement_pk}}';
 
         $this->ensureNoTable($tableName);
 
@@ -197,7 +197,7 @@ abstract class AbstractSchema extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('This method does not support tables with composite primary keys.');
 
-        $this->db->getSchema()->resetSequence($tableName, 1);
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
     }
 
     protected function ensureNoTable(string $tableName): void
