@@ -818,7 +818,10 @@ abstract class Schema extends BaseObject
 
         $columnPK = reset($tableSchema->primaryKey);
 
-        if ($this->db->getDriverName() !== 'oci' && $tableSchema->columns[$columnPK]->autoIncrement === false) {
+        if (
+            in_array($this->db->getDriverName(), ['mysql', 'sqlite'], true) === false &&
+            $tableSchema->columns[$columnPK]->autoIncrement === false
+        ) {
             throw new InvalidArgumentException("The column '$columnPK' is not an auto-incremental column.");
         }
 
