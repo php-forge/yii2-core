@@ -27,28 +27,28 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\sqlite\provider\SchemaProvider::resetSequence
+     * @dataProvider \yiiunit\framework\db\sqlite\provider\SchemaProvider::resetAutoIncrementPK
      */
-    public function testResetSequence(
+    public function testResetAutoIncrementPK(
         string $tableName,
         array $insertRows,
         array $expectedIds,
         int|null $value = null
     ): void {
-        parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
+        parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
     }
 
-    public function testResetSequenceWithTableNotPrimaryKey(): void
+    public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
         $this->columnsSchema = [
             'id' => 'INTEGER',
             'name' => 'TEXT',
         ];
 
-        parent::testResetSequenceWithTableNotPrimaryKey();
+        parent::testResetAutoIncrementPKWithTableNotPrimaryKey();
     }
 
-    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    public function testResetAutoIncrementPKWithTablePrimaryKeyComposite(): void
     {
         $this->columnsSchema = [
             'id' => 'INTEGER',
@@ -57,16 +57,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'PRIMARY KEY (id, user_id)',
         ];
 
-        parent::testResetSequenceWithTablePrimaryKeyComposite();
+        parent::testResetAutoIncrementPKWithTablePrimaryKeyComposite();
     }
 
-    public function testResetSequenceWithValueNegative(): void
+    public function testResetAutoIncrementPKWithValueNegative(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_auto_increment_pk}}';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("The value must be greater than '0'.");
 
-        $this->db->getSchema()->resetSequence($tableName, -1);
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, -1);
     }
 }

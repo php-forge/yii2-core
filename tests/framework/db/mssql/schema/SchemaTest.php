@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\mssql\schema;
 
+use yii\base\InvalidArgumentException;
 use yiiunit\support\MssqlConnection;
 
 /**
@@ -26,28 +27,50 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
     }
 
     /**
-     * @dataProvider \yiiunit\framework\db\mssql\provider\SchemaProvider::resetSequence
+     * @dataProvider \yiiunit\framework\db\mssql\provider\SchemaProvider::resetAutoIncrementPK
      */
-    public function testResetSequence(
+    public function testResetAutoIncrementPK(
         string $tableName,
         array $insertRows,
         array $expectedIds,
         int|null $value = null
     ): void {
-        parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
+        parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
     }
 
-    public function testResetSequenceWithTableNotPrimaryKey(): void
+    public function testResetAutoIncrementPKWithTableNotAutoIncrement(): void
+    {
+        $tableName = '{{%reset_autoincrement_pk}}';
+
+        $this->columnsSchema = [
+            'id' => 'INT',
+            'name' => 'NVARCHAR(128)',
+            'PRIMARY KEY (id)',
+        ];
+
+        $this->ensureNoTable($tableName);
+
+        $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
+
+        $this->assertSame(0, $result);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("The column 'id' is not an auto-incremental column.");
+
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
+    }
+
+    public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
         $this->columnsSchema = [
             'id' => 'INT',
             'name' => 'NVARCHAR(128)',
         ];
 
-        parent::testResetSequenceWithTableNotPrimaryKey();
+        parent::testResetAutoIncrementPKWithTableNotPrimaryKey();
     }
 
-    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    public function testResetAutoIncrementPKWithTablePrimaryKeyComposite(): void
     {
         $this->columnsSchema = [
             'id' => 'INT IDENTITY',
@@ -56,6 +79,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'PRIMARY KEY (id, user_id)',
         ];
 
-        parent::testResetSequenceWithTablePrimaryKeyComposite();
+        parent::testResetAutoIncrementPKWithTablePrimaryKeyComposite();
     }
 }

@@ -385,15 +385,10 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      *
      * Note:
-     * - `MySQL` does not support sequences as in other databases like `Oracle` or `PostgreSQL`. Instead, it uses
-     *    auto-increment columns to generate unique sequential values for a primary key column automatically.
-     *    Auto-increment columns are often used as a replacement for sequences to handle the generation of unique
-     *    identifiers.
-     * - `SQLite` not support value negative for auto increment column.
+     * - `SQLite` not support value negative for auto increment primary key column.
      * - `SQLite` auto-increment value must be greater than zero.
-     * - `SQLite` add 1 to the value to set the next auto increment value.
      */
-    public function resetSequence(string $tableName, int|null $value = null): int
+    public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
     {
         if ($value < 0) {
             throw new InvalidArgumentException("The value must be greater than '0'.");
@@ -403,26 +398,10 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             $value = 1;
         }
 
-        $tableSchema = $this->db->getTableSchema($tableName);
-
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        if (empty($tableSchema->primaryKey)) {
-            throw new InvalidArgumentException(
-                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
-            );
-        }
-
-        if (count($tableSchema->primaryKey) > 1) {
-            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
-        }
-
-        $columnPK = reset($tableSchema->primaryKey);
+        [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
 
         if ($value === null) {
-            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+            $value = $this->db->getSchema()->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
         $valueSequence = $value - 1;
