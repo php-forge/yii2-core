@@ -341,13 +341,16 @@ SQL;
     }
 
     /**
-     * Sequence name of table.
+     * Returns the sequence name for the specified table or sequence.
      *
-     * @param string $tableName the table name.
+     * This method attempts to retrieve the sequence name for a table or sequence by searching for it in user triggers
+     * (for sequences created via triggers) or user sequences. If no matching sequence is found, it returns `false`.
      *
-     * @return false|string whether the sequence exists.
+     * @param string $tableOrSequenceName the table name or sequence name to search for.
+     *
+     * @return false|string the sequence name if it exists, or `false` if not found.
      */
-    public function getTableSequenceName(string $tableName): false|string
+    public function getTableSequenceName(string $tableOrSequenceName): false|string
     {
         $sql = <<<SQL
         SELECT
@@ -355,7 +358,7 @@ SQL;
                 (
                     SELECT TRIGGER_NAME AS SEQUENCE_NAME
                     FROM USER_TRIGGERS
-                    WHERE TABLE_NAME = :tableName
+                    WHERE TABLE_NAME = :tableOrSequenceName
                         AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
                     FETCH FIRST 1 ROW ONLY
                 ),
@@ -363,14 +366,14 @@ SQL;
                     SELECT SEQUENCE_NAME
                     FROM USER_SEQUENCES
                     WHERE SEQUENCE_NAME
-                        LIKE :tableName || '%'
+                        LIKE :tableOrSequenceName || '%'
                     FETCH FIRST 1 ROW ONLY
                 )
             ) AS SEQUENCE_NAME
         FROM DUAL
         SQL;
 
-        $result = $this->db->createCommand($sql, [':tableName' => $tableName])->queryScalar();
+        $result = $this->db->createCommand($sql, [':tableOrSequenceName' => $tableOrSequenceName])->queryScalar();
 
         return empty($result) ? false : $result;
     }
