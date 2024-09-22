@@ -100,7 +100,8 @@ abstract class AbstractSchema extends TestCase
 
         if ($this->db->driverName === 'oci') {
             $tableSchema = $this->db->getTableSchema($tableName);
-            $sequenceName = $tableSchema->sequenceName;
+
+            $sequenceName = $tableSchema->columns['id']->sequenceName;
         }
 
         $this->assertEquals(end($expectedIds), $this->db->getLastInsertID($sequenceName));

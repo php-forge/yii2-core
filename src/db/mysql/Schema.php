@@ -386,9 +386,6 @@ SQL;
             $table->columns[$column->name] = $column;
             if ($column->isPrimaryKey) {
                 $table->primaryKey[] = $column->name;
-                if ($column->autoIncrement) {
-                    $table->sequenceName = $column->name;
-                }
             }
         }
 

@@ -43,6 +43,7 @@ Yii Core version 2 Change Log
 - Enh #102: Better naming `resetSequence()` to `resetAutoIncrementPK()` and `getNextAutoIncrementValue()` to `getNextAutoIncrementPKValue()` in `Schema::class` (@terabytesoftw)
 - Bug #103: Remove `server:2017-latest` in `github actions` and add in `appveyor.yml` (@terabytesoftw)
 - Bug #104: Remove `insert()` method from `Schema::class` (@terabytesoftw)
+- Bug #105: Removed the `sequenceName` property from the `TableSchema::class` and added it to the `ColumnSchema::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

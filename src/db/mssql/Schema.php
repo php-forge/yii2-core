@@ -442,10 +442,6 @@ SQL;
                 }
             }
 
-            if ($column->autoIncrement) {
-                $table->sequenceName = $column->name;
-            }
-
             $table->columns[$column->name] = $column;
         }
 

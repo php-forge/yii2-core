@@ -19,13 +19,11 @@ class ColumnSchema extends \yii\db\ColumnSchema
     /**
      * @var int the dimension of array. Defaults to 0, means this column is not an array.
      */
-    public $dimension = 0;
+    public int $dimension = 0;
     /**
-     * @var string name of associated sequence if column is auto-incremental
-     * @since 2.0.29
+     * @var string|null name of associated sequence if column is auto-incremental
      */
-    public $sequenceName = null;
-
+    public string|null $sequenceName = null;
 
     /**
      * {@inheritdoc}

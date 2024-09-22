@@ -334,14 +334,6 @@ SQL;
 
             $c = $this->createColumn($column);
 
-            if ($c->autoIncrement) {
-                preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
-
-                if (isset($matches[1])) {
-                    $table->sequenceName = $matches[1];
-                }
-            }
-
             $table->columns[$c->name] = $c;
         }
 
@@ -351,24 +343,36 @@ SQL;
     /**
      * Sequence name of table.
      *
-     * @param string $tableName
-     * @internal param \yii\db\TableSchema $table->name the table schema
-     * @return string|null whether the sequence exists
+     * @param string $tableName the table name.
+     *
+     * @return false|string whether the sequence exists.
      */
-    protected function getTableSequenceName($tableName)
+    public function getTableSequenceName(string $tableName): false|string
     {
-        $sequenceNameSql = <<<'SQL'
-SELECT
-    UD.REFERENCED_NAME AS SEQUENCE_NAME
-FROM USER_DEPENDENCIES UD
-    JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-WHERE
-    UT.TABLE_NAME = :tableName
-    AND UD.TYPE = 'TRIGGER'
-    AND UD.REFERENCED_TYPE = 'SEQUENCE'
-SQL;
-        $sequenceName = $this->db->createCommand($sequenceNameSql, [':tableName' => $tableName])->queryScalar();
-        return $sequenceName === false ? null : $sequenceName;
+        $sql = <<<SQL
+        SELECT
+            COALESCE(
+                (
+                    SELECT TRIGGER_NAME AS SEQUENCE_NAME
+                    FROM USER_TRIGGERS
+                    WHERE TABLE_NAME = :tableName
+                        AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
+                    FETCH FIRST 1 ROW ONLY
+                ),
+                (
+                    SELECT SEQUENCE_NAME
+                    FROM USER_SEQUENCES
+                    WHERE SEQUENCE_NAME
+                        LIKE :tableName || '%'
+                    FETCH FIRST 1 ROW ONLY
+                )
+            ) AS SEQUENCE_NAME
+        FROM DUAL
+        SQL;
+
+        $result = $this->db->createCommand($sql, [':tableName' => $tableName])->queryScalar();
+
+        return empty($result) ? false : $result;
     }
 
     /**
@@ -451,6 +455,14 @@ SQL;
             }
         }
 
+        if ($c->autoIncrement) {
+            preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
+
+            if (isset($matches[1])) {
+                $c->sequenceName = $matches[1];
+            }
+        }
+
         return $c;
     }
 
@@ -493,9 +505,6 @@ SQL;
             if ($row['CONSTRAINT_TYPE'] === 'P') {
                 $table->columns[$row['COLUMN_NAME']]->isPrimaryKey = true;
                 $table->primaryKey[] = $row['COLUMN_NAME'];
-                if (empty($table->sequenceName)) {
-                    $table->sequenceName = $this->getTableSequenceName($table->name);
-                }
             }
 
             if ($row['CONSTRAINT_TYPE'] !== 'R') {
@@ -630,7 +639,13 @@ SQL;
         // `Oracle` needs at least two queries to reset a sequence with trigger
         // (see adding transactions and/or use alter method to avoid grants' issue?)
         if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
-            $sequenceName = $this->db->quoteTableName($tableSchema->sequenceName);
+            $sequenceName = $this->getTableSequenceName($tableSchema->fullName);
+
+            if ($sequenceName === false) {
+                throw new InvalidArgumentException("Sequence name for table '{$tableSchema->fullName}' not found.");
+            }
+
+            $sequenceName = $this->quoteTableName($sequenceName);
 
             $this->db->createCommand(
                 <<<SQL
