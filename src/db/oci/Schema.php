@@ -619,55 +619,6 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function insert($table, $columns)
-    {
-        $params = [];
-        $returnParams = [];
-        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
-        $tableSchema = $this->getTableSchema($table);
-        $returnColumns = $tableSchema->primaryKey;
-        if (!empty($returnColumns)) {
-            $columnSchemas = $tableSchema->columns;
-            $returning = [];
-            foreach ((array) $returnColumns as $name) {
-                $phName = QueryBuilder::PARAM_PREFIX . (count($params) + count($returnParams));
-                $returnParams[$phName] = [
-                    'column' => $name,
-                    'value' => '',
-                ];
-                if (!isset($columnSchemas[$name]) || $columnSchemas[$name]->phpType !== 'integer') {
-                    $returnParams[$phName]['dataType'] = \PDO::PARAM_STR;
-                } else {
-                    $returnParams[$phName]['dataType'] = \PDO::PARAM_INT;
-                }
-                $returnParams[$phName]['size'] = isset($columnSchemas[$name]->size) ? $columnSchemas[$name]->size : -1;
-                $returning[] = $this->quoteColumnName($name);
-            }
-            $sql .= ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));
-        }
-
-        $command = $this->db->createCommand($sql, $params);
-        $command->prepare(false);
-
-        foreach ($returnParams as $name => &$value) {
-            $command->pdoStatement->bindParam($name, $value['value'], $value['dataType'], $value['size']);
-        }
-
-        if (!$command->execute()) {
-            return false;
-        }
-
-        $result = [];
-        foreach ($returnParams as $value) {
-            $result[$value['column']] = $value['value'];
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
     {
         [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
