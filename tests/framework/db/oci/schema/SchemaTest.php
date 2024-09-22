@@ -38,28 +38,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
     }
 
-    public function testResetAutoIncrementPKWithTableNotAutoIncrement(): void
-    {
-        $tableName = '{{%reset_autoincrement_pk}}';
-
-        $this->columnsSchema = [
-            'id' => 'NUMBER(10)',
-            'name' => 'VARCHAR2(128)',
-            'PRIMARY KEY ([[id]])',
-        ];
-
-        $this->ensureNoTable($tableName);
-
-        $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
-
-        $this->assertSame(0, $result);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("The column 'id' is not an auto-incremental column.");
-
-        $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
-    }
-
     public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
         $this->columnsSchema = [
