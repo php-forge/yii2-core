@@ -7,7 +7,6 @@ namespace yiiunit\framework\db\helper;
 use yii\db\SqlHelper;
 
 /**
- * @group db
  * @group sqlhelper
  */
 final class SqlHelperTest extends \yiiunit\TestCase
