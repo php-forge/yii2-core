@@ -9,6 +9,7 @@ use yii\base\NotSupportedException;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
+use yii\db\SqlHelper;
 
 /**
  * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
@@ -165,7 +166,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $cache
         SQL;
 
-        return preg_replace('/^\h*\v+/m', '', $sql);
+        return SqlHelper::cleanSql($sql);
     }
 
     /**
