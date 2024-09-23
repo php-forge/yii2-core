@@ -23,16 +23,16 @@ Yii Core version 2 Change Log
 - Bug #72: Add type hint in method in BuildTest.php for `MSSQL` (@terabytesoftw)
 - Bug #75: Refactor `prepareInsertValues()` method in `QueryBuilder::class` to accept `TableSchema` object (@terabytesoftw)
 - Bug #77: Add support for test `Oci` 18, 21 (@terabytesoftw)
-- Bug #78: Fix test case for `getSchemaNames()` method in `SchemaTest::class` in `Oci` (@terabytesoftw)
+- Bug #78: Fix test case for `getSchemaNames()` method in `SchemaTest::class` in `Oracle` (@terabytesoftw)
 - Enh #84: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
-- Enh #86: Remove unnecesary `resolveTableNames()` and refactor `resolveTableName()` in `Schema::class` in `MSSQL`, `MySQL`, `Oci`, `PostgreSQL` (@terabytesoftw)
+- Enh #86: Remove unnecesary `resolveTableNames()` and refactor `resolveTableName()` in `Schema::class` in `MSSQL`, `MySQL`, `Oracle`, `PostgreSQL` (@terabytesoftw)
 - Enh #87: Refactor `TableSchema::class` in `MSSQL` (@terabytesoftw)
 - Enh #88: Implement `hasTable()` method in `Connection::class` (@terabytesoftw)
 - Enh #89: Refactor `AbstractConnection::class` test case for `hasTable()` method (@terabytesoftw)
 - Enh #90: Refactor `findColums()` in  `MSSQL` `Schema::class`, add support for `size` and `precision` for `float` and numeric data type (@terabytesoftw)
 - Enh #91: Add enum `PHPType::class` and  refactor `getColumnPhpType()` method in `Schema::class` (@terabytesoftw)
 - Enh #92: Refactor `batchInsert()` method in `Command::class`, and `QueryBuilder::class` (@terabytesoftw)
-- Bug #93: Use `Quoter::class` insted of specific methods in `Schema::class` for `MSSQL`, `Oci` (@terabytesoftw)
+- Bug #93: Use `Quoter::class` insted of specific methods in `Schema::class` for `MSSQL`, `Oracle` (@terabytesoftw)
 - Enh #95: Move `getRawTableName()` to `Quoter::class`, and better arguments naming in `Quoter::class` (@terabytesoftw)
 - Bug #96: Remove unnecesary `testUpsert()`, move to separate directory `command` and `querybuilder` (@terabytesoftw)
 - Enh #97: Add `getNextAutoIncrementValue()` method in `Schema::class` (@terabytesoftw)
@@ -44,6 +44,7 @@ Yii Core version 2 Change Log
 - Bug #103: Remove `server:2017-latest` in `github actions` and add in `appveyor.yml` (@terabytesoftw)
 - Bug #104: Remove `insert()` method from `Schema::class` (@terabytesoftw)
 - Bug #105: Removed the `sequenceName` property from the `TableSchema::class` and added it to the `ColumnSchema::class` (@terabytesoftw)
+- Enh #106: Move `extractAlias()` method to `Quoter::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
