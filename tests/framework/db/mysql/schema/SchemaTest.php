@@ -27,18 +27,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db = MysqlConnection::getConnection();
     }
 
-    /**
-     * @dataProvider \yiiunit\framework\db\mysql\provider\SchemaProvider::resetSequence
-     */
-    public function testResetSequence(
-        string $tableName,
-        array $insertRows,
-        array $expectedIds,
-        int|null $value = null
-    ): void {
-        parent::testResetSequence($tableName, $insertRows, $expectedIds, $value);
-    }
-
     public function testGetSequenceName(): void
     {
         $tableName = '{{%sequence_test}}';
@@ -49,6 +37,18 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db->getSchema()->getSequenceName($tableName);
     }
 
+    /**
+     * @dataProvider \yiiunit\framework\db\mysql\provider\SchemaProvider::resetAutoIncrementPK
+     */
+    public function testResetAutoIncrementPK(
+        string $tableName,
+        array $insertRows,
+        array $expectedIds,
+        int|null $value = null
+    ): void {
+        parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
+    }
+
     public function testResetSequenceWithTableNotPrimaryKey(): void
     {
         $this->columnsSchema = [
@@ -56,10 +56,10 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'name' => 'VARCHAR(128)',
         ];
 
-        parent::testResetSequenceWithTableNotPrimaryKey();
+        parent::testResetAutoIncrementPKWithTableNotPrimaryKey();
     }
 
-    public function testResetSequenceWithTablePrimaryKeyComposite(): void
+    public function testResetAutoIncrementPKWithTablePrimaryKeyComposite(): void
     {
         $this->columnsSchema = [
             'id' => 'INT NOT NULL AUTO_INCREMENT',
@@ -68,16 +68,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'PRIMARY KEY (id, user_id)',
         ];
 
-        parent::testResetSequenceWithTablePrimaryKeyComposite();
+        parent::testResetAutoIncrementPKWithTablePrimaryKeyComposite();
     }
 
-    public function testResetSequenceWithValueNegative(): void
+    public function testResetAutoIncrementPKWithValueNegative(): void
     {
-        $tableName = '{{%reset_sequence}}';
+        $tableName = '{{%reset_auto_increment_pk}}';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("The value must be greater than '0'.");
 
-        $this->db->getSchema()->resetSequence($tableName, -1);
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, -1);
     }
 }

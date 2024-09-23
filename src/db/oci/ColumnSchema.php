@@ -12,6 +12,11 @@ use yii\db\Schema;
  */
 class ColumnSchema extends \yii\db\ColumnSchema
 {
+    /**
+     * @var string|null name of associated sequence if column is auto-incremental
+     */
+    public string|null $sequenceName = null;
+
     public function dbTypecast($value)
     {
         if ($this->type === Schema::TYPE_BINARY && $this->dbType === 'BLOB') {

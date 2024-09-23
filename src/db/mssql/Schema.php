@@ -442,10 +442,6 @@ SQL;
                 }
             }
 
-            if ($column->autoIncrement) {
-                $table->sequenceName = $column->name;
-            }
-
             $table->columns[$column->name] = $column;
         }
 
@@ -746,26 +742,10 @@ SQL;
      */
     public function resetSequence(string $tableName, int|null $value = null): int
     {
-        $tableSchema = $this->db->getTableSchema($tableName);
-
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
-            throw new InvalidArgumentException(
-                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
-            );
-        }
-
-        if (count($tableSchema->primaryKey) > 1) {
-            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
-        }
-
-        $columnPK = reset($tableSchema->primaryKey);
+        [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
 
         if ($value === null) {
-            $value = $this->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+            $value = $this->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
         $sql = <<<SQL

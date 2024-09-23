@@ -6,12 +6,12 @@ namespace yiiunit\framework\db\pgsql\provider;
 
 final class SchemaProvider extends \yiiunit\framework\db\provider\AbstractSchemaProvider
 {
-    public static function resetSequence(): array
+    public static function resetAutoIncrementPK(): array
     {
-        $rows = parent::resetSequence();
+        $rows = parent::resetAutoIncrementPK();
 
         $rows['value with zero'] = [
-            '{{%reset_sequence}}',
+            '{{%reset_autoincrement_pk}}',
             [
                 ['name' => 'name1'],
                 ['name' => 'name2'],

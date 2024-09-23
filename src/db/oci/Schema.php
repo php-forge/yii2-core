@@ -334,14 +334,6 @@ SQL;
 
             $c = $this->createColumn($column);
 
-            if ($c->autoIncrement) {
-                preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
-
-                if (isset($matches[1])) {
-                    $table->sequenceName = $matches[1];
-                }
-            }
-
             $table->columns[$c->name] = $c;
         }
 
@@ -349,32 +341,33 @@ SQL;
     }
 
     /**
-     * {@inheritdoc}
+     * Attempts to find a sequence name from user triggers for the given table.
+     *
+     * @param string $tableName the table name to search for.
+     *
+     * @return false|string the sequence name if found in triggers, or `false` if not found.
      */
-    public function getSequenceName(string $sequenceName): false|string
+    public function getTableSequenceName(string $tableName): false|string
     {
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            return false;
+        }
+
         $sql = <<<SQL
-        SELECT
-            COALESCE(
-                (
-                    SELECT TRIGGER_NAME AS SEQUENCE_NAME
-                    FROM USER_TRIGGERS
-                    WHERE TABLE_NAME = :tableName
-                        AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
-                    FETCH FIRST 1 ROW ONLY
-                ),
-                (
-                    SELECT SEQUENCE_NAME
-                    FROM USER_SEQUENCES
-                    WHERE SEQUENCE_NAME
-                        LIKE :tableName || '%'
-                    FETCH FIRST 1 ROW ONLY
-                )
-            ) AS SEQUENCE_NAME
-        FROM DUAL
+        SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
+        FROM USER_DEPENDENCIES UD
+        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
+        WHERE
+            UT.TABLE_NAME = :tableName
+            AND UD.TYPE = 'TRIGGER'
+            AND UD.REFERENCED_TYPE = 'SEQUENCE'
         SQL;
 
-        return $this->db->createCommand($sql, [':tableName' => $sequenceName])->queryScalar();
+        $result = $this->db->createCommand($sql, [':tableName' => $tableSchema->fullName])->queryScalar();
+
+        return empty($result) ? false : $result;
     }
 
     /**
@@ -457,6 +450,14 @@ SQL;
             }
         }
 
+        if ($c->autoIncrement) {
+            preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
+
+            if (isset($matches[1])) {
+                $c->sequenceName = $matches[1];
+            }
+        }
+
         return $c;
     }
 
@@ -499,9 +500,6 @@ SQL;
             if ($row['CONSTRAINT_TYPE'] === 'P') {
                 $table->columns[$row['COLUMN_NAME']]->isPrimaryKey = true;
                 $table->primaryKey[] = $row['COLUMN_NAME'];
-                if (empty($table->sequenceName)) {
-                    $table->sequenceName = $this->getSequenceName($table->name);
-                }
             }
 
             if ($row['CONSTRAINT_TYPE'] !== 'R') {
@@ -625,83 +623,24 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function insert($table, $columns)
+    public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
     {
-        $params = [];
-        $returnParams = [];
-        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
-        $tableSchema = $this->getTableSchema($table);
-        $returnColumns = $tableSchema->primaryKey;
-        if (!empty($returnColumns)) {
-            $columnSchemas = $tableSchema->columns;
-            $returning = [];
-            foreach ((array) $returnColumns as $name) {
-                $phName = QueryBuilder::PARAM_PREFIX . (count($params) + count($returnParams));
-                $returnParams[$phName] = [
-                    'column' => $name,
-                    'value' => '',
-                ];
-                if (!isset($columnSchemas[$name]) || $columnSchemas[$name]->phpType !== 'integer') {
-                    $returnParams[$phName]['dataType'] = \PDO::PARAM_STR;
-                } else {
-                    $returnParams[$phName]['dataType'] = \PDO::PARAM_INT;
-                }
-                $returnParams[$phName]['size'] = isset($columnSchemas[$name]->size) ? $columnSchemas[$name]->size : -1;
-                $returning[] = $this->quoteColumnName($name);
-            }
-            $sql .= ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));
-        }
-
-        $command = $this->db->createCommand($sql, $params);
-        $command->prepare(false);
-
-        foreach ($returnParams as $name => &$value) {
-            $command->pdoStatement->bindParam($name, $value['value'], $value['dataType'], $value['size']);
-        }
-
-        if (!$command->execute()) {
-            return false;
-        }
-
-        $result = [];
-        foreach ($returnParams as $value) {
-            $result[$value['column']] = $value['value'];
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function resetSequence(string $tableName, int|null $value = null): int
-    {
-        $tableSchema = $this->db->getTableSchema($tableName);
-
-        if ($tableSchema === null) {
-            throw new InvalidArgumentException("Table not found: '$tableName'.");
-        }
-
-        if (empty($tableSchema->primaryKey) || empty($tableSchema->sequenceName)) {
-            throw new InvalidArgumentException(
-                "There is no primary key or sequence associated with table '$tableSchema->fullName'."
-            );
-        }
-
-        if (count($tableSchema->primaryKey) > 1) {
-            throw new InvalidArgumentException('This method does not support tables with composite primary keys.');
-        }
-
-        $columnPK = reset($tableSchema->primaryKey);
+        [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
 
         if ($value === null) {
-            $value = $this->db->getSchema()->getNextAutoIncrementValue($tableSchema->fullName, $columnPK);
+            $value = $this->db->getSchema()->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
         // `Oracle` needs at least two queries to reset a sequence with trigger
         // (see adding transactions and/or use alter method to avoid grants' issue?)
         if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
-            $sequenceName = $this->db->quoteTableName($tableSchema->sequenceName);
+            $sequenceName = $this->getTableSequenceName($tableSchema->fullName);
+
+            if ($sequenceName === false) {
+                throw new InvalidArgumentException("Sequence name for table '{$tableSchema->fullName}' not found.");
+            }
+
+            $sequenceName = $this->quoteTableName($sequenceName);
 
             $this->db->createCommand(
                 <<<SQL
