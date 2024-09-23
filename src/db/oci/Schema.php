@@ -341,39 +341,31 @@ SQL;
     }
 
     /**
-     * Returns the sequence name for the specified table or sequence.
+     * Attempts to find a sequence name from user triggers for the given table.
      *
-     * This method attempts to retrieve the sequence name for a table or sequence by searching for it in user triggers
-     * (for sequences created via triggers) or user sequences. If no matching sequence is found, it returns `false`.
+     * @param string $tableName the table name to search for.
      *
-     * @param string $tableOrSequenceName the table name or sequence name to search for.
-     *
-     * @return false|string the sequence name if it exists, or `false` if not found.
+     * @return false|string the sequence name if found in triggers, or `false` if not found.
      */
-    public function getTableSequenceName(string $tableOrSequenceName): false|string
+    public function getTableSequenceName(string $tableName): false|string
     {
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            return false;
+        }
+
         $sql = <<<SQL
-        SELECT
-            COALESCE(
-                (
-                    SELECT TRIGGER_NAME AS SEQUENCE_NAME
-                    FROM USER_TRIGGERS
-                    WHERE TABLE_NAME = :tableOrSequenceName
-                        AND TRIGGER_TYPE = 'BEFORE EACH ROW' AND TRIGGER_NAME LIKE '%_SEQ'
-                    FETCH FIRST 1 ROW ONLY
-                ),
-                (
-                    SELECT SEQUENCE_NAME
-                    FROM USER_SEQUENCES
-                    WHERE SEQUENCE_NAME
-                        LIKE :tableOrSequenceName || '%'
-                    FETCH FIRST 1 ROW ONLY
-                )
-            ) AS SEQUENCE_NAME
-        FROM DUAL
+        SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
+        FROM USER_DEPENDENCIES UD
+        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
+        WHERE
+            UT.TABLE_NAME = :tableName
+            AND UD.TYPE = 'TRIGGER'
+            AND UD.REFERENCED_TYPE = 'SEQUENCE'
         SQL;
 
-        $result = $this->db->createCommand($sql, [':tableOrSequenceName' => $tableOrSequenceName])->queryScalar();
+        $result = $this->db->createCommand($sql, [':tableName' => $tableSchema->fullName])->queryScalar();
 
         return empty($result) ? false : $result;
     }
