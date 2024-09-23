@@ -39,6 +39,13 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->assertFalse($sequenceName);
     }
 
+    public function testGetTableSequenceNameWithTableNotExists(): void
+    {
+        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%not_exists}}');
+
+        $this->assertFalse($sequenceName);
+    }
+
     /**
      * @dataProvider \yiiunit\framework\db\oci\provider\SchemaProvider::resetAutoIncrementPK
      */
