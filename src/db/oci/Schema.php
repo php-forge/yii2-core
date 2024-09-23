@@ -341,6 +341,23 @@ SQL;
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSequenceName(string $sequenceName): false|string
+    {
+        $sql = <<<SQL
+        SELECT SEQUENCE_NAME
+        FROM USER_SEQUENCES
+        WHERE SEQUENCE_NAME LIKE :sequenceName || '%'
+        FETCH FIRST 1 ROW ONLY
+        SQL;
+
+        $result = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryScalar();
+
+        return empty($result) ? false : $result;
+    }
+
+    /**
      * Attempts to find a sequence name from user triggers for the given table.
      *
      * @param string $tableName the table name to search for.

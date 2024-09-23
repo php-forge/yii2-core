@@ -49,7 +49,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
     }
 
-    public function testResetSequenceWithTableNotPrimaryKey(): void
+    public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
         $this->columnsSchema = [
             'id' => 'INT',

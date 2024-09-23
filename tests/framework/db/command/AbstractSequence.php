@@ -26,7 +26,7 @@ abstract class AbstractSequence extends \yiiunit\TestCase
     ): void {
         $sequenceName = $table . '_SEQ';
 
-        if ($this->db->getSchema()->getSequenceName($sequenceName) !== null) {
+        if ($this->db->getSchema()->getSequenceName($sequenceName)) {
             $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
 
             $this->assertSame(0, $result);
