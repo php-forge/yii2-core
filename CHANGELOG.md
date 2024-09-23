@@ -45,6 +45,8 @@ Yii Core version 2 Change Log
 - Bug #103: Remove `server:2017-latest` in `github actions` and add in `appveyor.yml` (@terabytesoftw)
 - Bug #104: Remove `insert()` method from `Schema::class` (@terabytesoftw)
 - Bug #105: Removed the `sequenceName` property from the `TableSchema::class` and added it to the `ColumnSchema::class` (@terabytesoftw)
+- Enh #106: Move `extractAlias()` method to `Quoter::class` (@terabytesoftw)
+- Enh #107: Add `SqlHelper::class` in `db` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

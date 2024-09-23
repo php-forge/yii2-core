@@ -587,17 +587,6 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Returns a value indicating whether a SQL statement is for read purpose.
-     * @param string $sql the SQL statement
-     * @return bool whether a SQL statement is for read purpose.
-     */
-    public function isReadQuery($sql)
-    {
-        $pattern = '/^\s*(SELECT|SHOW|DESCRIBE)\b/i';
-        return preg_match($pattern, $sql) > 0;
-    }
-
-    /**
      * Returns a server version as a string comparable by [[\version_compare()]].
      * @return string server version as a string.
      * @since 2.0.14

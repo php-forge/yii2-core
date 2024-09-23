@@ -1728,18 +1728,15 @@ class QueryBuilder extends \yii\base\BaseObject
     }
 
     /**
-     * Extracts table alias if there is one or returns false
-     * @param $table
-     * @return bool|array
-     * @since 2.0.24
+     * Extracts table alias.
+     *
+     * @param string $tableName The table name.
+     *
+     * @return bool|array The table name and alias. False if no alias is found.
      */
-    protected function extractAlias($table)
+    public function extractAlias(string $tableName): bool|array
     {
-        if (preg_match('/^(.*?)(?i:\s+as|)\s+([^ ]+)$/', $table, $matches)) {
-            return $matches;
-        }
-
-        return false;
+        return $this->db->getQuoter()->extractAlias($tableName);
     }
 
     /**

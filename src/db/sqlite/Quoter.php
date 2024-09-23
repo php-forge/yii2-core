@@ -12,6 +12,9 @@ use function explode;
  */
 final class Quoter extends \yii\db\Quoter
 {
+    /**
+     * {@inheritdoc}
+     */
     public function getTableNameParts(string $tableName, bool $withColumn = false): array
     {
         $parts = array_slice(explode('.', $tableName), -2, 2);
