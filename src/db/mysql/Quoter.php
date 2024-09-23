@@ -15,6 +15,9 @@ use function str_replace;
  */
 final class Quoter extends \yii\db\Quoter
 {
+    /**
+     * {@inheritdoc}
+     */
     public function quoteValue(mixed $value): mixed
     {
         if (!is_string($value)) {

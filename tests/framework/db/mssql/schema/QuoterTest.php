@@ -29,6 +29,13 @@ final class QuoterTest extends \yiiunit\framework\db\schema\AbstractQuoter
         parent::testEnsureColumnName($columnName, $expected);
     }
 
+    public function testExtractAliasWithBrackets(): void
+    {
+        $tableName = '[dbo].[users]';
+
+        $this->assertFalse($this->db->getQuoter()->extractAlias($tableName));
+    }
+
     /**
      * @dataProvider \yiiunit\framework\db\mssql\provider\QuoterProvider::tableNameParts
      */

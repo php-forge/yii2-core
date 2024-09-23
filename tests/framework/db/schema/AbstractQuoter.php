@@ -26,6 +26,36 @@ abstract class AbstractQuoter extends TestCase
         $this->assertSame($expected, $this->db->getQuoter()->ensureColumnName($columnName));
     }
 
+    public function testExtractAliasWithAlias(): void
+    {
+        $tableName = 'users u';
+        $expected = ['users u', 'users', 'u'];
+
+        $this->assertSame($expected, $this->db->getQuoter()->extractAlias($tableName));
+    }
+
+    public function testExtractAliasWithoutAlias(): void
+    {
+        $tableName = 'users';
+
+        $this->assertFalse($this->db->getQuoter()->extractAlias($tableName));
+    }
+
+    public function testExtractAliasWithASKeyword(): void
+    {
+        $tableName = 'users AS u';
+        $expected = ['users AS u', 'users', 'u'];
+
+        $this->assertSame($expected, $this->db->getQuoter()->extractAlias($tableName));
+    }
+
+    public function testExtractAliasNoAliasFound(): void
+    {
+        $tableName = 'invalid_table_name';
+
+        $this->assertFalse($this->db->getQuoter()->extractAlias($tableName));
+    }
+
     public function testGetTableNameParts(string $tableName, string ...$expected): void
     {
         $this->assertSame($expected, array_reverse($this->db->getQuoter()->getTableNameParts($tableName)));

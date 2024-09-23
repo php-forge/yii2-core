@@ -37,6 +37,39 @@ class Quoter
     }
 
     /**
+     * Ensures name of the column is wrapped with `[[ and ]]`.
+     *
+     * @param string $columnName the name to quote.
+     *
+     * @return string the quoted name.
+     */
+    public function ensureColumnName(string $columnName): string
+    {
+        if (strrpos($columnName, '.') !== false) {
+            $parts = explode('.', $columnName);
+            $columnName = $parts[count($parts) - 1];
+        }
+
+        return preg_replace('|^\[\[([_\w\-. ]+)\]\]$|', '\1', $columnName);
+    }
+
+    /**
+     * Extracts table alias.
+     *
+     * @param string $tableName The table name.
+     *
+     * @return bool|array The table name and alias. False if no alias is found.
+     */
+    public function extractAlias(string $tableName): array|false
+    {
+        if (preg_match('/^(.*?)(?i:\s+as|)\s+([^ ]+)$/', $tableName, $matches)) {
+            return $matches;
+        }
+
+        return false;
+    }
+
+    /**
      * Returns the table prefix to be used for table names.
      *
      * @return string the table prefix to be used for table names.
@@ -81,23 +114,6 @@ class Quoter
             },
             $tableName
         );
-    }
-
-    /**
-     * Ensures name of the column is wrapped with `[[ and ]]`.
-     *
-     * @param string $columnName the name to quote.
-     *
-     * @return string the quoted name.
-     */
-    public function ensureColumnName(string $columnName): string
-    {
-        if (strrpos($columnName, '.') !== false) {
-            $parts = explode('.', $columnName);
-            $columnName = $parts[count($parts) - 1];
-        }
-
-        return preg_replace('|^\[\[([_\w\-. ]+)\]\]$|', '\1', $columnName);
     }
 
     /**

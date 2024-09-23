@@ -561,18 +561,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * {@inheritdoc}
-     */
-    protected function extractAlias($table)
-    {
-        if (preg_match('/^\[.*\]$/', $table)) {
-            return false;
-        }
-
-        return parent::extractAlias($table);
-    }
-
-    /**
      * Builds a SQL statement for dropping constraints for column of table.
      *
      * @param string $table the table whose constraint is to be dropped. The name will be properly quoted by the method.
