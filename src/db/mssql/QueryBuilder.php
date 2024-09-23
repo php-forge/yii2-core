@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii\db\mssql;
 
-use SebastianBergmann\CodeCoverage\Report\PHP;
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
 use yii\db\Expression;
