@@ -740,7 +740,7 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function resetSequence(string $tableName, int|null $value = null): int
+    public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
     {
         [$tableSchema, $columnPK] = $this->validateTableAndAutoIncrementPK($tableName);
 
