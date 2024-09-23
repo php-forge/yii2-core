@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace yiiunit\framework\db\mysql\querybuilder;
+namespace yiiunit\framework\db\sqlite\querybuilder;
 
 use yii\base\NotSupportedException;
 use yii\db\Connection;
-use yiiunit\support\MysqlConnection;
+use yiiunit\support\SqliteConnection;
 
 /**
  * @group db
- * @group mysql
+ * @group sqlite
  * @group querybuilder
  * @group drop-sequence
  */
@@ -22,13 +22,13 @@ final class DropSequenceTest extends \yiiunit\TestCase
     {
         parent::setUp();
 
-        $this->db = MysqlConnection::getConnection();
+        $this->db = SqliteConnection::getConnection();
     }
 
     public function testGenerateSQL(): void
     {
         $this->expectException(NotSupportedException::class);
-        $this->expectExceptionMessage('yii\db\mysql\QueryBuilder::dropSequence is not supported by MySQL/MariaDB.');
+        $this->expectExceptionMessage('yii\db\sqlite\QueryBuilder::dropSequence is not supported by SQLite.');
 
         $this->db->getQueryBuilder()->dropSequence('test_sequence');
     }
