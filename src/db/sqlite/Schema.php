@@ -242,7 +242,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             }
         }
         if (count($table->primaryKey) === 1 && !strncasecmp($table->columns[$table->primaryKey[0]]->dbType, 'int', 3)) {
-            $table->sequenceName = $table->primaryKey[0];
             $table->columns[$table->primaryKey[0]]->autoIncrement = true;
         }
 

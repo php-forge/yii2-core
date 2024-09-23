@@ -26,6 +26,26 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db = OciConnection::getConnection();
     }
 
+    public function testGetTableSequenceName(): void
+    {
+        $this->db = OciConnection::getConnection(true);
+
+        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%profile}}');
+
+        $this->assertSame('profile_SEQ', $sequenceName);
+
+        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%type}}');
+
+        $this->assertFalse($sequenceName);
+    }
+
+    public function testGetTableSequenceNameWithTableNotExists(): void
+    {
+        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%not_exists}}');
+
+        $this->assertFalse($sequenceName);
+    }
+
     /**
      * @dataProvider \yiiunit\framework\db\oci\provider\SchemaProvider::resetAutoIncrementPK
      */
@@ -36,6 +56,29 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         int|null $value = null
     ): void {
         parent::testResetAutoIncrementPK($tableName, $insertRows, $expectedIds, $value);
+    }
+
+    public function testResetAutoIncrementWithNotColumnAutoIncrementAndNotTrigger(): void
+    {
+        $tableName = '{{%reset_auto_increment_pk}}';
+
+        $this->ensureNoTable($tableName);
+
+        $result = $this->db->createCommand()->createTable(
+            $tableName,
+            [
+                'id' => 'NUMBER(10)',
+                'name' => 'VARCHAR2(128)',
+                'PRIMARY KEY ([[id]])',
+            ]
+        )->execute();
+
+        $this->assertSame(0, $result);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Sequence name for table 'reset_auto_increment_pk' not found.");
+
+        $this->db->getSchema()->resetAutoIncrementPK($tableName, 7);
     }
 
     public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void

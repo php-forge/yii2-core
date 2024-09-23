@@ -334,14 +334,6 @@ SQL;
 
             $c = $this->createColumn($column);
 
-            if ($c->autoIncrement) {
-                preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
-
-                if (isset($matches[1])) {
-                    $table->sequenceName = $matches[1];
-                }
-            }
-
             $table->columns[$c->name] = $c;
         }
 
@@ -349,26 +341,33 @@ SQL;
     }
 
     /**
-     * Sequence name of table.
+     * Attempts to find a sequence name from user triggers for the given table.
      *
-     * @param string $tableName
-     * @internal param \yii\db\TableSchema $table->name the table schema
-     * @return string|null whether the sequence exists
+     * @param string $tableName the table name to search for.
+     *
+     * @return false|string the sequence name if found in triggers, or `false` if not found.
      */
-    protected function getTableSequenceName($tableName)
+    public function getTableSequenceName(string $tableName): false|string
     {
-        $sequenceNameSql = <<<'SQL'
-SELECT
-    UD.REFERENCED_NAME AS SEQUENCE_NAME
-FROM USER_DEPENDENCIES UD
-    JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-WHERE
-    UT.TABLE_NAME = :tableName
-    AND UD.TYPE = 'TRIGGER'
-    AND UD.REFERENCED_TYPE = 'SEQUENCE'
-SQL;
-        $sequenceName = $this->db->createCommand($sequenceNameSql, [':tableName' => $tableName])->queryScalar();
-        return $sequenceName === false ? null : $sequenceName;
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            return false;
+        }
+
+        $sql = <<<SQL
+        SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
+        FROM USER_DEPENDENCIES UD
+        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
+        WHERE
+            UT.TABLE_NAME = :tableName
+            AND UD.TYPE = 'TRIGGER'
+            AND UD.REFERENCED_TYPE = 'SEQUENCE'
+        SQL;
+
+        $result = $this->db->createCommand($sql, [':tableName' => $tableSchema->fullName])->queryScalar();
+
+        return empty($result) ? false : $result;
     }
 
     /**
@@ -451,6 +450,14 @@ SQL;
             }
         }
 
+        if ($c->autoIncrement) {
+            preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
+
+            if (isset($matches[1])) {
+                $c->sequenceName = $matches[1];
+            }
+        }
+
         return $c;
     }
 
@@ -493,9 +500,6 @@ SQL;
             if ($row['CONSTRAINT_TYPE'] === 'P') {
                 $table->columns[$row['COLUMN_NAME']]->isPrimaryKey = true;
                 $table->primaryKey[] = $row['COLUMN_NAME'];
-                if (empty($table->sequenceName)) {
-                    $table->sequenceName = $this->getTableSequenceName($table->name);
-                }
             }
 
             if ($row['CONSTRAINT_TYPE'] !== 'R') {
@@ -630,7 +634,13 @@ SQL;
         // `Oracle` needs at least two queries to reset a sequence with trigger
         // (see adding transactions and/or use alter method to avoid grants' issue?)
         if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
-            $sequenceName = $this->db->quoteTableName($tableSchema->sequenceName);
+            $sequenceName = $this->getTableSequenceName($tableSchema->fullName);
+
+            if ($sequenceName === false) {
+                throw new InvalidArgumentException("Sequence name for table '{$tableSchema->fullName}' not found.");
+            }
+
+            $sequenceName = $this->quoteTableName($sequenceName);
 
             $this->db->createCommand(
                 <<<SQL

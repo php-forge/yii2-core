@@ -294,7 +294,7 @@ SQL;
             $value = $this->db->getSchema()->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
-        $sequenceName = $this->db->quoteValue($tableSchema->sequenceName[$columnPK]) ?? null;
+        $sequenceName = $this->db->quoteValue($tableSchema->columns[$columnPK]->sequenceName);
 
         $sql = <<<SQL
         SELECT SETVAL($sequenceName,{$value},false)
@@ -595,10 +595,6 @@ SQL;
             $column = $this->loadColumnSchema($column);
 
             $tableSchema->columns[$column->name] = $column;
-
-            if ($column->sequenceName !== null) {
-                $tableSchema->sequenceName[$column->name] = $column->sequenceName;
-            }
 
             if ($column->isPrimaryKey) {
                 $tableSchema->primaryKey[] = $column->name;

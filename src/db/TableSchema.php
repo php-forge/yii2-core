@@ -35,12 +35,6 @@ class TableSchema extends BaseObject
      */
     public array $primaryKey = [];
     /**
-     * @var array|string|null sequence name for the primary keys. Null if no sequence.
-     *
-     * In `PostgreSQL`, an associative array is used, with the column name as key and the sequence name as value.
-     */
-    public array|string|null $sequenceName = null;
-    /**
      * @var array foreign keys of this table. Each array element is of the following structure:
      *
      * ```php
