@@ -252,7 +252,8 @@ class Command extends Component
             // master is in a transaction. use the same connection.
             $forRead = false;
         }
-        if ($forRead || $forRead === null && $this->db->getSchema()->isReadQuery($sql)) {
+
+        if ($forRead || $forRead === null && SqlHelper::isReadQuery($sql)) {
             $pdo = $this->db->getSlavePdo(true);
         } else {
             $pdo = $this->db->getMasterPdo();
