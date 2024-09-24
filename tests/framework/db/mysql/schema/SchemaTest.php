@@ -27,14 +27,14 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db = MysqlConnection::getConnection();
     }
 
-    public function testGetSequenceName(): void
+    public function testGetSequenceInfo(): void
     {
         $tableName = '{{%sequence_test}}';
 
         $this->expectException(NotSupportedException::class);
         $this->expectExceptionMessage('mysql does not support getting sequence name.');
 
-        $this->db->getSchema()->getSequenceName($tableName);
+        $this->db->getSchema()->getSequenceInfo($tableName);
     }
 
     /**
