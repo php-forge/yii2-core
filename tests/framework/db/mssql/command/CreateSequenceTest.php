@@ -70,6 +70,60 @@ final class CreateSequenceTest extends \yiiunit\TestCase
         $this->ensureNoTable($tableName);
     }
 
+    public function testCreateSequenceWithOptions(): void
+    {
+        $tableName = '{{%T_create_sequence_options}}';
+
+        $this->ensureNoTable($tableName);
+
+        $result = $this->db->createCommand()->createTable(
+            $tableName,
+            [
+                'id' => 'INT',
+                'name' => 'NVARCHAR(128)',
+            ]
+        )->execute();
+
+        $this->assertSame(0, $result);
+
+        $sequenceName = 'T_create_sequence_options';
+
+        $result = $this->db->createCommand()->createSequence(
+            $sequenceName,
+            100,
+            2,
+            [
+                'cache' => 10,
+                'cycle' => true,
+            ]
+        )->execute();
+
+        $this->assertSame(0, $result);
+
+        $idValue = new Expression("NEXT VALUE FOR {$sequenceName}_SEQ");
+
+        $result = $this->db->createCommand()->insert($tableName, ['id' => $idValue, 'name' => 'test'])->execute();
+
+        $this->assertSame(1, $result);
+
+        $result = $this->db->createCommand()->insert($tableName, ['id' => $idValue, 'name' => 'test'])->execute();
+
+        $ids = $this->db->createCommand(
+            <<<SQL
+            SELECT id
+            FROM $tableName
+            SQL
+        )->queryColumn();
+
+        $this->assertSame(['100', '102'], $ids);
+
+        $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
+
+        $this->assertSame(0, $result);
+
+        $this->ensureNoTable($tableName);
+    }
+
     private function ensureNoTable(string $tableName): void
     {
         if ($this->db->hasTable($tableName)) {
