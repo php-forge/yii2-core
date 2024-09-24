@@ -138,7 +138,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         string $sequenceName,
         int $start = 1,
         int $increment = 1,
-        array $options = []
+        array $options = [],
     ): string {
         $types = ['tinyint', 'smallint', 'int', 'bigint', 'decimal'];
 

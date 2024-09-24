@@ -137,7 +137,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         string $sequenceName,
         int $start = 1,
         int $increment = 1,
-        array $options = []
+        array $options = [],
     ): string {
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';

@@ -187,7 +187,7 @@ class QueryBuilder extends \yii\base\BaseObject
         string $sequenceName,
         int $start = 1,
         int $increment = 1,
-        array $options = []
+        array $options = [],
     ): string {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support creating sequences.');
     }
