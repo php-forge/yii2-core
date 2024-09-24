@@ -18,7 +18,7 @@ final class DropSequenceTest extends \yiiunit\framework\db\querybuilder\Abstract
     {
         parent::setUp();
 
-        $this->db = MssqlConnection::getConnection(true);
+        $this->db = MssqlConnection::getConnection();
     }
 
     /**

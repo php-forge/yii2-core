@@ -18,7 +18,7 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
     {
         parent::setUp();
 
-        $this->db = MssqlConnection::getConnection(true);
+        $this->db = MssqlConnection::getConnection();
     }
 
     /**

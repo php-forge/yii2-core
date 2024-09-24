@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\mssql\command;
 
-use yii\db\Connection;
 use yii\db\Expression;
 use yiiunit\support\MssqlConnection;
 
@@ -14,18 +13,24 @@ use yiiunit\support\MssqlConnection;
  * @group command
  * @group create-sequence
  */
-final class CreateSequenceTest extends \yiiunit\TestCase
+final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCreateSequence
 {
-    private Connection|null $db = null;
-
     public function setup(): void
     {
         parent::setUp();
 
-        $this->db = MssqlConnection::getConnection(true);
+        $this->db = MssqlConnection::getConnection();
     }
 
-    public function testCreateSequence(): void
+    /**
+     * @dataProvider \yiiunit\framework\db\mssql\provider\CommandProvider::createSequence
+     */
+    public function testCreateSequence(string $table, int $start, int $increment, array $options): void
+    {
+        parent::testCreateSequence($table, $start, $increment, $options);
+    }
+
+    public function testUseSequence(): void
     {
         $tableName = '{{%T_create_sequence}}';
 
@@ -70,7 +75,7 @@ final class CreateSequenceTest extends \yiiunit\TestCase
         $this->ensureNoTable($tableName);
     }
 
-    public function testCreateSequenceWithOptions(): void
+    public function testUseSequenceWithOptions(): void
     {
         $tableName = '{{%T_create_sequence_options}}';
 
@@ -108,6 +113,8 @@ final class CreateSequenceTest extends \yiiunit\TestCase
 
         $result = $this->db->createCommand()->insert($tableName, ['id' => $idValue, 'name' => 'test'])->execute();
 
+        $this->assertSame(1, $result);
+
         $ids = $this->db->createCommand(
             <<<SQL
             SELECT id
@@ -122,13 +129,5 @@ final class CreateSequenceTest extends \yiiunit\TestCase
         $this->assertSame(0, $result);
 
         $this->ensureNoTable($tableName);
-    }
-
-    private function ensureNoTable(string $tableName): void
-    {
-        if ($this->db->hasTable($tableName)) {
-            $this->db->createCommand()->dropTable($tableName)->execute();
-            $this->assertFalse($this->db->hasTable($tableName));
-        }
     }
 }

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace yii\db\oci;
 
-use Generator;
 use PDO;
-use yii\base\InvalidArgumentException;
-use yii\db\Connection;
 use yii\db\Exception;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
+use yii\db\SqlHelper;
 use yii\db\TableSchema;
 
 /**
@@ -100,8 +98,10 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name: `tablename_SEQ`.
+     * @param string $sequenceName the name of the sequence.
+     * The name will be properly quoted by the method.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
+     * for the table `customer` will be `customer_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -133,21 +133,34 @@ class QueryBuilder extends \yii\db\QueryBuilder
      *
      * @see https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/CREATE-SEQUENCE.html
      */
-    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
-    {
-        $cache = $options['cache'] ?? false;
-        $cycle = $options['cycle'] ?? false;
-        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
-        $minValue = $options['minValue'] ?? $start;
-        $sequence = $this->db->quoteTableName("{$table}_SEQ");
+    public function createSequence(
+        string $sequenceName,
+        int $start = 1,
+        int $increment = 1,
+        array $options = []
+    ): string {
+        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
+        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';
+        $minValue = isset($options['minValue']) && is_int($options['minValue'])
+            ? 'MINVALUE ' . $options['minValue'] : 'MINVALUE ' . $start;
+        $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
+            ? 'MAXVALUE ' . $options['maxValue'] : 'MAXVALUE ' . PHP_INT_MAX;
 
-        return 'CREATE SEQUENCE ' . $sequence
-            . ' START WITH ' . $start
-            . ' MINVALUE ' . $minValue
-            . ' INCREMENT BY ' . $increment
-            . ' MAXVALUE ' . $maxValue
-            . ($cache !== false ? ' CACHE ' . $cache : ' NOCACHE')
-            . ($cycle !== false ? ' CYCLE' : ' NOCYCLE');
+        if (str_contains($sequenceName, '_SEQ') === false) {
+            $sequenceName .= '_SEQ';
+        }
+
+        $sql = <<<SQL
+        CREATE SEQUENCE {$this->db->quoteTableName($sequenceName)}
+            START WITH $start
+            $minValue
+            INCREMENT BY $increment
+            $maxValue
+            $cache
+            $cycle
+        SQL;
+
+        return SqlHelper::cleanSql($sql);
     }
 
     /**

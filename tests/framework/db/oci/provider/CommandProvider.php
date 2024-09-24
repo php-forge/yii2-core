@@ -41,29 +41,65 @@ final class CommandProvider extends \yiiunit\framework\db\provider\AbstractComma
                 1,
                 [],
             ],
-            'with cache' => [
+            'with suffix _SEQ' => [
+                'test_sequence_SEQ',
+                1,
+                1,
+                [],
+            ],
+            'as start' => [
+                'T_sequence',
+                5,
+                1,
+                [],
+            ],
+            'as start with value negative' => [
+                'T_sequence',
+                -5,
+                1,
+                [],
+            ],
+            'as start with value 0' => [
+                'T_sequence',
+                0,
+                1,
+                [],
+            ],
+            'as increment' => [
                 'T_sequence',
                 1,
                 2,
-                ['cache' => 50],
+                ['increment' => 2],
             ],
-            'with cycle' => [
+            'as increment with value negative' => [
                 'T_sequence',
                 1,
-                1,
-                ['cycle' => true],
+                -2,
+                ['increment' => -2],
             ],
-            'with maxvalue' => [
+            'as minvalue' => [
+                'T_sequence',
+                12,
+                1,
+                ['minValue' => 10],
+            ],
+            'as maxvalue' => [
                 'T_sequence',
                 1,
                 1,
                 ['maxValue' => 100],
             ],
-            'with minvalue' => [
+            'as cycle' => [
                 'T_sequence',
-                12,
                 1,
-                ['minValue' => 10],
+                1,
+                ['cycle' => true],
+            ],
+            'as cache' => [
+                'T_sequence',
+                1,
+                2,
+                ['cache' => 50],
             ],
         ];
     }

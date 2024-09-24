@@ -46,6 +46,21 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                     NO CACHE
                 SQL,
             ],
+            'with_schema' => [
+                'YIITEST.T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [YIITEST].[T_sequence_SEQ]
+                    START WITH 1
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
             'as type smallint' => [
                 'test_sequence',
                 1,
@@ -140,6 +155,21 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                     NO CACHE
                 SQL,
             ],
+            'as start with zero value' => [
+                'test_sequence',
+                0,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE [test_sequence_SEQ]
+                    START WITH 0
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    NO CYCLE
+                    NO CACHE
+                SQL,
+            ],
             'as increment' => [
                 'test_sequence',
                 1,
@@ -155,7 +185,7 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                     NO CACHE
                 SQL,
             ],
-            'as increment negative' => [
+            'as increment with value negative' => [
                 'test_sequence',
                 1,
                 -10,
@@ -172,12 +202,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
             ],
             'as minvalue' => [
                 'test_sequence',
-                1,
+                12,
                 1,
                 ['minValue' => 10],
                 <<<SQL
                 CREATE SEQUENCE [test_sequence_SEQ]
-                    START WITH 1
+                    START WITH 12
                     INCREMENT BY 1
                     MINVALUE 10
                     NO MAXVALUE

@@ -6,7 +6,7 @@ namespace yiiunit\framework\db\command;
 
 use yii\db\Connection;
 
-abstract class AbstractSequence extends \yiiunit\TestCase
+abstract class AbstractCreateSequence extends \yiiunit\TestCase
 {
     protected Connection|null $db = null;
 
@@ -18,26 +18,30 @@ abstract class AbstractSequence extends \yiiunit\TestCase
         parent::tearDown();
     }
 
-    public function testExecuteCreateSequence(
+    public function testCreateSequence(
         string $table,
         int $start,
         int $increment,
         array $options
     ): void {
-        $sequenceName = $table . '_SEQ';
-
-        if ($this->db->getSchema()->getSequenceName($sequenceName)) {
-            $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
-
-            $this->assertSame(0, $result);
-        }
+        $this->ensureNoTable($table);
 
         $result = $this->db->createCommand()->createSequence($table, $start, $increment, $options)->execute();
 
         $this->assertSame(0, $result);
 
-        $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
+        $result = $this->db->createCommand()->dropSequence($table)->execute();
 
         $this->assertSame(0, $result);
+
+        $this->ensureNoTable($table);
+    }
+
+    protected function ensureNoTable(string $tableName): void
+    {
+        if ($this->db->hasTable($tableName)) {
+            $this->db->createCommand()->dropTable($tableName)->execute();
+            $this->assertFalse($this->db->hasTable($tableName));
+        }
     }
 }
