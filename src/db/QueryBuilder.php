@@ -173,7 +173,7 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $sequenceName the name of the sequence.
+     * @param string $sequence the name of the sequence.
      * The name will be properly quoted by the method.
      * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
      * for the table `customer` will be `customer_SEQ`.
@@ -183,12 +183,8 @@ class QueryBuilder extends \yii\base\BaseObject
      *
      * @return string the SQL statement for creating the sequence.
      */
-    public function createSequence(
-        string $sequenceName,
-        int $start = 1,
-        int $increment = 1,
-        array $options = [],
-    ): string {
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
+    {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support creating sequences.');
     }
 

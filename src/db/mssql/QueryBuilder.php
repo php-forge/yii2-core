@@ -96,7 +96,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $sequenceName the name of the sequence.
+     * @param string $sequence the name of the sequence.
      * The name will be properly quoted by the method.
      * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
      * for the table `customer` will be `customer_SEQ`.
@@ -134,12 +134,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      *
      * @see https://learn.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver16
      */
-    public function createSequence(
-        string $sequenceName,
-        int $start = 1,
-        int $increment = 1,
-        array $options = [],
-    ): string {
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
+    {
         $types = ['tinyint', 'smallint', 'int', 'bigint', 'decimal'];
 
         $type = isset($options['type']) && in_array($options['type'], $types, true)
@@ -151,12 +147,12 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NO CACHE';
 
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName .= '_SEQ';
+        if (str_contains($sequence, '_SEQ') === false) {
+            $sequence .= '_SEQ';
         }
 
         $sql = <<<SQL
-        CREATE SEQUENCE {$this->db->quoteTableName($sequenceName)}
+        CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
             $type
             START WITH $start
             INCREMENT BY $increment

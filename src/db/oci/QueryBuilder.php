@@ -98,7 +98,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $sequenceName the name of the sequence.
+     * @param string $sequence the name of the sequence.
      * The name will be properly quoted by the method.
      * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
      * for the table `customer` will be `customer_SEQ`.
@@ -133,12 +133,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      *
      * @see https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/CREATE-SEQUENCE.html
      */
-    public function createSequence(
-        string $sequenceName,
-        int $start = 1,
-        int $increment = 1,
-        array $options = [],
-    ): string {
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
+    {
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';
         $minValue = isset($options['minValue']) && is_int($options['minValue'])
@@ -146,12 +142,12 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
             ? 'MAXVALUE ' . $options['maxValue'] : 'MAXVALUE ' . PHP_INT_MAX;
 
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName .= '_SEQ';
+        if (str_contains($sequence, '_SEQ') === false) {
+            $sequence .= '_SEQ';
         }
 
         $sql = <<<SQL
-        CREATE SEQUENCE {$this->db->quoteTableName($sequenceName)}
+        CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
             START WITH $start
             $minValue
             INCREMENT BY $increment
