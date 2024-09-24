@@ -600,17 +600,14 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Returns the name of the sequence object.
+     * Retrieves detailed information about a sequence in the database.
      *
-     * @param string $sequenceName the sequence name.
-     * The name may contain schema name if any.
-     * The name will be properly quoted by the method.
+     * @param string $sequenceName the name of the sequence to query.
      *
-     * @return string|false the name of the sequence object. False is returned if the sequence does not exist.
-     *
-     * @throws NotSupportedException if this method is not supported by the DBMS.
+     * @return array|false Information about the sequence (name, current value, increment), or false if the sequence
+     * does not exist.
      */
-    public function getSequenceName(string $sequenceName): false|string
+    public function getSequenceInfo(string $sequenceName): array|false
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support getting sequence name.');
     }

@@ -724,17 +724,42 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function getSequenceName(string $sequenceName): false|string
+    public function getSequenceInfo(string $sequenceName): array|false
     {
         if (str_contains($sequenceName, '_SEQ') === false) {
             $sequenceName .= '_SEQ';
         }
 
         $sql = <<<SQL
-        SELECT [name] FROM [sys].[sequences] WHERE [name] = :sequenceName
+        SELECT
+            [sequence_name],
+            [data_type],
+            [start_value],
+            [increment],
+            [minimum_value],
+            [maximum_value],
+            [cycle_option]
+        FROM
+            [INFORMATION_SCHEMA].[sequences]
+        WHERE
+            [sequence_name] = :sequenceName
         SQL;
 
-        return $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryScalar();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
+
+        if ($sequenceInfo === false) {
+            return false;
+        }
+
+        return [
+            'name' => $sequenceInfo['sequence_name'],
+            'type' => $sequenceInfo['data_type'],
+            'start' => $sequenceInfo['start_value'],
+            'increment' => $sequenceInfo['increment'],
+            'minValue' => $sequenceInfo['minimum_value'],
+            'maxValue' => $sequenceInfo['maximum_value'],
+            'cycle' => $sequenceInfo['cycle_option'] === '1',
+        ];
     }
 
     /**

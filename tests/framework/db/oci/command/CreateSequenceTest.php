@@ -25,9 +25,14 @@ final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCre
     /**
      * @dataProvider \yiiunit\framework\db\oci\provider\CommandProvider::createSequence
      */
-    public function testCreateSequence(string $table, int $start, int $increment, array $options): void
-    {
-        parent::testCreateSequence($table, $start, $increment, $options);
+    public function testCreateSequence(
+        string $table,
+        int $start,
+        int $increment,
+        array $options,
+        array $expectedSequenceInfo
+    ): void {
+        parent::testCreateSequence($table, $start, $increment, $options, $expectedSequenceInfo);
     }
 
     public function testUseSequence(): void

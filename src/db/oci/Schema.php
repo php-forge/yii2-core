@@ -343,18 +343,44 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function getSequenceName(string $sequenceName): false|string
+    public function getSequenceInfo(string $sequenceName): array|false
     {
+        if (str_contains($sequenceName, '_SEQ') === false) {
+            $sequenceName .= '_SEQ';
+        }
+
         $sql = <<<SQL
-        SELECT SEQUENCE_NAME
-        FROM USER_SEQUENCES
-        WHERE SEQUENCE_NAME LIKE :sequenceName || '%'
-        FETCH FIRST 1 ROW ONLY
+        SELECT
+            [[SEQUENCE_NAME]],
+            [[MIN_VALUE]],
+            [[MAX_VALUE]],
+            [[INCREMENT_BY]],
+            [[CYCLE_FLAG]],
+            [[CACHE_SIZE]],
+            [[LAST_NUMBER]]
+        FROM
+            [[USER_SEQUENCES]]
+        WHERE
+            [[SEQUENCE_NAME]] = :sequenceName
         SQL;
 
-        $result = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryScalar();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
 
-        return empty($result) ? false : $result;
+        if ($sequenceInfo === false) {
+            return false;
+        }
+
+        return [
+            'name' => $sequenceInfo['SEQUENCE_NAME'],
+            'start' => $sequenceInfo['MIN_VALUE'] !== $sequenceInfo['LAST_NUMBER']
+                ? $sequenceInfo['LAST_NUMBER'] : $sequenceInfo['MIN_VALUE'],
+            'min' => $sequenceInfo['MIN_VALUE'],
+            'max' => $sequenceInfo['MAX_VALUE'],
+            'increment' => $sequenceInfo['INCREMENT_BY'],
+            'last_number' => $sequenceInfo['LAST_NUMBER'],
+            'cycle' => $sequenceInfo['CYCLE_FLAG'] === 'Y',
+            'cache' => $sequenceInfo['CACHE_SIZE'] === '0' ? false : (int) $sequenceInfo['CACHE_SIZE'],
+        ];
     }
 
     /**

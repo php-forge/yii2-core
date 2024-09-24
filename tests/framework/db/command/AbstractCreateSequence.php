@@ -22,13 +22,18 @@ abstract class AbstractCreateSequence extends \yiiunit\TestCase
         string $table,
         int $start,
         int $increment,
-        array $options
+        array $options,
+        array $expectedSequenceInfo
     ): void {
         $this->ensureNoTable($table);
 
         $result = $this->db->createCommand()->createSequence($table, $start, $increment, $options)->execute();
 
         $this->assertSame(0, $result);
+
+        $sequenceInfo = $this->db->getSchema()->getSequenceInfo($table);
+
+        $this->assertSame($expectedSequenceInfo, $sequenceInfo);
 
         $result = $this->db->createCommand()->dropSequence($table)->execute();
 
