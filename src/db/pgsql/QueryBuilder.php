@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace yii\db\pgsql;
 
-use yii\base\InvalidArgumentException;
 use yii\db\Expression;
 use yii\db\QueryInterface;
+use yii\db\SqlHelper;
+
+use function str_ends_with;
+use function strtolower;
 
 /**
  * QueryBuilder is the query builder for PostgreSQL databases.
@@ -125,8 +128,10 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * Creates an `SEQUENCE` SQL statement.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name: `tablename_SEQ`.
+     * @param string $sequence the name of the sequence.
+     * The name will be properly quoted by the method.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
+     * for the table `customer` will be `customer_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -145,25 +150,39 @@ class QueryBuilder extends \yii\db\QueryBuilder
      *
      * @see https://www.postgresql.org/docs/9.5/sql-createsequence.html
      */
-    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): string
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
     {
-        $cache = $options['cache'] ?? null;
-        $cycle = $options['cycle'] ?? null;
-        $minValue = $options['minValue'] ?? null;
-        $maxValue = $options['maxValue'] ?? PHP_INT_MAX;
-        $sequence = $this->db->quoteTableName($table . '_SEQ');
-        $type = $options['type'] ?? null;
+        $types = ['bigint', 'int', 'smallint'];
 
-        return <<<SQL
-            CREATE SEQUENCE $sequence
-            $type != null ? AS $type : ''
+        $type = isset($options['type']) && in_array($options['type'], $types, true)
+            ? 'AS ' . $options['type'] : '';
+        $minValue = isset($options['minValue']) && is_int($options['minValue'])
+            ? 'MINVALUE ' . $options['minValue'] : 'NO MINVALUE';
+        $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
+            ? 'MAXVALUE ' . $options['maxValue'] : 'NO MAXVALUE';
+        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
+        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : '';
+
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
+            $sequence .= '_SEQ';
+        }
+
+        if ($start < 1) {
+            $minValue = "MINVALUE $start";
+        }
+
+        $sql = <<<SQL
+        CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+            $type
             INCREMENT BY $increment
-            $minValue != null ? MINVALUE $minValue : NO MINVALUE
-            $maxValue != null ? MAXVALUE $maxValue : NO MAXVALUE
+            $minValue
+            $maxValue
             START WITH $start
-            $cache != null ? CACHE $cache : NO CACHE
-            $cycle != null ? CYCLE : NO CYCLE
+            $cycle
+            $cache
         SQL;
+
+        return SqlHelper::cleanSql($sql);
     }
 
     /**

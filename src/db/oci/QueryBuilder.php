@@ -12,6 +12,9 @@ use yii\db\QueryInterface;
 use yii\db\SqlHelper;
 use yii\db\TableSchema;
 
+use function str_ends_with;
+use function strtolower;
+
 /**
  * QueryBuilder is the query builder for Oracle databases.
  */
@@ -135,14 +138,14 @@ class QueryBuilder extends \yii\db\QueryBuilder
      */
     public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
     {
-        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
-        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';
         $minValue = isset($options['minValue']) && is_int($options['minValue'])
             ? 'MINVALUE ' . $options['minValue'] : 'MINVALUE ' . $start;
         $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
             ? 'MAXVALUE ' . $options['maxValue'] : 'MAXVALUE ' . PHP_INT_MAX;
+        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';
+        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
 
-        if (str_contains($sequence, '_SEQ') === false) {
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
             $sequence .= '_SEQ';
         }
 

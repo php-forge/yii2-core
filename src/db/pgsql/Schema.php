@@ -273,6 +273,47 @@ SQL;
 
     /**
      * {@inheritdoc}
+     */
+    public function getSequenceInfo(string $sequenceName): array|false
+    {
+        if (str_contains($sequenceName, '_SEQ') === false) {
+            $sequenceName .= '_SEQ';
+        }
+
+        $sql = <<<SQL
+        SELECT
+            [[sequence_name]],
+            [[data_type]],
+            [[start_value]],
+            [[increment]],
+            [[minimum_value]],
+            [[maximum_value]],
+            [[cycle_option]]
+        FROM
+            [[information_schema.sequences]]
+        WHERE
+            [[sequence_name]] = :sequenceName
+        SQL;
+
+        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
+
+        if ($sequenceInfo === false) {
+            return false;
+        }
+
+        return [
+            'name' => $sequenceInfo['sequence_name'],
+            'type' => $sequenceInfo['data_type'],
+            'start' => $sequenceInfo['start_value'],
+            'increment' => $sequenceInfo['increment'],
+            'minValue' => $sequenceInfo['minimum_value'],
+            'maxValue' => $sequenceInfo['maximum_value'],
+            'cycle' => $sequenceInfo['cycle_option'] === 'YES',
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
      *
      * Note:
      * - `PostgreSQL` not support value negative for auto increment primary key column.

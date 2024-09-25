@@ -732,17 +732,17 @@ SQL;
 
         $sql = <<<SQL
         SELECT
-            [sequence_name],
-            [data_type],
-            [start_value],
-            [increment],
-            [minimum_value],
-            [maximum_value],
-            [cycle_option]
+            [[sequence_name]],
+            [[data_type]],
+            [[start_value]],
+            [[increment]],
+            [[minimum_value]],
+            [[maximum_value]],
+            [[cycle_option]]
         FROM
-            [INFORMATION_SCHEMA].[sequences]
+            [[INFORMATION_SCHEMA]].[[sequences]]
         WHERE
-            [sequence_name] = :sequenceName
+            [[sequence_name]] = :sequenceName
         SQL;
 
         $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();

@@ -13,6 +13,229 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
 {
     protected static string $driverName = 'pgsql';
 
+    public static function createSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'with suffix _SEQ' => [
+                'T_sequence_SEQ',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as type bigint' => [
+                'T_sequence',
+                1,
+                1,
+                ['type' => 'bigint'],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    AS bigint
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as type int' => [
+                'T_sequence',
+                1,
+                1,
+                ['type' => 'int'],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    AS int
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as type smallint' => [
+                'T_sequence',
+                1,
+                1,
+                ['type' => 'smallint'],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    AS smallint
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as start' => [
+                'T_sequence',
+                10,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 10
+                    NO CYCLE
+                SQL,
+            ],
+            'as start with value negative' => [
+                'T_sequence',
+                -10,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    MINVALUE -10
+                    NO MAXVALUE
+                    START WITH -10
+                    NO CYCLE
+                SQL,
+            ],
+            'as start with zero value' => [
+                'T_sequence',
+                0,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    MINVALUE 0
+                    NO MAXVALUE
+                    START WITH 0
+                    NO CYCLE
+                SQL,
+            ],
+            'as increment' => [
+                'T_sequence',
+                1,
+                10,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 10
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as increment with value negative' => [
+                'T_sequence',
+                -1,
+                -1,
+                [
+                    'minValue' => -10,
+                    'maxValue' => PHP_INT_MAX,
+                ],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY -1
+                    MINVALUE -1
+                    MAXVALUE 9223372036854775807
+                    START WITH -1
+                    NO CYCLE
+                SQL,
+            ],
+            'as minvalue' => [
+                'T_sequence',
+                12,
+                1,
+                ['minValue' => 10],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    MINVALUE 10
+                    NO MAXVALUE
+                    START WITH 12
+                    NO CYCLE
+                SQL,
+            ],
+            'as maxvalue' => [
+                'T_sequence',
+                1,
+                1,
+                ['maxValue' => 10],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    MAXVALUE 10
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as maxvalue PHP_INT_MAX' => [
+                'T_sequence',
+                1,
+                1,
+                ['maxValue' => PHP_INT_MAX],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    MAXVALUE 9223372036854775807
+                    START WITH 1
+                    NO CYCLE
+                SQL,
+            ],
+            'as cycle' => [
+                'T_sequence',
+                1,
+                1,
+                ['cycle' => true],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    CYCLE
+                SQL,
+            ],
+            'as cache' => [
+                'T_sequence',
+                1,
+                1,
+                ['cache' => 50],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    INCREMENT BY 1
+                    NO MINVALUE
+                    NO MAXVALUE
+                    START WITH 1
+                    NO CYCLE
+                    CACHE 50
+                SQL,
+            ],
+        ];
+    }
+
     public static function insert(): array
     {
         $insert = parent::insert();

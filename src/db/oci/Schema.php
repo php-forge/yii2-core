@@ -374,9 +374,9 @@ SQL;
             'name' => $sequenceInfo['SEQUENCE_NAME'],
             'start' => $sequenceInfo['MIN_VALUE'] !== $sequenceInfo['LAST_NUMBER']
                 ? $sequenceInfo['LAST_NUMBER'] : $sequenceInfo['MIN_VALUE'],
-            'min' => $sequenceInfo['MIN_VALUE'],
-            'max' => $sequenceInfo['MAX_VALUE'],
             'increment' => $sequenceInfo['INCREMENT_BY'],
+            'minValue' => $sequenceInfo['MIN_VALUE'],
+            'maxValue' => $sequenceInfo['MAX_VALUE'],
             'last_number' => $sequenceInfo['LAST_NUMBER'],
             'cycle' => $sequenceInfo['CYCLE_FLAG'] === 'Y',
             'cache' => $sequenceInfo['CACHE_SIZE'] === '0' ? false : (int) $sequenceInfo['CACHE_SIZE'],
