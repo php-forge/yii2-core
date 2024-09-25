@@ -171,16 +171,27 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $minValue = "MINVALUE $start";
         }
 
-        $sql = <<<SQL
-        CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
-            $type
-            INCREMENT BY $increment
-            $minValue
-            $maxValue
-            START WITH $start
-            $cycle
-            $cache
-        SQL;
+        $sql = match (version_compare($this->db->serverVersion, '10.0', '<')) {
+            true => <<<SQL
+            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+                INCREMENT BY $increment
+                $minValue
+                $maxValue
+                START WITH $start
+                $cycle
+                $cache
+            SQL,
+            default => <<<SQL
+            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+                $type
+                INCREMENT BY $increment
+                $minValue
+                $maxValue
+                START WITH $start
+                $cycle
+                $cache
+            SQL,
+        };
 
         if (version_compare($this->db->serverVersion, '10.0', '<')) {
             $sql = <<<SQL
