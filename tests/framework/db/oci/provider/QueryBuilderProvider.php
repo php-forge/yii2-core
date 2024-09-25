@@ -14,6 +14,24 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
 {
     protected static string $driverName = 'oci';
 
+    public static function batchInsert(): array
+    {
+        $batchInsert = parent::batchInsert();
+
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['simple']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['escape-danger-chars']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['customer3']['expected']);
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, bool2-null']['expected']);
+
+        $batchInsert['wrong']['expected'] = <<<SQL
+        INSERT ALL INTO "type" ("float_col", "time") VALUES (:qp0, now()) INTO "type" ("float_col", "time") VALUES (:qp1, now()) SELECT 1 FROM SYS.DUAL
+        SQL;
+
+        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, time-now()']['expected']);
+
+        return $batchInsert;
+    }
+
     public static function createSequence(): array
     {
         return [
@@ -200,22 +218,16 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
         ];
     }
 
-    public static function batchInsert(): array
+    public static function dropSequence(): array
     {
-        $batchInsert = parent::batchInsert();
-
-        DbHelper::changeSqlForOracleBatchInsert($batchInsert['simple']['expected']);
-        DbHelper::changeSqlForOracleBatchInsert($batchInsert['escape-danger-chars']['expected']);
-        DbHelper::changeSqlForOracleBatchInsert($batchInsert['customer3']['expected']);
-        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, bool2-null']['expected']);
-
-        $batchInsert['wrong']['expected'] = <<<SQL
-        INSERT ALL INTO "type" ("float_col", "time") VALUES (:qp0, now()) INTO "type" ("float_col", "time") VALUES (:qp1, now()) SELECT 1 FROM SYS.DUAL
-        SQL;
-
-        DbHelper::changeSqlForOracleBatchInsert($batchInsert['bool-false, time-now()']['expected']);
-
-        return $batchInsert;
+        return [
+            'simple' => [
+                'T_sequence',
+                <<<SQL
+                DROP SEQUENCE "T_sequence_SEQ"
+                SQL,
+            ],
+        ];
     }
 
     public static function insert(): array

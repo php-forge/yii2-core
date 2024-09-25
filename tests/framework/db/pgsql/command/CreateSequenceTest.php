@@ -32,6 +32,11 @@ final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCre
         array $options,
         array $expectedSequenceInfo
     ): void {
+        if (isset($options['type'])) {
+            $expectedSequenceInfo['type'] = 'bigint';
+            $expectedSequenceInfo['maxValue'] = '9223372036854775807';
+        }
+
         parent::testCreateSequence($table, $start, $increment, $options, $expectedSequenceInfo);
     }
 

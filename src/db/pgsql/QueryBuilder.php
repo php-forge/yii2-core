@@ -144,7 +144,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * If enabled, the `MAXVALUE` option will be used to set the maximal value for the sequence. If `false` is provided,
      * for default the `PHP_INT_MAX` value will be used.
      * If enabled, the `TYPE` option will be used to set the sequence data type. If not provided, the default value will
-     * be used.
+     * be used. The supported types are `bigint`, `int`, `smallint` for `PostgreSQL` 10 and later.
      *
      * @return string the SQL statement for creating the sequence.
      *
@@ -181,6 +181,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $cycle
             $cache
         SQL;
+
+        if (version_compare($this->db->serverVersion, '10.0', '<')) {
+            $sql = <<<SQL
+            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+                INCREMENT BY $increment
+                $minValue
+                $maxValue
+                START WITH $start
+                $cycle
+                $cache
+            SQL;
+        }
 
         return SqlHelper::cleanSql($sql);
     }

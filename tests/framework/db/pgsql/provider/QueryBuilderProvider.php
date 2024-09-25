@@ -236,6 +236,19 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
         ];
     }
 
+
+    public static function dropSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                <<<SQL
+                DROP SEQUENCE "T_sequence_SEQ"
+                SQL,
+            ],
+        ];
+    }
+
     public static function insert(): array
     {
         $insert = parent::insert();

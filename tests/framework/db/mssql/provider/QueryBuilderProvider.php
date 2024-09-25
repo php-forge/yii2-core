@@ -17,12 +17,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
     {
         return [
             'simple' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -32,12 +32,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'with suffix _SEQ' => [
-                'test_sequence_SEQ',
+                'T_sequence_SEQ',
                 1,
                 1,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -62,12 +62,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as type smallint' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['type' => 'smallint'],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     AS smallint
                     START WITH 1
                     INCREMENT BY 1
@@ -78,12 +78,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as type int' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['type' => 'int'],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     AS int
                     START WITH 1
                     INCREMENT BY 1
@@ -94,12 +94,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as type bigint' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['type' => 'bigint'],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     AS bigint
                     START WITH 1
                     INCREMENT BY 1
@@ -110,12 +110,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as type decimal' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['type' => 'decimal'],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     AS decimal
                     START WITH 1
                     INCREMENT BY 1
@@ -126,12 +126,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as start' => [
-                'test_sequence',
+                'T_sequence',
                 10,
                 1,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 10
                     INCREMENT BY 1
                     NO MINVALUE
@@ -141,12 +141,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as start with value negative' => [
-                'test_sequence',
+                'T_sequence',
                 -10,
                 1,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH -10
                     INCREMENT BY 1
                     NO MINVALUE
@@ -156,12 +156,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as start with zero value' => [
-                'test_sequence',
+                'T_sequence',
                 0,
                 1,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 0
                     INCREMENT BY 1
                     NO MINVALUE
@@ -171,12 +171,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as increment' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 10,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 10
                     NO MINVALUE
@@ -186,12 +186,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as increment with value negative' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 -10,
                 [],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY -10
                     NO MINVALUE
@@ -201,12 +201,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as minvalue' => [
-                'test_sequence',
+                'T_sequence',
                 12,
                 1,
                 ['minValue' => 10],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 12
                     INCREMENT BY 1
                     MINVALUE 10
@@ -216,12 +216,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as maxvalue' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['maxValue' => 10],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -231,12 +231,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as maxvalue PHP_INT_MAX' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['maxValue' => PHP_INT_MAX],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -246,12 +246,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as cycle' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['cycle' => true],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -261,12 +261,12 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
                 SQL,
             ],
             'as cache' => [
-                'test_sequence',
+                'T_sequence',
                 1,
                 1,
                 ['cache' => 50],
                 <<<SQL
-                CREATE SEQUENCE [test_sequence_SEQ]
+                CREATE SEQUENCE [T_sequence_SEQ]
                     START WITH 1
                     INCREMENT BY 1
                     NO MINVALUE
@@ -282,9 +282,9 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
     {
         return [
             'simple' => [
-                'test_sequence',
+                'T_sequence',
                 <<<SQL
-                DROP SEQUENCE [test_sequence_SEQ]
+                DROP SEQUENCE [T_sequence_SEQ]
                 SQL,
             ],
         ];
