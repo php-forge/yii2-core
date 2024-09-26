@@ -10,7 +10,7 @@ abstract class AbstractSchemaProvider
     {
         return [
             'no value' => [
-                '{{%reset_autoincrement_pk}}',
+                '{{%T_reset_autoincrement_pk}}',
                 [
                     ['name' => 'name1'],
                     ['name' => 'name2'],
@@ -19,7 +19,7 @@ abstract class AbstractSchemaProvider
                 [1, 2, 3],
             ],
             'null value' => [
-                '{{%reset_autoincrement_pk}}',
+                '{{%T_reset_autoincrement_pk}}',
                 [
                     ['name' => 'name1'],
                     ['name' => 'name2'],
@@ -29,7 +29,7 @@ abstract class AbstractSchemaProvider
                 null,
             ],
             'value' => [
-                '{{%reset_autoincrement_pk}}',
+                '{{%T_reset_autoincrement_pk}}',
                 [
                     ['name' => 'name1'],
                     ['name' => 'name2'],
@@ -39,7 +39,7 @@ abstract class AbstractSchemaProvider
                 5,
             ],
             'value with zero' => [
-                '{{%reset_autoincrement_pk}}',
+                '{{%T_reset_autoincrement_pk}}',
                 [
                     ['name' => 'name1'],
                     ['name' => 'name2'],

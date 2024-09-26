@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mssql\schema;
 
 use yii\base\InvalidArgumentException;
-use yiiunit\support\MssqlConnection;
+use yiiunit\support\{DbHelper, MssqlConnection};
 
 /**
  * @group db
  * @group mssql
  * @group schema
+ * @group auto-increment
  */
-final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
+final class AutoIncrementTest extends \yiiunit\framework\db\schema\AbstractAutoIncrement
 {
     protected array $columnsSchema = [
         'id' => 'INT IDENTITY PRIMARY KEY',
@@ -24,11 +25,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::setUp();
 
         $this->db = MssqlConnection::getConnection();
-    }
-
-    public function testGetSequenceInfoWithNotExist(): void
-    {
-        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%not_exists}}'));
     }
 
     /**
@@ -45,7 +41,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
     public function testResetAutoIncrementPKWithTableNotAutoIncrement(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_auto_increment_pk}}';
 
         $this->columnsSchema = [
             'id' => 'INT',
@@ -53,7 +49,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'PRIMARY KEY (id)',
         ];
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 

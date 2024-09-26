@@ -6,10 +6,13 @@ namespace yiiunit\framework\db\pgsql\querybuilder;
 
 use yiiunit\support\PgsqlConnection;
 
+use function preg_replace;
+use function version_compare;
+
 /**
  * @group db
  * @group pgsql
- * @group querybuilder
+ * @group query-builder
  * @group create-sequence
  */
 final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\AbstractCreateSequence
@@ -25,7 +28,7 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
      * @dataProvider \yiiunit\framework\db\pgsql\provider\QueryBuilderProvider::createSequence
      */
     public function testGenerateSQL(
-        string $sequenceName,
+        string $sequence,
         int $start,
         int $increment,
         array $options,
@@ -36,6 +39,6 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
             $expectedSQL = preg_replace('/\s*AS\s+\w+\s*\n/', "\n", $expectedSQL);
         }
 
-        parent::testGenerateSQL($sequenceName, $start, $increment, $options, $expectedSQL);
+        parent::testGenerateSQL($sequence, $start, $increment, $options, $expectedSQL);
     }
 }

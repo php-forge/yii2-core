@@ -18,10 +18,10 @@ abstract class AbstractDropSequence extends \yiiunit\TestCase
         parent::tearDown();
     }
 
-    public function testGenerateSQL(string $sequenceName, string $expectedSQL): void
+    public function testGenerateSQL(string $sequence, string $expectedSQL): void
     {
         $qb = $this->db->getQueryBuilder();
 
-        $this->assertSame($expectedSQL, $qb->dropSequence($sequenceName));
+        $this->assertSame($expectedSQL, $qb->dropSequence($sequence));
     }
 }

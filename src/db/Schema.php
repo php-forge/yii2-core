@@ -609,7 +609,7 @@ abstract class Schema extends BaseObject
      */
     public function getSequenceInfo(string $sequence): array|false
     {
-        throw new NotSupportedException($this->db->getDriverName() . ' does not support getting sequence name.');
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support getting sequence information.');
     }
 
     /**

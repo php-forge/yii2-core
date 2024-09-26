@@ -9,7 +9,7 @@ use yiiunit\support\MssqlConnection;
 /**
  * @group db
  * @group mssql
- * @group querybuilder
+ * @group query-builder
  * @group drop-sequence
  */
 final class DropSequenceTest extends \yiiunit\framework\db\querybuilder\AbstractDropSequence
@@ -24,8 +24,8 @@ final class DropSequenceTest extends \yiiunit\framework\db\querybuilder\Abstract
     /**
      * @dataProvider \yiiunit\framework\db\mssql\provider\QueryBuilderProvider::dropSequence
      */
-    public function testGenerateSQL(string $tableName, string $expectedSQL): void
+    public function testGenerateSQL(string $sequence, string $expectedSQL): void
     {
-        parent::testGenerateSQL($tableName, $expectedSQL);
+        parent::testGenerateSQL($sequence, $expectedSQL);
     }
 }

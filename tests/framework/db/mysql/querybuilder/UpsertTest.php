@@ -10,7 +10,7 @@ use yiiunit\support\MysqlConnection;
 /**
  * @group db
  * @group mysql
- * @group querybuilder
+ * @group query-builder
  * @group upsert
  */
 final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert

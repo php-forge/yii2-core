@@ -19,10 +19,10 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         parent::tearDown();
     }
 
-    public function testBatchInsert(string $table, array $columns, iterable|Generator $rows, string $expected): void
+    public function testBatchInsert(string $tableName, array $columns, iterable|Generator $rows, string $expected): void
     {
         $qb = $this->db->getQueryBuilder();
 
-        $this->assertSame($expected, $qb->batchInsert($table, $columns, $rows));
+        $this->assertSame($expected, $qb->batchInsert($tableName, $columns, $rows));
     }
 }

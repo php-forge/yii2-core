@@ -10,7 +10,7 @@ use yiiunit\support\MssqlConnection;
 /**
  * @group db
  * @group mssql
- * @group querybuilder
+ * @group query-builder
  * @group upsert
  */
 final class UpsertTest extends \yiiunit\framework\db\querybuilder\AbstractUpsert

@@ -11,8 +11,9 @@ use yiiunit\support\SqliteConnection;
  * @group db
  * @group sqlite
  * @group schema
+ * @group auto-increment
  */
-final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
+final class AutoIncrementTest extends \yiiunit\framework\db\schema\AbstractAutoIncrement
 {
     protected array $columnsSchema = [
         'id' => 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -62,7 +63,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
     public function testResetAutoIncrementPKWithValueNegative(): void
     {
-        $tableName = '{{%reset_auto_increment_pk}}';
+        $tableName = '{{%T_reset_auto_increment_pk}}';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("The value must be greater than '0'.");

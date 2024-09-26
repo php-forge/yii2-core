@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\command;
 
-use yii\db\Connection;
-use yii\db\Query;
-use yii\db\QueryInterface;
+use yii\db\{Connection, Query, QueryInterface};
 
+use function is_resource;
 use function json_encode;
+use function stream_get_contents;
 
 abstract class AbstractUpsert extends \yiiunit\TestCase
 {

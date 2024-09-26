@@ -25,6 +25,6 @@ abstract class AbstractSequence extends \yiiunit\TestCase
 
     public function testGetSequenceInfoWithSequenceNotExist(): void
     {
-        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%not_exists}}'));
+        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%T_not_exists}}'));
     }
 }

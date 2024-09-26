@@ -11,7 +11,7 @@ use yiiunit\support\SqliteConnection;
 /**
  * @group db
  * @group sqlite
- * @group querybuilder
+ * @group query-builder
  * @group create-sequence
  */
 final class CreateSequenceTest extends \yiiunit\TestCase
@@ -30,6 +30,6 @@ final class CreateSequenceTest extends \yiiunit\TestCase
         $this->expectException(NotSupportedException::class);
         $this->expectExceptionMessage('sqlite does not support creating sequences.');
 
-        $this->db->getQueryBuilder()->createSequence('test_sequence');
+        $this->db->getQueryBuilder()->createSequence('{{%T_create_sequence}}');
     }
 }

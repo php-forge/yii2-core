@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\command;
 
 use yii\db\Connection;
+use yiiunit\support\DbHelper;
 
 abstract class AbstractCreateSequence extends \yiiunit\TestCase
 {
@@ -19,34 +20,26 @@ abstract class AbstractCreateSequence extends \yiiunit\TestCase
     }
 
     public function testCreateSequence(
-        string $table,
+        string $sequence,
         int $start,
         int $increment,
         array $options,
         array $expectedSequenceInfo
     ): void {
-        $this->ensureNoTable($table);
+        DbHelper::ensureNoTable($this->db, $sequence);
 
-        $result = $this->db->createCommand()->createSequence($table, $start, $increment, $options)->execute();
+        $result = $this->db->createCommand()->createSequence($sequence, $start, $increment, $options)->execute();
 
         $this->assertSame(0, $result);
 
-        $sequenceInfo = $this->db->getSchema()->getSequenceInfo($table);
+        $sequenceInfo = $this->db->getSchema()->getSequenceInfo($sequence);
 
         $this->assertSame($expectedSequenceInfo, $sequenceInfo);
 
-        $result = $this->db->createCommand()->dropSequence($table)->execute();
+        $result = $this->db->createCommand()->dropSequence($sequence)->execute();
 
         $this->assertSame(0, $result);
 
-        $this->ensureNoTable($table);
-    }
-
-    protected function ensureNoTable(string $tableName): void
-    {
-        if ($this->db->hasTable($tableName)) {
-            $this->db->createCommand()->dropTable($tableName)->execute();
-            $this->assertFalse($this->db->hasTable($tableName));
-        }
+        DbHelper::ensureNoTable($this->db, $sequence);
     }
 }

@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\schema;
 
 use yii\base\InvalidArgumentException;
-use yii\base\NotSupportedException;
 use yiiunit\support\MysqlConnection;
 
 /**
  * @group db
  * @group mysql
  * @group schema
+ * @group auto-increment
  */
-final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
+final class AutoIncrementTest extends \yiiunit\framework\db\schema\AbstractAutoIncrement
 {
     protected array $columnsSchema = [
         'id' => 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -25,16 +25,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::setUp();
 
         $this->db = MysqlConnection::getConnection();
-    }
-
-    public function testGetSequenceInfo(): void
-    {
-        $tableName = '{{%sequence_test}}';
-
-        $this->expectException(NotSupportedException::class);
-        $this->expectExceptionMessage('mysql does not support getting sequence name.');
-
-        $this->db->getSchema()->getSequenceInfo($tableName);
     }
 
     /**
@@ -73,7 +63,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
     public function testResetAutoIncrementPKWithValueNegative(): void
     {
-        $tableName = '{{%reset_auto_increment_pk}}';
+        $tableName = '{{%T_reset_auto_increment_pk}}';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("The value must be greater than '0'.");
