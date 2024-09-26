@@ -17,6 +17,7 @@ use yii\db\ConstraintFinderTrait;
 use yii\db\Expression;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\SqlHelper;
 use yii\db\TableSchema;
 use yii\helpers\ArrayHelper;
 
@@ -24,7 +25,6 @@ use function array_change_key_case;
 use function array_keys;
 use function array_merge;
 use function array_reverse;
-use function count;
 use function implode;
 
 /**
@@ -341,33 +341,44 @@ SQL;
     }
 
     /**
-     * Attempts to find a sequence name from user triggers for the given table.
-     *
-     * @param string $tableName the table name to search for.
-     *
-     * @return false|string the sequence name if found in triggers, or `false` if not found.
+     * {@inheritdoc}
      */
-    public function getTableSequenceName(string $tableName): false|string
+    public function getSequenceInfo(string $sequence): array|false
     {
-        $tableSchema = $this->getTableSchema($tableName);
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
-        if ($tableSchema === null) {
+        $sql = <<<SQL
+        SELECT
+            [[SEQUENCE_NAME]],
+            [[MIN_VALUE]],
+            [[MAX_VALUE]],
+            [[INCREMENT_BY]],
+            [[CYCLE_FLAG]],
+            [[CACHE_SIZE]],
+            [[LAST_NUMBER]]
+        FROM
+            [[USER_SEQUENCES]]
+        WHERE
+            [[SEQUENCE_NAME]] = :sequence
+        SQL;
+
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
+
+        if ($sequenceInfo === false) {
             return false;
         }
 
-        $sql = <<<SQL
-        SELECT UD.REFERENCED_NAME AS SEQUENCE_NAME
-        FROM USER_DEPENDENCIES UD
-        JOIN USER_TRIGGERS UT ON (UT.TRIGGER_NAME = UD.NAME)
-        WHERE
-            UT.TABLE_NAME = :tableName
-            AND UD.TYPE = 'TRIGGER'
-            AND UD.REFERENCED_TYPE = 'SEQUENCE'
-        SQL;
-
-        $result = $this->db->createCommand($sql, [':tableName' => $tableSchema->fullName])->queryScalar();
-
-        return empty($result) ? false : $result;
+        return [
+            'name' => $sequenceInfo['SEQUENCE_NAME'],
+            'start' => $sequenceInfo['MIN_VALUE'] !== $sequenceInfo['LAST_NUMBER']
+                ? $sequenceInfo['LAST_NUMBER'] : $sequenceInfo['MIN_VALUE'],
+            'increment' => $sequenceInfo['INCREMENT_BY'],
+            'minValue' => $sequenceInfo['MIN_VALUE'],
+            'maxValue' => $sequenceInfo['MAX_VALUE'],
+            'last_number' => $sequenceInfo['LAST_NUMBER'],
+            'cycle' => $sequenceInfo['CYCLE_FLAG'] === 'Y',
+            'cache' => $sequenceInfo['CACHE_SIZE'] === '0' ? false : (int) $sequenceInfo['CACHE_SIZE'],
+        ];
     }
 
     /**
@@ -621,6 +632,36 @@ SQL;
     }
 
     /**
+     * Searches for the sequence name in the triggers for a given table.
+     *
+     * @param string $tableName the table name to search for.
+     *
+     * @return false|string the sequence name if found in triggers, or `false` if not found.
+     */
+    public function findTableSequenceFromTriggers(string $tableName): false|string
+    {
+        $tableSchema = $this->getTableSchema($tableName);
+
+        if ($tableSchema === null) {
+            return false;
+        }
+
+        $sql = <<<SQL
+        SELECT [[UD.REFERENCED_NAME]] AS [[SEQUENCE_NAME]]
+        FROM [[USER_DEPENDENCIES]] [[UD]]
+        JOIN [[USER_TRIGGERS]] [[UT]] ON ([[UT.TRIGGER_NAME]] = [[UD.NAME]])
+        WHERE
+            [[UT.TABLE_NAME]] = :tableName
+            AND [[UD.TYPE]] = 'TRIGGER'
+            AND [[UD.REFERENCED_TYPE]] = 'SEQUENCE'
+        SQL;
+
+        $result = $this->db->createCommand($sql, [':tableName' => $tableSchema->fullName])->queryScalar();
+
+        return empty($result) ? false : $result;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function resetAutoIncrementPK(string $tableName, int|null $value = null): int
@@ -634,7 +675,7 @@ SQL;
         // `Oracle` needs at least two queries to reset a sequence with trigger
         // (see adding transactions and/or use alter method to avoid grants' issue?)
         if ($tableSchema->columns[$columnPK]->autoIncrement === false) {
-            $sequenceName = $this->getTableSequenceName($tableSchema->fullName);
+            $sequenceName = $this->findTableSequenceFromTriggers($tableSchema->fullName);
 
             if ($sequenceName === false) {
                 throw new InvalidArgumentException("Sequence name for table '{$tableSchema->fullName}' not found.");

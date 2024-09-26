@@ -32,6 +32,204 @@ final class QueryBuilderProvider extends \yiiunit\framework\db\provider\Abstract
         return $batchInsert;
     }
 
+    public static function createSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'with suffix _SEQ' => [
+                'test_sequence_SEQ',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "test_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'with_schema' => [
+                'YIITEST.T_sequence',
+                1,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "YIITEST"."T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as start' => [
+                'T_sequence',
+                5,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 5
+                    MINVALUE 5
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as start with value negative' => [
+                'T_sequence',
+                -5,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH -5
+                    MINVALUE -5
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as start with value 0' => [
+                'T_sequence',
+                0,
+                1,
+                [],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 0
+                    MINVALUE 0
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as increment' => [
+                'T_sequence',
+                1,
+                2,
+                ['increment' => 2],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 2
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as increment with value negative' => [
+                'T_sequence',
+                1,
+                -2,
+                ['increment' => -2],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY -2
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as minvalue' => [
+                'T_sequence',
+                12,
+                1,
+                ['minValue' => 10],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 12
+                    MINVALUE 10
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as maxvalue' => [
+                'T_sequence',
+                1,
+                1,
+                ['maxValue' => 100],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 1
+                    MAXVALUE 100
+                    NOCACHE
+                    NOCYCLE
+                SQL,
+            ],
+            'as cycle' => [
+                'T_sequence',
+                1,
+                1,
+                ['cycle' => true],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 1
+                    MAXVALUE 9223372036854775807
+                    NOCACHE
+                    CYCLE
+                SQL,
+            ],
+            'as cache' => [
+                'T_sequence',
+                1,
+                2,
+                ['cache' => 50],
+                <<<SQL
+                CREATE SEQUENCE "T_sequence_SEQ"
+                    START WITH 1
+                    MINVALUE 1
+                    INCREMENT BY 2
+                    MAXVALUE 9223372036854775807
+                    CACHE 50
+                    NOCYCLE
+                SQL,
+            ],
+        ];
+    }
+
+    public static function dropSequence(): array
+    {
+        return [
+            'simple' => [
+                'T_sequence',
+                <<<SQL
+                DROP SEQUENCE "T_sequence_SEQ"
+                SQL,
+            ],
+        ];
+    }
+
     public static function insert(): array
     {
         $insert = parent::insert();

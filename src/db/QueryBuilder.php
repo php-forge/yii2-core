@@ -171,6 +171,43 @@ class QueryBuilder extends \yii\base\BaseObject
     }
 
     /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return string the SQL statement for creating the sequence.
+     */
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        throw new NotSupportedException($this->db->getDriverName() . ' does not support creating sequences.');
+    }
+
+    /**
+     * Creates an `DROP SEQUENCE` SQL statement.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
+     *
+     * @return string the SQL statement for dropping the sequence.
+     */
+    public function dropSequence(string $sequence): string
+    {
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
+
+        return <<<SQL
+        DROP SEQUENCE {$this->db->quoteTableName($sequence)}
+        SQL;
+    }
+
+    /**
      * Setter for [[expressionBuilders]] property.
      *
      * @param string[] $builders array of builders that should be merged with the pre-defined ones

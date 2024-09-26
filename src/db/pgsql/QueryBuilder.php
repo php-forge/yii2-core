@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace yii\db\pgsql;
 
-use yii\base\InvalidArgumentException;
 use yii\db\Expression;
 use yii\db\QueryInterface;
+use yii\db\SqlHelper;
 
 /**
  * QueryBuilder is the query builder for PostgreSQL databases.
@@ -120,6 +120,75 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $this->db->quoteTableName($table) .
         ($index !== false ? " USING $index" : '') .
         ' (' . $this->buildColumns($columns) . ')';
+    }
+
+    /**
+     * Creates an `SEQUENCE` SQL statement.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     * If enabled, the `CACHE` option will be used to cache sequence values for better performance, example
+     * `cache` => `20`, will cache 20 sequence values. If `false` is provided, the `NOCACHE` option will be used.
+     * If enabled, the `CYCLE` option will be used to allow the sequence to restart once the maximal value is reached.
+     * If `false` is provided, the `NOCYCLE` option will be used.
+     * If enabled, the `MINVALUE` option will be used to set the minimal value for the sequence. If `false` is provided,
+     * the `NO MINVALUE` option will be used. If not provided, the default value will be used.
+     * If enabled, the `MAXVALUE` option will be used to set the maximal value for the sequence. If `false` is provided,
+     * for default the `PHP_INT_MAX` value will be used.
+     * If enabled, the `TYPE` option will be used to set the sequence data type. If not provided, the default value will
+     * be used. The supported types are `bigint`, `int`, `smallint` for `PostgreSQL` 10 and later.
+     *
+     * @return string the SQL statement for creating the sequence.
+     *
+     * @see https://www.postgresql.org/docs/9.5/sql-createsequence.html
+     */
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): string
+    {
+        $types = ['bigint', 'int', 'smallint'];
+
+        $type = isset($options['type']) && in_array($options['type'], $types, true)
+            ? 'AS ' . $options['type'] : '';
+        $minValue = isset($options['minValue']) && is_int($options['minValue'])
+            ? 'MINVALUE ' . $options['minValue'] : 'NO MINVALUE';
+        $maxValue = isset($options['maxValue']) && is_int($options['maxValue'])
+            ? 'MAXVALUE ' . $options['maxValue'] : 'NO MAXVALUE';
+        $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
+        $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : '';
+
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
+
+        if ($start < 1) {
+            $minValue = "MINVALUE $start";
+        }
+
+        $sql = match (version_compare($this->db->serverVersion, '10.0', '<')) {
+            true => <<<SQL
+            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+                INCREMENT BY $increment
+                $minValue
+                $maxValue
+                START WITH $start
+                $cycle
+                $cache
+            SQL,
+            default => <<<SQL
+            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
+                $type
+                INCREMENT BY $increment
+                $minValue
+                $maxValue
+                START WITH $start
+                $cycle
+                $cache
+            SQL,
+        };
+
+        return SqlHelper::cleanSql($sql);
     }
 
     /**

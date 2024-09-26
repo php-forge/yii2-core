@@ -14,6 +14,7 @@ use yii\db\ConstraintFinderTrait;
 use yii\db\Expression;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\SqlHelper;
 use yii\db\TableSchema;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
@@ -269,6 +270,45 @@ SQL;
     protected function loadTableDefaultValues($tableName)
     {
         throw new NotSupportedException('PostgreSQL does not support default value constraints.');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSequenceInfo(string $sequence): array|false
+    {
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
+
+        $sql = <<<SQL
+        SELECT
+            [[sequence_name]],
+            [[data_type]],
+            [[start_value]],
+            [[increment]],
+            [[minimum_value]],
+            [[maximum_value]],
+            [[cycle_option]]
+        FROM
+            [[information_schema.sequences]]
+        WHERE
+            [[sequence_name]] = :sequence
+        SQL;
+
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
+
+        if ($sequenceInfo === false) {
+            return false;
+        }
+
+        return [
+            'name' => $sequenceInfo['sequence_name'],
+            'type' => $sequenceInfo['data_type'],
+            'start' => $sequenceInfo['start_value'],
+            'increment' => $sequenceInfo['increment'],
+            'minValue' => $sequenceInfo['minimum_value'],
+            'maxValue' => $sequenceInfo['maximum_value'],
+            'cycle' => $sequenceInfo['cycle_option'] === 'YES',
+        ];
     }
 
     /**

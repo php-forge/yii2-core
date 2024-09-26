@@ -26,6 +26,11 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db = MssqlConnection::getConnection();
     }
 
+    public function testGetSequenceInfoWithNotExist(): void
+    {
+        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%not_exists}}'));
+    }
+
     /**
      * @dataProvider \yiiunit\framework\db\mssql\provider\SchemaProvider::resetAutoIncrementPK
      */

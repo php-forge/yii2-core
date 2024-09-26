@@ -553,6 +553,49 @@ class Command extends Component
     }
 
     /**
+     * Creates a SQL command for creating a new DB sequence.
+     *
+     * This method is available for `MSSQL`, `Oracle`, and `PostgreSQL`, as these databases support sequences.
+     * `MySQL` and `SQLite` do not support sequences.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
+     * @param int $start the starting value for the sequence. Defaults to `1`.
+     * @param int $increment the increment value for the sequence. Defaults to `1`.
+     * @param array $options the additional SQL fragment that will be appended to the generated SQL.
+     *
+     * @return static the command object itself.
+     */
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): static
+    {
+        $sql = $this->db->getQueryBuilder()->createSequence($sequence, $start, $increment, $options);
+
+        return $this->setSql($sql);
+    }
+
+    /**
+     * Creates a SQL command for dropping a DB sequence.
+     *
+     * This method is available for `MSSQL`, `Oracle`, and `PostgreSQL`, as these databases support sequences.
+     * `MySQL` and `SQLite` do not support sequences.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
+     *
+     * @return static the command object itself.
+     */
+    public function dropSequence(string $sequence): static
+    {
+        $sql = $this->db->getQueryBuilder()->dropSequence($sequence);
+
+        return $this->setSql($sql);
+    }
+
+    /**
      * Creates a command to insert rows into a database table if
      * they do not already exist (matching unique constraints),
      * or update them if they do.

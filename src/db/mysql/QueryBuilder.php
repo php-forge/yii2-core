@@ -329,11 +329,19 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function dropSequence(string $sequence): string
+    {
+        throw new NotSupportedException(__METHOD__ . ' is not supported by MySQL/MariaDB.');
+    }
+
+    /**
      * @throws NotSupportedException if this method is called. This method is not supported by MySQL.
      */
     public function insertWithReturningPks(string $table, QueryInterface|array $columns, array &$params = []): string
     {
-        throw new NotSupportedException(__METHOD__ . ' is not supported by Mysql.');
+        throw new NotSupportedException(__METHOD__ . ' is not supported by MySQL/MariaDB.');
     }
 
     /**

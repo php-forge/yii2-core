@@ -44,4 +44,12 @@ abstract class AbstractInsert extends TestCase
             $this->db->createCommand()->insertWithReturningPks('negative_default_values', []),
         );
     }
+
+    protected function ensureNoTable(string $tableName): void
+    {
+        if ($this->db->hasTable($tableName)) {
+            $this->db->createCommand()->dropTable($tableName)->execute();
+            $this->assertFalse($this->db->hasTable($tableName));
+        }
+    }
 }

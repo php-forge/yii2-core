@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mysql\schema;
 
 use yii\base\InvalidArgumentException;
+use yii\base\NotSupportedException;
 use yiiunit\support\MysqlConnection;
 
 /**
@@ -24,6 +25,16 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         parent::setUp();
 
         $this->db = MysqlConnection::getConnection();
+    }
+
+    public function testGetSequenceInfo(): void
+    {
+        $tableName = '{{%sequence_test}}';
+
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('mysql does not support getting sequence name.');
+
+        $this->db->getSchema()->getSequenceInfo($tableName);
     }
 
     /**

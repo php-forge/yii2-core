@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
-use yii\base\InvalidArgumentException;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
 use yii\db\ConstraintFinderInterface;
@@ -13,6 +12,7 @@ use yii\db\ConstraintFinderTrait;
 use yii\db\DefaultValueConstraint;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\SqlHelper;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
@@ -719,6 +719,45 @@ SQL;
     public function createColumnSchemaBuilder($type, $length = null)
     {
         return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length, $this->db]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSequenceInfo(string $sequence): array|false
+    {
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
+
+        $sql = <<<SQL
+        SELECT
+            [[sequence_name]],
+            [[data_type]],
+            [[start_value]],
+            [[increment]],
+            [[minimum_value]],
+            [[maximum_value]],
+            [[cycle_option]]
+        FROM
+            [[INFORMATION_SCHEMA]].[[sequences]]
+        WHERE
+            [[sequence_name]] = :sequence
+        SQL;
+
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
+
+        if ($sequenceInfo === false) {
+            return false;
+        }
+
+        return [
+            'name' => $sequenceInfo['sequence_name'],
+            'type' => $sequenceInfo['data_type'],
+            'start' => $sequenceInfo['start_value'],
+            'increment' => $sequenceInfo['increment'],
+            'minValue' => $sequenceInfo['minimum_value'],
+            'maxValue' => $sequenceInfo['maximum_value'],
+            'cycle' => $sequenceInfo['cycle_option'] === '1',
+        ];
     }
 
     /**

@@ -25,6 +25,7 @@ Yii Core version 2 Change Log
 - Bug #77: Add support for test `Oci` 18, 21 (@terabytesoftw)
 - Bug #78: Fix test case for `getSchemaNames()` method in `SchemaTest::class` in `Oracle` (@terabytesoftw)
 - Enh #84: Remove `Oracle-11c` service image versions in build workflow (@terabytesoftw)
+- Enh #85: Add `createSequence()`, `dropSequence()`, `getSequenceInfo()` for `MSSQL`, `Oracle`, `PostgreSQL`, and refactor method `getTableSequenceName()` to `findTableSequenceFromTriggers()` for `Oracle` (@terabytesoftw)
 - Enh #86: Remove unnecesary `resolveTableNames()` and refactor `resolveTableName()` in `Schema::class` in `MSSQL`, `MySQL`, `Oracle`, `PostgreSQL` (@terabytesoftw)
 - Enh #87: Refactor `TableSchema::class` in `MSSQL` (@terabytesoftw)
 - Enh #88: Implement `hasTable()` method in `Connection::class` (@terabytesoftw)
