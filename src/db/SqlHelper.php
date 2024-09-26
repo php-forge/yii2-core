@@ -8,7 +8,10 @@ use function preg_match;
 use function preg_replace;
 use function rtrim;
 use function str_ends_with;
+use function strlen;
 use function strtolower;
+use function strtoupper;
+use function substr;
 
 class SqlHelper
 {
@@ -28,20 +31,27 @@ class SqlHelper
 
     /**
      * Adds a suffix to the given string if it doesn't already end with it.
-     * The check is case-insensitive, but the suffix will be added with the original case.
+     * If the suffix is already present in lowercase, it will be replaced with the uppercase version.
+     * The check is case-insensitive.
      *
      * @param string $input the base string to which the suffix will be added.
-     * @param string $suffix the suffix to append if not already present.
+     * @param string $suffix the suffix to append or replace with if necessary.
      *
-     * @return string the string with the suffix added if it was not present.
+     * @return string the string with the suffix added or replaced in uppercase.
      */
     public static function addSuffix(string $input, string $suffix): string
     {
-        if (str_ends_with(strtolower($input), strtolower($suffix)) === false) {
-            $input .= $suffix;
+        if ($suffix === '') {
+            return $input;
         }
 
-        return $input;
+        $suffixUpper = strtoupper($suffix);
+
+        if (str_ends_with(strtolower($input), strtolower($suffix))) {
+            return substr($input, 0, - strlen($suffix)) . $suffixUpper;
+        }
+
+        return $input . $suffixUpper;
     }
 
     /**
