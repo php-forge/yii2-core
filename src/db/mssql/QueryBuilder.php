@@ -11,9 +11,6 @@ use yii\db\ExpressionInterface;
 use yii\db\QueryInterface;
 use yii\db\SqlHelper;
 
-use function str_ends_with;
-use function strtolower;
-
 /**
  * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
  */
@@ -150,9 +147,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NO CACHE';
 
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         $sql = <<<SQL
         CREATE SEQUENCE {$this->db->quoteTableName($sequence)}

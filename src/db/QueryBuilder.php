@@ -200,9 +200,7 @@ class QueryBuilder extends \yii\base\BaseObject
      */
     public function dropSequence(string $sequence): string
     {
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         return <<<SQL
         DROP SEQUENCE {$this->db->quoteTableName($sequence)}

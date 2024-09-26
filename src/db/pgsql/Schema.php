@@ -14,6 +14,7 @@ use yii\db\ConstraintFinderTrait;
 use yii\db\Expression;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\SqlHelper;
 use yii\db\TableSchema;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
@@ -27,8 +28,6 @@ use function explode;
 use function implode;
 use function in_array;
 use function preg_match;
-use function str_ends_with;
-use function strtolower;
 use function strtoupper;
 use function substr;
 
@@ -278,9 +277,7 @@ SQL;
      */
     public function getSequenceInfo(string $sequence): array|false
     {
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         $sql = <<<SQL
         SELECT
@@ -297,7 +294,7 @@ SQL;
             [[sequence_name]] = :sequence
         SQL;
 
-        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequence])->queryOne();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
 
         if ($sequenceInfo === false) {
             return false;

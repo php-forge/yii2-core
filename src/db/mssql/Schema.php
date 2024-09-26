@@ -12,6 +12,7 @@ use yii\db\ConstraintFinderTrait;
 use yii\db\DefaultValueConstraint;
 use yii\db\ForeignKeyConstraint;
 use yii\db\IndexConstraint;
+use yii\db\SqlHelper;
 use yii\db\ViewFinderTrait;
 use yii\helpers\ArrayHelper;
 
@@ -19,10 +20,8 @@ use function array_reverse;
 use function explode;
 use function implode;
 use function preg_match;
-use function str_ends_with;
 use function str_replace;
 use function stripos;
-use function strtolower;
 
 /**
  * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
@@ -727,9 +726,7 @@ SQL;
      */
     public function getSequenceInfo(string $sequence): array|false
     {
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         $sql = <<<SQL
         SELECT

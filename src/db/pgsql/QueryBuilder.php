@@ -8,9 +8,6 @@ use yii\db\Expression;
 use yii\db\QueryInterface;
 use yii\db\SqlHelper;
 
-use function str_ends_with;
-use function strtolower;
-
 /**
  * QueryBuilder is the query builder for PostgreSQL databases.
  */
@@ -163,9 +160,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NO CYCLE';
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : '';
 
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         if ($start < 1) {
             $minValue = "MINVALUE $start";

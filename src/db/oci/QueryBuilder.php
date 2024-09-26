@@ -12,9 +12,6 @@ use yii\db\QueryInterface;
 use yii\db\SqlHelper;
 use yii\db\TableSchema;
 
-use function str_ends_with;
-use function strtolower;
-
 /**
  * QueryBuilder is the query builder for Oracle databases.
  */
@@ -145,9 +142,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $cache = isset($options['cache']) && is_int($options['cache']) ? 'CACHE ' . $options['cache'] : 'NOCACHE';
         $cycle = isset($options['cycle']) ? 'CYCLE' : 'NOCYCLE';
 
-        if (str_ends_with(strtolower($sequence), '_seq') === false) {
-            $sequence .= '_SEQ';
-        }
+        $sequence = SqlHelper::addSuffix($sequence, '_SEQ');
 
         $sql = <<<SQL
         CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
