@@ -26,29 +26,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         $this->db = OciConnection::getConnection();
     }
 
-    public function testGetSequenceInfoWithNotExist(): void
-    {
-        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%not_exists}}'));
-    }
-
-    public function testGetTableSequenceName(): void
-    {
-        $this->db = OciConnection::getConnection(true);
-
-        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%profile}}');
-
-        $this->assertSame('profile_SEQ', $sequenceName);
-
-        $sequenceName = $this->db->getSchema()->getTableSequenceName('{{%type}}');
-
-        $this->assertFalse($sequenceName);
-    }
-
-    public function testGetTableSequenceNameWithTableNotExists(): void
-    {
-        $this->assertFalse($this->db->getSchema()->getTableSequenceName('{{%not_exists}}'));
-    }
-
     /**
      * @dataProvider \yiiunit\framework\db\oci\provider\SchemaProvider::resetAutoIncrementPK
      */

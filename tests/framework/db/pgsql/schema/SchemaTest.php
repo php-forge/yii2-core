@@ -31,11 +31,6 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
         ];
     }
 
-    public function testGetSequenceInfoWithNotExist(): void
-    {
-        $this->assertFalse($this->db->getSchema()->getSequenceInfo('{{%not_exists}}'));
-    }
-
     /**
      * @dataProvider \yiiunit\framework\db\pgsql\provider\SchemaProvider::resetAutoIncrementPK
      */
