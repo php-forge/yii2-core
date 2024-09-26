@@ -46,6 +46,7 @@ Yii Core version 2 Change Log
 - Bug #105: Removed the `sequenceName` property from the `TableSchema::class` and added it to the `ColumnSchema::class` (@terabytesoftw)
 - Enh #106: Move `extractAlias()` method to `Quoter::class` (@terabytesoftw)
 - Enh #107: Add `SqlHelper::class` in `db` (@terabytesoftw)
+- Enh #108: Add method `addSuffix()` in `SqlHelper::class` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
