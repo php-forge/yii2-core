@@ -57,7 +57,7 @@ final class AutoIncrementTest extends \yiiunit\framework\db\schema\AbstractAutoI
         $this->assertSame(0, $result);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Sequence name for table 'reset_auto_increment_pk' not found.");
+        $this->expectExceptionMessage("Sequence name for table 'T_reset_auto_increment_pk' not found.");
 
         $this->db->getSchema()->resetAutoIncrementPK($tableName, 7);
     }

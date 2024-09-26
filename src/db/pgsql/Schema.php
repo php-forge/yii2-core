@@ -334,10 +334,10 @@ SQL;
             $value = $this->db->getSchema()->getNextAutoIncrementPKValue($tableSchema->fullName, $columnPK);
         }
 
-        $sequenceName = $this->db->quoteValue($tableSchema->columns[$columnPK]->sequenceName);
+        $sequenceName =  $this->quoteValue('"' . $tableSchema->columns[$columnPK]->sequenceName . '"');
 
         $sql = <<<SQL
-        SELECT SETVAL($sequenceName,{$value},false)
+        SELECT SETVAL($sequenceName,$value,false)
         SQL;
 
         $this->db->createCommand($sql)->execute();
