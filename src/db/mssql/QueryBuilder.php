@@ -100,9 +100,9 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * Creates an `SEQUENCE` SQL statement.
      *
      * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
      * The name will be properly quoted by the method.
-     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
-     * for the table `customer` will be `customer_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.

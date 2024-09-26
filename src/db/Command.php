@@ -555,17 +555,22 @@ class Command extends Component
     /**
      * Creates a SQL command for creating a new DB sequence.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     * This method is available for `MSSQL`, `Oracle`, and `PostgreSQL`, as these databases support sequences.
+     * `MySQL` and `SQLite` do not support sequences.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
      *
      * @return static the command object itself.
      */
-    public function createSequence(string $table, int $start = 1, int $increment = 1, array $options = []): static
+    public function createSequence(string $sequence, int $start = 1, int $increment = 1, array $options = []): static
     {
-        $sql = $this->db->getQueryBuilder()->createSequence($table, $start, $increment, $options);
+        $sql = $this->db->getQueryBuilder()->createSequence($sequence, $start, $increment, $options);
 
         return $this->setSql($sql);
     }
@@ -573,14 +578,19 @@ class Command extends Component
     /**
      * Creates a SQL command for dropping a DB sequence.
      *
-     * @param string $table the table name. The name will be properly quoted by the method. The sequence name will be
-     * generated based on the table name. For example, 'user' table will result in 'user_SEQ' sequence name.
+     * This method is available for `MSSQL`, `Oracle`, and `PostgreSQL`, as these databases support sequences.
+     * `MySQL` and `SQLite` do not support sequences.
+     *
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
+     * The name will be properly quoted by the method.
      *
      * @return static the command object itself.
      */
-    public function dropSequence(string $table): static
+    public function dropSequence(string $sequence): static
     {
-        $sql = $this->db->getQueryBuilder()->dropSequence($table);
+        $sql = $this->db->getQueryBuilder()->dropSequence($sequence);
 
         return $this->setSql($sql);
     }

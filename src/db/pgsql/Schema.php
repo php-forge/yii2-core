@@ -27,6 +27,8 @@ use function explode;
 use function implode;
 use function in_array;
 use function preg_match;
+use function str_ends_with;
+use function strtolower;
 use function strtoupper;
 use function substr;
 
@@ -274,10 +276,10 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function getSequenceInfo(string $sequenceName): array|false
+    public function getSequenceInfo(string $sequence): array|false
     {
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName .= '_SEQ';
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
+            $sequence .= '_SEQ';
         }
 
         $sql = <<<SQL
@@ -292,10 +294,10 @@ SQL;
         FROM
             [[information_schema.sequences]]
         WHERE
-            [[sequence_name]] = :sequenceName
+            [[sequence_name]] = :sequence
         SQL;
 
-        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequence])->queryOne();
 
         if ($sequenceInfo === false) {
             return false;

@@ -174,9 +174,9 @@ class QueryBuilder extends \yii\base\BaseObject
      * Creates an `SEQUENCE` SQL statement.
      *
      * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
      * The name will be properly quoted by the method.
-     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
-     * for the table `customer` will be `customer_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -191,20 +191,21 @@ class QueryBuilder extends \yii\base\BaseObject
     /**
      * Creates an `DROP SEQUENCE` SQL statement.
      *
-     * @param string $sequenceName the name of the sequence to be dropped.
+     * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
      * The name will be properly quoted by the method.
-     * The sequence name will be generated based on the table name: `tablename_SEQ`.
      *
      * @return string the SQL statement for dropping the sequence.
      */
-    public function dropSequence(string $sequenceName): string
+    public function dropSequence(string $sequence): string
     {
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName = $sequenceName . '_SEQ';
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
+            $sequence .= '_SEQ';
         }
 
         return <<<SQL
-        DROP SEQUENCE {$this->db->quoteTableName($sequenceName)}
+        DROP SEQUENCE {$this->db->quoteTableName($sequence)}
         SQL;
     }
 

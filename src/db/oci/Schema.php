@@ -24,8 +24,9 @@ use function array_change_key_case;
 use function array_keys;
 use function array_merge;
 use function array_reverse;
-use function count;
 use function implode;
+use function str_ends_with;
+use function strtolower;
 
 /**
  * Schema is the class for retrieving metadata from an Oracle database.
@@ -343,10 +344,10 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function getSequenceInfo(string $sequenceName): array|false
+    public function getSequenceInfo(string $sequence): array|false
     {
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName .= '_SEQ';
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
+            $sequence .= '_SEQ';
         }
 
         $sql = <<<SQL
@@ -361,10 +362,10 @@ SQL;
         FROM
             [[USER_SEQUENCES]]
         WHERE
-            [[SEQUENCE_NAME]] = :sequenceName
+            [[SEQUENCE_NAME]] = :sequence
         SQL;
 
-        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
 
         if ($sequenceInfo === false) {
             return false;

@@ -129,9 +129,9 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * Creates an `SEQUENCE` SQL statement.
      *
      * @param string $sequence the name of the sequence.
+     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided.
+     * For example sequence name for the table `customer` will be `customer_SEQ`.
      * The name will be properly quoted by the method.
-     * The sequence name will be generated based on the suffix '_SEQ' if it is not provided. For example sequence name
-     * for the table `customer` will be `customer_SEQ`.
      * @param int $start the starting value for the sequence. Defaults to `1`.
      * @param int $increment the increment value for the sequence. Defaults to `1`.
      * @param array $options the additional SQL fragment that will be appended to the generated SQL.
@@ -192,18 +192,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 $cache
             SQL,
         };
-
-        if (version_compare($this->db->serverVersion, '10.0', '<')) {
-            $sql = <<<SQL
-            CREATE SEQUENCE {$this->db->quoteTableName($sequence)}
-                INCREMENT BY $increment
-                $minValue
-                $maxValue
-                START WITH $start
-                $cycle
-                $cache
-            SQL;
-        }
 
         return SqlHelper::cleanSql($sql);
     }

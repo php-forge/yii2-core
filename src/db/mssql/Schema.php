@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
-use yii\base\InvalidArgumentException;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
 use yii\db\ConstraintFinderInterface;
@@ -20,8 +19,10 @@ use function array_reverse;
 use function explode;
 use function implode;
 use function preg_match;
+use function str_ends_with;
 use function str_replace;
 use function stripos;
+use function strtolower;
 
 /**
  * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
@@ -724,10 +725,10 @@ SQL;
     /**
      * {@inheritdoc}
      */
-    public function getSequenceInfo(string $sequenceName): array|false
+    public function getSequenceInfo(string $sequence): array|false
     {
-        if (str_contains($sequenceName, '_SEQ') === false) {
-            $sequenceName .= '_SEQ';
+        if (str_ends_with(strtolower($sequence), '_seq') === false) {
+            $sequence .= '_SEQ';
         }
 
         $sql = <<<SQL
@@ -742,10 +743,10 @@ SQL;
         FROM
             [[INFORMATION_SCHEMA]].[[sequences]]
         WHERE
-            [[sequence_name]] = :sequenceName
+            [[sequence_name]] = :sequence
         SQL;
 
-        $sequenceInfo = $this->db->createCommand($sql, [':sequenceName' => $sequenceName])->queryOne();
+        $sequenceInfo = $this->db->createCommand($sql, [':sequence' => $sequence])->queryOne();
 
         if ($sequenceInfo === false) {
             return false;

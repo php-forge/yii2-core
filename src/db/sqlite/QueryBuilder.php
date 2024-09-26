@@ -60,7 +60,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
     /**
      * {@inheritdoc}
      */
-    public function dropSequence(string $sequenceName): string
+    public function dropSequence(string $sequence): string
     {
         throw new NotSupportedException(__METHOD__ . ' is not supported by SQLite.');
     }
