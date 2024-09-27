@@ -11,7 +11,7 @@ final class SchemaProvider extends \yiiunit\framework\db\provider\AbstractSchema
         $rows = parent::resetAutoIncrementPK();
 
         $rows['value with zero'] = [
-            '{{%reset_autoincrement_pk}}',
+            '{{%T_reset_autoincrement_pk}}',
             [
                 ['name' => 'name1'],
                 ['name' => 'name2'],
@@ -22,7 +22,7 @@ final class SchemaProvider extends \yiiunit\framework\db\provider\AbstractSchema
         ];
 
         $rows['value negative'] = [
-            '{{%reset_autoincrement_pk}}',
+            '{{%T_reset_autoincrement_pk}}',
             [
                 ['name' => 'name1'],
                 ['name' => 'name2'],

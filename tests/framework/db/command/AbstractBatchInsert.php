@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\command;
 
 use yii\base\InvalidArgumentException;
-use yii\db\Connection;
-use yii\db\Query;
+use yii\db\{Connection, Query};
 
 abstract class AbstractBatchInsert extends \yiiunit\TestCase
 {
@@ -26,7 +25,7 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
      * {@see https://github.com/yiisoft/yii2/issues/11242}
      */
     public function testBatchInsert(
-        string $table,
+        string $tableName,
         array $columns,
         array $values,
         string $expected,
@@ -34,7 +33,7 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         int $insertedRow = 1
     ): void {
         $command = $this->db->createCommand();
-        $command->batchInsert($table, $columns, $values);
+        $command->batchInsert($tableName, $columns, $values);
 
         $this->assertSame($expected, $command->getSql());
         $this->assertSame($expectedParams, $command->params);
@@ -42,7 +41,7 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
         $command->prepare(false);
         $command->execute();
 
-        $this->assertEquals($insertedRow, (new Query())->from($table)->count(db: $this->db));
+        $this->assertEquals($insertedRow, (new Query())->from($tableName)->count(db: $this->db));
     }
 
     /**
@@ -98,12 +97,13 @@ abstract class AbstractBatchInsert extends \yiiunit\TestCase
             $this->assertEquals('1', $data[0]['bool_col']);
             $this->assertIsOneOf($data[1]['bool_col'], ['0', false]);
             $this->assertIsOneOf($data[2]['bool_col'], ['0', false]);
-
         } catch (\Exception $e) {
             setlocale(LC_NUMERIC, $locale);
+
             throw $e;
         } catch (\Throwable $e) {
             setlocale(LC_NUMERIC, $locale);
+
             throw $e;
         }
 

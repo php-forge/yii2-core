@@ -9,7 +9,7 @@ use yiiunit\support\PgsqlConnection;
 /**
  * @group db
  * @group pgsql
- * @group querybuilder
+ * @group query-builder
  * @group drop-sequence
  */
 final class DropSequenceTest extends \yiiunit\framework\db\querybuilder\AbstractDropSequence
@@ -24,8 +24,8 @@ final class DropSequenceTest extends \yiiunit\framework\db\querybuilder\Abstract
     /**
      * @dataProvider \yiiunit\framework\db\pgsql\provider\QueryBuilderProvider::dropSequence
      */
-    public function testGenerateSQL(string $tableName, string $expectedSQL): void
+    public function testGenerateSQL(string $sequence, string $expectedSQL): void
     {
-        parent::testGenerateSQL($tableName, $expectedSQL);
+        parent::testGenerateSQL($sequence, $expectedSQL);
     }
 }

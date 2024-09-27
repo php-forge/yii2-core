@@ -9,7 +9,7 @@ use yiiunit\support\OciConnection;
 /**
  * @group db
  * @group oci
- * @group querybuilder
+ * @group query-builder
  * @group create-sequence
  */
 final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\AbstractCreateSequence
@@ -25,12 +25,12 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
      * @dataProvider \yiiunit\framework\db\oci\provider\QueryBuilderProvider::createSequence
      */
     public function testGenerateSQL(
-        string $table,
+        string $sequence,
         int $start,
         int $increment,
         array $options,
         string $expectedSQL
     ): void {
-        parent::testGenerateSQL($table, $start, $increment, $options, $expectedSQL);
+        parent::testGenerateSQL($sequence, $start, $increment, $options, $expectedSQL);
     }
 }

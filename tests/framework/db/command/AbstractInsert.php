@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\command;
 
 use yii\db\Connection;
-use yiiunit\TestCase;
 
-abstract class AbstractInsert extends TestCase
+abstract class AbstractInsert extends \yiiunit\TestCase
 {
     protected Connection|null $db = null;
 
@@ -43,13 +42,5 @@ abstract class AbstractInsert extends TestCase
             1,
             $this->db->createCommand()->insertWithReturningPks('negative_default_values', []),
         );
-    }
-
-    protected function ensureNoTable(string $tableName): void
-    {
-        if ($this->db->hasTable($tableName)) {
-            $this->db->createCommand()->dropTable($tableName)->execute();
-            $this->assertFalse($this->db->hasTable($tableName));
-        }
     }
 }

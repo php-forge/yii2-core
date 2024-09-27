@@ -6,12 +6,12 @@ namespace yiiunit\framework\db\schema;
 
 use yii\base\InvalidArgumentException;
 use yii\db\Connection;
-use yiiunit\TestCase;
+use yiiunit\support\DbHelper;
 
-abstract class AbstractSchema extends TestCase
+abstract class AbstractAutoIncrement extends \yiiunit\TestCase
 {
-    protected Connection|null $db = null;
     protected array $columnsSchema = [];
+    protected Connection|null $db = null;
 
     public function tearDown(): void
     {
@@ -23,9 +23,9 @@ abstract class AbstractSchema extends TestCase
 
     public function testGetNextAutoIncrementValue(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -41,12 +41,14 @@ abstract class AbstractSchema extends TestCase
         $this->assertSame(1, $result);
         $this->assertSame(3, $this->db->getSchema()->getNextAutoIncrementPKValue($tableName, 'id'));
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
     }
 
     public function testGetNextAutoIncrementValueWithNoColumnAutoIncrement(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_autoincrement_pk}}';
+
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -60,9 +62,9 @@ abstract class AbstractSchema extends TestCase
 
     public function testGetNextAutoIncrementValueWithNoTableExist(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Table not found: '{$tableName}'.");
@@ -76,9 +78,9 @@ abstract class AbstractSchema extends TestCase
         array $expectedIds,
         int|null $value
     ): void {
-        $sequenceName = '';
+        $sequence = '';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -101,10 +103,10 @@ abstract class AbstractSchema extends TestCase
         if ($this->db->driverName === 'oci') {
             $tableSchema = $this->db->getTableSchema($tableName);
 
-            $sequenceName = $tableSchema->columns['id']->sequenceName;
+            $sequence = $tableSchema->columns['id']->sequenceName;
         }
 
-        $this->assertEquals(end($expectedIds), $this->db->getLastInsertID($sequenceName));
+        $this->assertEquals(end($expectedIds), $this->db->getLastInsertID($sequence));
 
         $ids = $this->db->createCommand(
             <<<SQL
@@ -114,14 +116,14 @@ abstract class AbstractSchema extends TestCase
 
         $this->assertEquals($expectedIds, $ids);
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
     }
 
     public function testResetAutoIncrementPKWithData(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -154,14 +156,14 @@ abstract class AbstractSchema extends TestCase
             default => $this->assertEquals([1, 2, 3, 7, 8, 9], $ids),
         };
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
     }
 
     public function testResetAutoIncrementPKWithNotTableExist(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Table not found: '{$tableName}'.");
@@ -171,25 +173,25 @@ abstract class AbstractSchema extends TestCase
 
     public function testResetAutoIncrementPKWithTableNotPrimaryKey(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
         $this->assertSame(0, $result);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("There is no primary key associated with table 'reset_autoincrement_pk'.");
+        $this->expectExceptionMessage("There is no primary key associated with table 'T_reset_autoincrement_pk'.");
 
         $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
     }
 
     public function testResetAutoIncrementPKWithTablePrimaryKeyComposite(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -199,13 +201,5 @@ abstract class AbstractSchema extends TestCase
         $this->expectExceptionMessage('This method does not support tables with composite primary keys.');
 
         $this->db->getSchema()->resetAutoIncrementPK($tableName, 1);
-    }
-
-    protected function ensureNoTable(string $tableName): void
-    {
-        if ($this->db->hasTable($tableName)) {
-            $this->db->createCommand()->dropTable($tableName)->execute();
-            $this->assertFalse($this->db->hasTable($tableName));
-        }
     }
 }

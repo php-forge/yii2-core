@@ -9,7 +9,7 @@ use yiiunit\support\MssqlConnection;
 /**
  * @group db
  * @group mssql
- * @group querybuilder
+ * @group query-builder
  * @group create-sequence
  */
 final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\AbstractCreateSequence
@@ -25,12 +25,12 @@ final class CreateSequenceTest extends \yiiunit\framework\db\querybuilder\Abstra
      * @dataProvider \yiiunit\framework\db\mssql\provider\QueryBuilderProvider::createSequence
      */
     public function testGenerateSQL(
-        string $sequenceName,
+        string $sequence,
         int $start,
         int $increment,
         array $options,
         string $expectedSQL
     ): void {
-        parent::testGenerateSQL($sequenceName, $start, $increment, $options, $expectedSQL);
+        parent::testGenerateSQL($sequence, $start, $increment, $options, $expectedSQL);
     }
 }

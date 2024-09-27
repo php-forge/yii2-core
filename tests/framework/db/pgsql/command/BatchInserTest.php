@@ -10,7 +10,7 @@ use yiiunit\support\PgsqlConnection;
  * @group db
  * @group pgsql
  * @group command
- * @group batchinsert
+ * @group batch-insert
  */
 final class BatchInserTest extends \yiiunit\framework\db\command\AbstractBatchInsert
 {
@@ -25,13 +25,13 @@ final class BatchInserTest extends \yiiunit\framework\db\command\AbstractBatchIn
      * @dataProvider \yiiunit\framework\db\pgsql\provider\CommandProvider::batchInsert
      */
     public function testBatchInsert(
-        string $table,
+        string $tableName,
         array $columns,
         array $values,
         string $expected,
         array $expectedParams = [],
         int $insertedRow = 1
     ): void {
-        parent::testBatchInsert($table, $columns, $values, $expected, $expectedParams, $insertedRow);
+        parent::testBatchInsert($tableName, $columns, $values, $expected, $expectedParams, $insertedRow);
     }
 }

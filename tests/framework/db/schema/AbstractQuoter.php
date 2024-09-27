@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\schema;
 
 use yii\db\Connection;
-use yiiunit\TestCase;
 
 use function array_reverse;
 
-abstract class AbstractQuoter extends TestCase
+abstract class AbstractQuoter extends \yiiunit\TestCase
 {
     protected Connection|null $db = null;
 

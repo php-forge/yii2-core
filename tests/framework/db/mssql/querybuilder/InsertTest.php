@@ -10,7 +10,7 @@ use yiiunit\support\MssqlConnection;
 /**
  * @group db
  * @group mssql
- * @group querybuilder
+ * @group query-builder
  * @group insert
  */
 final class InsertTest extends \yiiunit\framework\db\querybuilder\AbstractInsert
@@ -26,25 +26,25 @@ final class InsertTest extends \yiiunit\framework\db\querybuilder\AbstractInsert
      * @dataProvider \yiiunit\framework\db\mssql\provider\QueryBuilderProvider::insert
      */
     public function testInsert(
-        string $table,
+        string $tableName,
         array|QueryInterface $columns,
         array $params,
         string $expectedSQL,
         array $expectedParams
     ): void {
-        parent::testInsert($table, $columns, $params, $expectedSQL, $expectedParams);
+        parent::testInsert($tableName, $columns, $params, $expectedSQL, $expectedParams);
     }
 
     /**
      * @dataProvider \yiiunit\framework\db\mssql\provider\QueryBuilderProvider::insertWithReturningPks
      */
     public function testInsertWithReturningPks(
-        string $table,
+        string $tableName,
         array|QueryInterface $columns,
         array $params,
         string $expectedSQL,
         array $expectedParams
     ): void {
-        parent::testInsertWithReturningPks($table, $columns, $params, $expectedSQL, $expectedParams);
+        parent::testInsertWithReturningPks($tableName, $columns, $params, $expectedSQL, $expectedParams);
     }
 }

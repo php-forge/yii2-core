@@ -6,6 +6,8 @@ namespace yiiunit\support;
 
 use yii\db\Connection;
 
+use function array_merge;
+use function assert;
 use function explode;
 use function file_get_contents;
 use function preg_replace;
@@ -22,6 +24,23 @@ final class DbHelper
     public static function changeSqlForOracleBatchInsert(string &$str): void
     {
         $str = str_replace('INSERT INTO', 'INSERT ALL INTO', $str) . ' SELECT 1 FROM SYS.DUAL';
+    }
+
+    /**
+     * Ensures that a table does not exist in the database.
+     * If the table exists, it will be dropped.
+     *
+     * @param Connection $db the database connection.
+     * @param string $tableName the name of the table to ensure does not exist.
+     *
+     * @return void
+     */
+    public static function ensureNoTable(Connection $db, string $tableName): void
+    {
+        if ($db->hasTable($tableName)) {
+            $db->createCommand()->dropTable($tableName)->execute();
+            assert($db->hasTable($tableName) === false, "Table {$tableName} should not exist.");
+        }
     }
 
     /**

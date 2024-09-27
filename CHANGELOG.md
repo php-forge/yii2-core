@@ -48,6 +48,7 @@ Yii Core version 2 Change Log
 - Enh #106: Move `extractAlias()` method to `Quoter::class` (@terabytesoftw)
 - Enh #107: Add `SqlHelper::class` in `db` (@terabytesoftw)
 - Enh #108: Add method `addSuffix()` in `SqlHelper::class` (@terabytesoftw)
+- Enh #109: Clean tests for `PHPUnit` v.10 (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================

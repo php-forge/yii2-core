@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\querybuilder;
 
-use yii\db\Connection;
-use yii\db\QueryInterface;
+use yii\db\{Connection, QueryInterface};
 
 abstract class AbstractUpsert extends \yiiunit\TestCase
 {

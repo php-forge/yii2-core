@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\connection;
 
-use yii\db\Connection;
-use yii\db\Schema;
+use yii\db\{Connection, Schema};
 
 abstract class AbstractConnection extends \yiiunit\TestCase
 {
@@ -21,7 +20,7 @@ abstract class AbstractConnection extends \yiiunit\TestCase
 
     public function testHasTable(): void
     {
-        $tableName = 'T_table';
+        $tableName = '{{%T_has_table}}';
 
         if ($this->db->hasTable($tableName)) {
             $result = $this->db->createCommand()->dropTable($tableName)->execute();

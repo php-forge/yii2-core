@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\mssql\command;
 
 use yii\db\Expression;
-use yiiunit\support\MssqlConnection;
+use yiiunit\support\{DbHelper, MssqlConnection};
 
 /**
  * @group db
@@ -26,7 +26,7 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
     {
         $tableName = '{{%T_insert_using_sequence}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable(
             $tableName,
@@ -38,15 +38,15 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
 
         $this->assertSame(0, $result);
 
-        $sequenceName = 'T_insert_using_sequence';
+        $sequence = 'T_insert_using_sequence';
 
-        $result = $this->db->createCommand()->createSequence($sequenceName)->execute();
+        $result = $this->db->createCommand()->createSequence($sequence)->execute();
 
         $this->assertSame(0, $result);
 
         $result = $this->db->createCommand()->insert(
             $tableName,
-            ['id' => new Expression("NEXT VALUE FOR {$sequenceName}_SEQ"), 'name' => 'test']
+            ['id' => new Expression("NEXT VALUE FOR {$sequence}_SEQ"), 'name' => 'test']
         )->execute();
 
         $this->assertSame(1, $result);
@@ -60,18 +60,18 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
 
         $this->assertSame(['1'], $ids);
 
-        $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
+        $result = $this->db->createCommand()->dropSequence($sequence)->execute();
 
         $this->assertSame(0, $result);
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
     }
 
     public function testInsertUsingSequenceWithOptions(): void
     {
         $tableName = '{{%T_insert_using_sequence_options}}';
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable(
             $tableName,
@@ -83,10 +83,10 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
 
         $this->assertSame(0, $result);
 
-        $sequenceName = 'T_insert_using_sequence_options';
+        $sequence = 'T_insert_using_sequence_options';
 
         $result = $this->db->createCommand()->createSequence(
-            $sequenceName,
+            $sequence,
             100,
             2,
             [
@@ -97,7 +97,7 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
 
         $this->assertSame(0, $result);
 
-        $idValue = new Expression("NEXT VALUE FOR {$sequenceName}_SEQ");
+        $idValue = new Expression("NEXT VALUE FOR {$sequence}_SEQ");
 
         $result = $this->db->createCommand()->insert($tableName, ['id' => $idValue, 'name' => 'test'])->execute();
 
@@ -116,10 +116,10 @@ final class InsertTest extends \yiiunit\framework\db\command\AbstractInsert
 
         $this->assertSame(['100', '102'], $ids);
 
-        $result = $this->db->createCommand()->dropSequence($sequenceName)->execute();
+        $result = $this->db->createCommand()->dropSequence($sequence)->execute();
 
         $this->assertSame(0, $result);
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
     }
 }

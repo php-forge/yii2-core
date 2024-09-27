@@ -11,7 +11,7 @@ use yiiunit\support\MssqlConnection;
 /**
  * @group db
  * @group mssql
- * @group querybuilder
+ * @group query-builder
  * @group build
  */
 final class BuildTest extends \yiiunit\TestCase

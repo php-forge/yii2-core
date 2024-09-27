@@ -6,6 +6,8 @@ namespace yiiunit\framework\db\pgsql\command;
 
 use yiiunit\support\PgsqlConnection;
 
+use function version_compare;
+
 /**
  * @group db
  * @group pgsql
@@ -25,7 +27,7 @@ final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCre
      * @dataProvider \yiiunit\framework\db\pgsql\provider\CommandProvider::createSequence
      */
     public function testCreateSequence(
-        string $table,
+        string $sequence,
         int $start,
         int $increment,
         array $options,
@@ -37,6 +39,6 @@ final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCre
             $expectedSequenceInfo['maxValue'] = '9223372036854775807';
         }
 
-        parent::testCreateSequence($table, $start, $increment, $options, $expectedSequenceInfo);
+        parent::testCreateSequence($sequence, $start, $increment, $options, $expectedSequenceInfo);
     }
 }

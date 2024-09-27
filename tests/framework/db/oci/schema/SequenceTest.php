@@ -23,13 +23,13 @@ final class SequenceTest extends \yiiunit\framework\db\schema\AbstractSequence
 
     public function testFindTableSequenceFromTriggers(): void
     {
-        $sequenceName = $this->db->getSchema()->findTableSequenceFromTriggers('{{%profile}}');
+        $sequence = $this->db->getSchema()->findTableSequenceFromTriggers('{{%profile}}');
 
-        $this->assertSame('profile_SEQ', $sequenceName);
+        $this->assertSame('profile_SEQ', $sequence);
     }
 
     public function testFindTableSequenceFromTriggersWithSequenceNotExist(): void
     {
-        $this->assertFalse($this->db->getSchema()->findTableSequenceFromTriggers('{{%not_exists}}'));
+        $this->assertFalse($this->db->getSchema()->findTableSequenceFromTriggers('{{%T_not_exists}}'));
     }
 }

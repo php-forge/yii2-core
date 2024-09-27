@@ -9,8 +9,8 @@ use yiiunit\support\PgsqlConnection;
 /**
  * @group db
  * @group pgsql
- * @group querybuilder
- * @group batchinsert
+ * @group query-builder
+ * @group batch-insert
  */
 final class BatchInserTest extends \yiiunit\framework\db\querybuilder\AbstractBatchInsert
 {
@@ -24,8 +24,8 @@ final class BatchInserTest extends \yiiunit\framework\db\querybuilder\AbstractBa
     /**
      * @dataProvider \yiiunit\framework\db\pgsql\provider\QueryBuilderProvider::batchInsert
      */
-    public function testBatchInsert(string $table, array $columns, iterable $rows, string $expected): void
+    public function testBatchInsert(string $tableName, array $columns, iterable $rows, string $expected): void
     {
-        parent::testBatchInsert($table, $columns, $rows, $expected);
+        parent::testBatchInsert($tableName, $columns, $rows, $expected);
     }
 }

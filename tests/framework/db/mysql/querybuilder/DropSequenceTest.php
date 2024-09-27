@@ -11,7 +11,7 @@ use yiiunit\support\MysqlConnection;
 /**
  * @group db
  * @group mysql
- * @group querybuilder
+ * @group query-builder
  * @group drop-sequence
  */
 final class DropSequenceTest extends \yiiunit\TestCase
@@ -30,6 +30,6 @@ final class DropSequenceTest extends \yiiunit\TestCase
         $this->expectException(NotSupportedException::class);
         $this->expectExceptionMessage('yii\db\mysql\QueryBuilder::dropSequence is not supported by MySQL/MariaDB.');
 
-        $this->db->getQueryBuilder()->dropSequence('test_sequence');
+        $this->db->getQueryBuilder()->dropSequence('{{%T_create_sequence}}');
     }
 }

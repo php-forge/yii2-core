@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace yiiunit\framework\db\pgsql\schema;
 
 use yii\base\InvalidArgumentException;
-use yiiunit\support\PgsqlConnection;
+use yiiunit\support\{DbHelper, PgsqlConnection};
+
+use function version_compare;
 
 /**
  * @group db
  * @group pgsql
  * @group schema
+ * @group auto-increment
  */
-final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
+final class AutoIncrementTest extends \yiiunit\framework\db\schema\AbstractAutoIncrement
 {
     protected function setUp(): void
     {
@@ -45,7 +48,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
     public function testResetAutoIncrementPKWithTableNotAutoIncrement(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
 
         $this->columnsSchema = [
             'id' => 'INT',
@@ -53,7 +56,7 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
             'PRIMARY KEY (id)',
         ];
 
-        $this->ensureNoTable($tableName);
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $result = $this->db->createCommand()->createTable($tableName, $this->columnsSchema)->execute();
 
@@ -94,7 +97,9 @@ final class SchemaTest extends \yiiunit\framework\db\schema\AbstractSchema
 
     public function testResetAutoIncrementPKWithValueNegative(): void
     {
-        $tableName = '{{%reset_autoincrement_pk}}';
+        $tableName = '{{%T_reset_autoincrement_pk}}';
+
+        DbHelper::ensureNoTable($this->db, $tableName);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("The value must be greater than '0'.");
