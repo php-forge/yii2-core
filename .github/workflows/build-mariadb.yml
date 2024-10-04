@@ -46,7 +46,7 @@ jobs:
           - 8.3
 
         mariadb:
-          - mariadb:10.4
+          - mariadb:10.5
           - mariadb:latest
 
     services:

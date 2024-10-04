@@ -45,7 +45,6 @@ jobs:
           - 8.3
 
         mysql:
-          - 5.7
           - latest
 
     services:
