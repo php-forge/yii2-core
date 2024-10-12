@@ -28,7 +28,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
     /**
      * {@inheritdoc}
      */
-    public function dbTypecast($value)
+    public function dbTypecast(mixed $value): mixed
     {
         if ($value === null) {
             return $value;
@@ -46,17 +46,13 @@ class ColumnSchema extends \yii\db\ColumnSchema
             return new JsonExpression($value, $this->dbType);
         }
 
-        if (is_string($value) && $this->type === Schema::TYPE_BINARY) {
-            return new PdoValue($value, \PDO::PARAM_LOB);
-        }
-
         return $this->typecast($value);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function phpTypecast($value)
+    public function phpTypecast(mixed $value): mixed
     {
         if ($this->dimension > 0) {
             if (!is_array($value) && (is_string($value) || $value === null)) {
@@ -78,12 +74,22 @@ class ColumnSchema extends \yii\db\ColumnSchema
     }
 
     /**
+     * Creates instance of ArrayParser
+     *
+     * @return ArrayParser
+     */
+    protected function getArrayParser()
+    {
+        return new ArrayParser();
+    }
+
+    /**
      * Casts $value after retrieving from the DBMS to PHP representation.
      *
      * @param string|null $value
      * @return bool|mixed|null
      */
-    protected function phpTypecastValue($value)
+    protected function phpTypecastValue(mixed $value): mixed
     {
         if ($value === null) {
             return null;
@@ -97,7 +103,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
                 return match ($value) {
                     't', 'true' => true,
                     'f', 'false' => false,
-                    default => (bool)$value,
+                    default => (bool) $value,
                 };
             case Schema::TYPE_JSON:
                 return json_decode((string) $value, true, 512, JSON_THROW_ON_ERROR);
@@ -107,18 +113,18 @@ class ColumnSchema extends \yii\db\ColumnSchema
     }
 
     /**
-     * Creates instance of ArrayParser
+     * Converts a given database value to a `resource` type.
      *
-     * @return ArrayParser
+     * @param mixed $value the value to be cast. Can be a `resource`.
+     *
+     * @return mixed the result of the type cast.
      */
-    protected function getArrayParser()
+    protected function typeCastAsResource(mixed $value): mixed
     {
-        static $parser = null;
-
-        if ($parser === null) {
-            $parser = new ArrayParser();
+        if ($this->type === Schema::TYPE_BINARY && is_string($value)) {
+            return new PdoValue($value, \PDO::PARAM_LOB);
         }
 
-        return $parser;
+        return parent::typeCastAsResource($value);
     }
 }

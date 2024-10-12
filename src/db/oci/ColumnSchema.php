@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace yii\db\oci;
 
 use yii\db\Expression;
-use yii\db\Schema;
+use yii\db\ExpressionInterface;
 
 /**
- * Class ColumnSchema for PostgreSQL database.
+ * Class ColumnSchema for Oracle databases.
  */
 class ColumnSchema extends \yii\db\ColumnSchema
 {
@@ -17,25 +17,32 @@ class ColumnSchema extends \yii\db\ColumnSchema
      */
     public string|null $sequenceName = null;
 
-    public function dbTypecast($value)
+    /**
+     * {@inheritdoc}
+     */
+    public function dbTypecast(mixed $value): mixed
     {
-        if ($this->type === Schema::TYPE_BINARY && $this->dbType === 'BLOB') {
-            if (is_string($value)) {
-                $placeholder = uniqid('exp_' . preg_replace('/[^a-z0-9]/i', '', $this->name));
-
-                return new Expression('TO_BLOB(UTL_RAW.CAST_TO_RAW(:' . $placeholder . '))', [$placeholder => $value]);
-            }
+        if ($this->dbType === 'BLOB' && is_string($value)) {
+            return $this->dbTypeCastAsBlob($value);
         }
 
         return parent::dbTypecast($value);
     }
 
-    protected function typecast($value)
+    /**
+     * Typecasts a value to a `BLOB` for the `BLOB` database type.
+     *
+     * If the value is a string, it generates a unique placeholder and returns an SQL expression that converts the
+     * string into a `BLOB` using `TO_BLOB` and `UTL_RAW.CAST_TO_RAW`.
+     *
+     * @param mixed $value the value to be typecast.
+     *
+     * @return ExpressionInterface the typecasted value as a `BLOB`.
+     */
+    protected function dbTypeCastAsBlob(mixed $value): ExpressionInterface
     {
-        if ($this->phpType === 'string' && is_bool($value)) {
-            return $value ? '1' : '0';
-        }
+        $placeholder = uniqid('exp_' . preg_replace('/[^a-z0-9]/i', '', $this->name));
 
-        return parent::typecast($value);
+        return new Expression('TO_BLOB(UTL_RAW.CAST_TO_RAW(:' . $placeholder . '))', [$placeholder => $value]);
     }
 }

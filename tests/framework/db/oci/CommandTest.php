@@ -264,7 +264,6 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         $db = $this->getConnection();
 
         if ($db->getSchema()->getTableSchema("testCreateTable") !== null) {
-            $db->createCommand("DROP SEQUENCE testCreateTable_SEQ")->execute();
             $db->createCommand()->dropTable("testCreateTable")->execute();
         }
 
@@ -328,7 +327,6 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         $db = $this->getConnection();
 
         if ($db->getSchema()->getTableSchema('testAlterTable') !== null) {
-            $db->createCommand("DROP SEQUENCE testAlterTable_SEQ")->execute();
             $db->createCommand()->dropTable('testAlterTable')->execute();
         }
 
@@ -377,7 +375,6 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         }
 
         if ($db->getSchema()->getTableSchema('testCreateViewTable')) {
-            $db->createCommand("DROP SEQUENCE testCreateViewTable_SEQ")->execute();
             $db->createCommand()->dropTable('testCreateViewTable')->execute();
         }
 

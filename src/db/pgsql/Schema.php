@@ -703,9 +703,9 @@ SQL;
         $column->type = self::TYPE_STRING;
         $column->defaultValue = $info['column_default'];
         $column->enumValues = ($info['enum_values'] !== null)
-            ? explode(',', str_replace(["''"], ["'"], $info['enum_values'])) : null;
+            ? explode(',', str_replace(["''"], ["'"], $info['enum_values'])) : [];
         $column->unsigned = false; // has no meaning in PG
-        $column->isPrimaryKey = $info['is_pkey'];
+        $column->isPrimaryKey = $info['is_pkey'] ?? false;
         $column->name = $info['column_name'];
         $column->precision = $info['numeric_precision'];
         $column->scale = $info['numeric_scale'];

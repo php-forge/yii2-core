@@ -318,7 +318,7 @@ SQL;
         $column->allowNull = $info['is_nullable'] === 'YES';
         $column->dbType = $info['data_type'];
         $column->enumValues = []; // mssql has only vague equivalents to enum
-        $column->isPrimaryKey = null; // primary key will be determined in findColumns() method
+        $column->isPrimaryKey = false; // primary key will be determined in findColumns() method
         $column->autoIncrement = $info['is_identity'] == 1;
         $column->isComputed = (bool) $info['is_computed'];
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;

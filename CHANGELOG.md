@@ -50,6 +50,7 @@ Yii Core version 2 Change Log
 - Enh #108: Add method `addSuffix()` in `SqlHelper::class` (@terabytesoftw)
 - Enh #109: Clean tests for `PHPUnit` v.10 (@terabytesoftw)
 - Enh #110: Update database versions in build workflows `MariaDb 10.6`, `MySQL 8.0`, `Oracle 12c`, `PostgreSQL 12` (@terabytesoftw)
+- Enh #111: Refactor `ColumnSchema::class` in `MSSQL`, `MySQL`, `Oracle`, `PostgreSQL` (@terabytesoftw)
 
 Yii Framework 2 Change Log
 ==========================
