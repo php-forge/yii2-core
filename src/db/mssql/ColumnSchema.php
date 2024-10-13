@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace yii\db\mssql;
 
-use yii\db\Expression;
-use yii\db\PdoValue;
+use yii\db\{Expression, ExpressionInterface, PdoValue};
 
 use function bin2hex;
 use function is_string;
 use function preg_match;
 
 /**
- * Class ColumnSchema for MSSQL database
+ * Class ColumnSchema for `MSSQL` database
  */
 class ColumnSchema extends \yii\db\ColumnSchema
 {
@@ -22,18 +21,29 @@ class ColumnSchema extends \yii\db\ColumnSchema
     public bool $isComputed = false;
 
     /**
-     * Parses the default value from the provided input.
+     * {@inheritdoc}
+     */
+    public function dbTypecast(mixed $value): mixed
+    {
+        if ($this->dbType === 'varbinary') {
+            return $this->dbTypecastAsVarbinary($value);
+        }
+
+        return parent::dbTypecast($value);
+    }
+
+    /**
+     * Normalizes the default value from the provided input.
      *
-     * This method processes the input to extract a default value. If the value is wrapped in quotes or parentheses,
-     *
-     * it recursively processes the value to return the underlying default value. If the value is `null`, it will return
+     * This method processes the input to normalize a default value. If the value is wrapped in quotes or parentheses,
+     * it recursively processes the value to extract the underlying default value. If the value is `null`, it returns
      * `null`. Otherwise, the value is converted to a string.
      *
-     * @param mixed $value the value to parse, which could be `null`, a string, or any other type.
+     * @param mixed $value the value to normalize, which could be `null`, a `string`, or any other type.
      *
-     * @return string|null the parsed default value.
+     * @return mixed the normalized default value, or `null` if the input is `null`, or a typecast value.
      */
-    public function parseDefaultValue(mixed $value): string|null
+    public function normalizeDefaultValue(mixed $value): mixed
     {
         if ($value === null) {
             return null;
@@ -46,22 +56,10 @@ class ColumnSchema extends \yii\db\ColumnSchema
         }
 
         if (preg_match('/^\((.*)\)$/', $value, $matches)) {
-            return $this->parseDefaultValue($matches[1]);
+            return $this->normalizeDefaultValue($matches[1]);
         }
 
-        return $value;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function dbTypecast(mixed $value): mixed
-    {
-        if ($this->dbType === 'varbinary') {
-            return $this->dbTypeCastAsVarbinary($value);
-        }
-
-        return parent::dbTypecast($value);
+        return $this->phpTypecast($value);
     }
 
     /**
@@ -72,9 +70,9 @@ class ColumnSchema extends \yii\db\ColumnSchema
      *
      * @param mixed $value the value to be typecast.
      *
-     * @return Expression the SQL expression representing the binary value in `VARBINARY` format.
+     * @return ExpressionInterface the SQL expression representing the binary value in `VARBINARY` format.
      */
-    protected function dbTypeCastAsVarbinary(mixed $value): mixed
+    protected function dbTypecastAsVarbinary(mixed $value): ExpressionInterface
     {
         if ($value instanceof PdoValue && is_string($value->getValue())) {
             $value = (string) $value->getValue();

@@ -5,27 +5,24 @@ declare(strict_types=1);
 namespace yii\db\mysql;
 
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\base\InvalidConfigException;
-use yii\base\NotSupportedException;
-use yii\db\CheckConstraint;
-use yii\db\ColumnSchema;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\Exception;
-use yii\db\Expression;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\PHPType;
-use yii\db\TableSchema;
+use yii\base\{InvalidArgumentException, InvalidConfigException, NotSupportedException};
+use yii\db\{
+    CheckConstraint,
+    ColumnSchema,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    Exception,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    PHPType,
+    TableSchema
+};
 use yii\helpers\ArrayHelper;
 
 use function array_reverse;
 use function array_values;
-use function bindec;
 use function implode;
-use function in_array;
 use function preg_match_all;
 use function preg_match;
 use function stripos;
@@ -276,10 +273,12 @@ SQL;
 
     /**
      * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
-     * @return ColumnSchema the column schema object
+     *
+     * @param array $info column information.
+     *
+     * @return ColumnSchema the column schema object.
      */
-    protected function loadColumnSchema($info)
+    protected function loadColumnSchema(array $info): ColumnSchema
     {
         $column = $this->createColumnSchema();
 
@@ -288,29 +287,34 @@ SQL;
         $column->isPrimaryKey = strpos($info['key'], 'PRI') !== false;
         $column->autoIncrement = stripos($info['extra'], 'auto_increment') !== false;
         $column->comment = $info['comment'];
-
         $column->dbType = $info['type'];
+        $column->type = self::TYPE_STRING;
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
 
-        $column->type = self::TYPE_STRING;
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = strtolower($matches[1]);
+
             if (isset($this->typeMap[$type])) {
                 $column->type = $this->typeMap[$type];
             }
+
             if (!empty($matches[2])) {
                 if ($type === 'enum') {
                     preg_match_all("/'[^']*'/", $matches[2], $values);
+
                     foreach ($values[0] as $i => $value) {
                         $values[$i] = trim($value, "'");
                     }
+
                     $column->enumValues = $values;
                 } else {
                     $values = explode(',', $matches[2]);
                     $column->size = $column->precision = (int) $values[0];
+
                     if (isset($values[1])) {
                         $column->scale = (int) $values[1];
                     }
+
                     if ($column->size === 1 && $type === 'bit') {
                         $column->type = 'boolean';
                     } elseif ($type === 'bit') {
@@ -325,26 +329,7 @@ SQL;
         }
 
         $column->phpType = $this->getColumnPhpType($column);
-
-        if (!$column->isPrimaryKey) {
-            /**
-             * When displayed in the INFORMATION_SCHEMA.COLUMNS table, a default CURRENT TIMESTAMP is displayed
-             * as CURRENT_TIMESTAMP up until MariaDB 10.2.2, and as current_timestamp() from MariaDB 10.2.3.
-             *
-             * See details here: https://mariadb.com/kb/en/library/now/#description
-             */
-            if (
-                in_array($column->type, ['timestamp', 'datetime', 'date', 'time'])
-                && isset($info['default'])
-                && preg_match('/^current_timestamp(?:\(([0-9]*)\))?$/i', $info['default'], $matches)
-            ) {
-                $column->defaultValue = new Expression('CURRENT_TIMESTAMP' . (!empty($matches[1]) ? '(' . $matches[1] . ')' : ''));
-            } elseif (isset($type) && $type === 'bit') {
-                $column->defaultValue = bindec(trim(isset($info['default']) ? $info['default'] : '', 'b\''));
-            } else {
-                $column->defaultValue = $column->phpTypecast($info['default']);
-            }
-        }
+        $column->defaultValue = $column->normalizeDefaultValue($info['default']);
 
         return $column;
     }

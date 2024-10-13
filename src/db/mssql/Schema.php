@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
-use yii\db\CheckConstraint;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\DefaultValueConstraint;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlHelper;
-use yii\db\ViewFinderTrait;
+use yii\db\{
+    CheckConstraint,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    DefaultValueConstraint,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlHelper,
+    ViewFinderTrait
+};
 use yii\helpers\ArrayHelper;
 
 use function array_reverse;
@@ -309,7 +311,7 @@ SQL;
      *
      * @param array $info column information.
      *
-     * @return ColumnSchema the column schema object
+     * @return ColumnSchema the column schema object.
      */
     protected function loadColumnSchema(array $info): ColumnSchema
     {
@@ -325,7 +327,7 @@ SQL;
         $column->comment = $info['comment'] === null ? '' : $info['comment'];
         $column->type = self::TYPE_STRING;
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
-        $column->defaultValue = $column->parseDefaultValue($info['column_default']);
+        $column->defaultValue = $column->normalizeDefaultValue($info['column_default']);
 
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = $matches[1];

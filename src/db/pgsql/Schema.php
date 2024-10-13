@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace yii\db\pgsql;
 
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\base\NotSupportedException;
-use yii\db\CheckConstraint;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\Expression;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlHelper;
-use yii\db\TableSchema;
-use yii\db\ViewFinderTrait;
+use yii\base\{InvalidArgumentException, NotSupportedException};
+use yii\db\{
+    CheckConstraint,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    Expression,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlHelper,
+    TableSchema,
+    ViewFinderTrait
+};
 use yii\helpers\ArrayHelper;
 
 use function array_change_key_case;

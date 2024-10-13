@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace yii\db\sqlite;
 
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\base\NotSupportedException;
-use yii\db\CheckConstraint;
-use yii\db\ColumnSchema;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\Expression;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlToken;
-use yii\db\TableSchema;
-use yii\db\Transaction;
+use yii\base\{InvalidArgumentException, NotSupportedException};
+use yii\db\{
+    CheckConstraint,
+    ColumnSchema,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlToken,
+    TableSchema,
+    Transaction
+};
 use yii\helpers\ArrayHelper;
 
 use function explode;
@@ -25,7 +25,6 @@ use function preg_match;
 use function strtolower;
 use function strncmp;
 use function strpos;
-use function trim;
 
 /**
  * Schema is the class for retrieving metadata from a SQLite (2/3) database.
@@ -79,6 +78,10 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * {@inheritdoc}
      */
     protected array|string $columnQuoteCharacter = '`';
+    /**
+     * {@inheritdoc}
+     */
+    public $columnSchemaClass = 'yii\db\sqlite\ColumnSchema';
 
     /**
      * {@inheritdoc}
@@ -305,22 +308,25 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
-     * @return ColumnSchema the column schema object
+     *
+     * @param array $info column information.
+     *
+     * @return ColumnSchema the column schema object.
      */
-    protected function loadColumnSchema($info)
+    protected function loadColumnSchema(array $info): ColumnSchema
     {
         $column = $this->createColumnSchema();
+
         $column->name = $info['name'];
         $column->allowNull = !$info['notnull'];
         $column->isPrimaryKey = $info['pk'] != 0;
-
         $column->dbType = strtolower($info['type']);
         $column->unsigned = strpos($column->dbType, 'unsigned') !== false;
-
         $column->type = self::TYPE_STRING;
+
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = strtolower($matches[1]);
+
             if (isset($this->typeMap[$type])) {
                 $column->type = $this->typeMap[$type];
             }
@@ -328,9 +334,11 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             if (!empty($matches[2])) {
                 $values = explode(',', $matches[2]);
                 $column->size = $column->precision = (int) $values[0];
+
                 if (isset($values[1])) {
                     $column->scale = (int) $values[1];
                 }
+
                 if ($column->size === 1 && ($type === 'tinyint' || $type === 'bit')) {
                     $column->type = 'boolean';
                 } elseif ($type === 'bit') {
@@ -342,18 +350,9 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
                 }
             }
         }
-        $column->phpType = $this->getColumnPhpType($column);
 
-        if (!$column->isPrimaryKey) {
-            if ($info['dflt_value'] === 'null' || $info['dflt_value'] === '' || $info['dflt_value'] === null) {
-                $column->defaultValue = null;
-            } elseif ($column->type === 'timestamp' && $info['dflt_value'] === 'CURRENT_TIMESTAMP') {
-                $column->defaultValue = new Expression('CURRENT_TIMESTAMP');
-            } else {
-                $value = trim($info['dflt_value'], "'\"");
-                $column->defaultValue = $column->phpTypecast($value);
-            }
-        }
+        $column->phpType = $this->getColumnPhpType($column);
+        $column->defaultValue = $column->normalizeDefaultValue($info['dflt_value']);
 
         return $column;
     }

@@ -172,7 +172,7 @@ class ColumnSchema extends BaseObject
      *
      * @return mixed the result of the type cast.
      */
-    protected function typeCastAsArray(mixed $value): mixed
+    protected function typecastAsArray(mixed $value): mixed
     {
         return $value;
     }
@@ -186,7 +186,7 @@ class ColumnSchema extends BaseObject
      * - bool: `false` for strings `'false'`, `'0'`, or any value that equates to false, `true` for strings `'1'`, or
      *   any non-empty, non-null value that equates to true.
      */
-    protected function typeCastAsBoolean(mixed $value): bool
+    protected function typecastAsBoolean(mixed $value): bool
     {
         // treating a 0 bit value as false too
         // https://github.com/yiisoft/yii2/issues/9006
@@ -201,7 +201,7 @@ class ColumnSchema extends BaseObject
      * @return float the result of the type cast:
      * - float: the float representation of a numeric value for numeric column types.
      */
-    protected function typeCastAsDouble(mixed $value): float
+    protected function typecastAsDouble(mixed $value): float
     {
         return (float) $value;
     }
@@ -211,11 +211,11 @@ class ColumnSchema extends BaseObject
      *
      * @param mixed $value the value to be cast. Can be a `string`, `number`, or a `BackedEnum` instance.
      *
-     * @return int the result of the type cast:
+     * @return mixed the result of the type cast:
      * - [[BackedEnum]]: the `integer` value of the enum.
      * - int: the integer representation of a numeric value for numeric column types.
      */
-    protected function typeCastAsInteger(mixed $value): int|null
+    protected function typecastAsInteger(mixed $value): mixed
     {
         if ($value instanceof \BackedEnum) {
             return (int) $value->value;
@@ -231,7 +231,7 @@ class ColumnSchema extends BaseObject
      *
      * @return mixed the result of the type cast.
      */
-    protected function typeCastAsResource(mixed $value): mixed
+    protected function typecastAsResource(mixed $value): mixed
     {
         return $value;
     }
@@ -241,13 +241,13 @@ class ColumnSchema extends BaseObject
      *
      * @param mixed $value the value to be cast. Can be a `string`, `number` or `boolean`.
      *
-     * @return int|string the result of the type cast:
+     * @return mixed the result of the type cast:
      * - string: the string representation of a float with '.' as decimal separator.
      * - int: the integer representation of a numeric value for numeric column types.
      * - string: the string value of a BackedEnum instance.
      * - string: the string representation of any other value type.
      */
-    protected function typeCastAsString(mixed $value): int|string
+    protected function typecastAsString(mixed $value): mixed
     {
         if (is_bool($value)) {
             return $value ? '1' : '0';
