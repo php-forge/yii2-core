@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace yii\db\pgsql;
 
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\base\NotSupportedException;
-use yii\db\CheckConstraint;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\Expression;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlHelper;
-use yii\db\TableSchema;
-use yii\db\ViewFinderTrait;
+use yii\base\{InvalidArgumentException, NotSupportedException};
+use yii\db\{
+    CheckConstraint,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    Expression,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlHelper,
+    TableSchema,
+    ViewFinderTrait
+};
 use yii\helpers\ArrayHelper;
 
 use function array_change_key_case;
@@ -703,9 +704,9 @@ SQL;
         $column->type = self::TYPE_STRING;
         $column->defaultValue = $info['column_default'];
         $column->enumValues = ($info['enum_values'] !== null)
-            ? explode(',', str_replace(["''"], ["'"], $info['enum_values'])) : null;
+            ? explode(',', str_replace(["''"], ["'"], $info['enum_values'])) : [];
         $column->unsigned = false; // has no meaning in PG
-        $column->isPrimaryKey = $info['is_pkey'];
+        $column->isPrimaryKey = $info['is_pkey'] ?? false;
         $column->name = $info['column_name'];
         $column->precision = $info['numeric_precision'];
         $column->scale = $info['numeric_scale'];

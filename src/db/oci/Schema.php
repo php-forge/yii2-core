@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace yii\db\oci;
 
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\base\InvalidCallException;
-use yii\base\NotSupportedException;
-use yii\db\CheckConstraint;
-use yii\db\ColumnSchema;
-use yii\db\Connection;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\Expression;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlHelper;
-use yii\db\TableSchema;
+use yii\base\{InvalidArgumentException, InvalidCallException, NotSupportedException};
+use yii\db\{
+    CheckConstraint,
+    ColumnSchema,
+    Connection,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    Expression,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlHelper,
+    TableSchema
+};
 use yii\helpers\ArrayHelper;
 
 use function array_change_key_case;
@@ -404,72 +404,49 @@ SQL;
     }
 
     /**
-     * Creates ColumnSchema instance.
+     * Loads the column information into a [[ColumnSchema]] object.
      *
-     * @param array $column column metadata.
+     * @param array $info column information.
      *
-     * @return ColumnSchema column schema instance.
+     * @return ColumnSchema the column schema object.
      */
-    protected function createColumn(array $column): ColumnSchema
+    protected function createColumn(array $info): ColumnSchema
     {
-        $c = $this->createColumnSchema();
+        $column = $this->createColumnSchema();
 
-        $c->name = $column['COLUMN_NAME'];
-        $c->allowNull = $column['NULLABLE'] === 'Y';
-        $c->comment = $column['COLUMN_COMMENT'] === null ? '' : $column['COLUMN_COMMENT'];
-        $c->isPrimaryKey = false;
-        $c->autoIncrement = $column['IDENTITY_COLUMN'] === 'YES';
+        $column->name = $info['COLUMN_NAME'];
+        $column->allowNull = $info['NULLABLE'] === 'Y';
+        $column->comment = $info['COLUMN_COMMENT'] === null ? '' : $info['COLUMN_COMMENT'];
+        $column->isPrimaryKey = false;
+        $column->autoIncrement = $info['IDENTITY_COLUMN'] === 'YES';
 
         $this->extractColumnType(
-            $c,
-            $column['DATA_TYPE'],
-            $column['DATA_PRECISION'],
-            $column['DATA_SCALE'],
-            $column['DATA_LENGTH']
+            $column,
+            $info['DATA_TYPE'],
+            $info['DATA_PRECISION'],
+            $info['DATA_SCALE'],
+            $info['DATA_LENGTH']
         );
         $this->extractColumnSize(
-            $c,
-            $column['DATA_TYPE'],
-            $column['DATA_PRECISION'],
-            $column['DATA_SCALE'],
-            $column['DATA_LENGTH']
+            $column,
+            $info['DATA_TYPE'],
+            $info['DATA_PRECISION'],
+            $info['DATA_SCALE'],
+            $info['DATA_LENGTH']
         );
-        $c->phpType = $this->getColumnPhpType($c);
 
-        if (!$c->isPrimaryKey) {
-            if (stripos((string) $column['DATA_DEFAULT'], 'timestamp') !== false) {
-                $c->defaultValue = null;
-            } else {
-                $defaultValue = (string) $column['DATA_DEFAULT'];
+        $column->phpType = $this->getColumnPhpType($column);
+        $column->defaultValue = $column->normalizeDefaultValue($info['DATA_DEFAULT']);
 
-                if ($c->type === 'timestamp' && $defaultValue === 'CURRENT_TIMESTAMP') {
-                    $c->defaultValue = new Expression('CURRENT_TIMESTAMP');
-                } else {
-                    if ($defaultValue !== null) {
-                        if (
-                            strlen($defaultValue) > 2
-                            && strncmp($defaultValue, "'", 1) === 0
-                            && substr($defaultValue, -1) === "'"
-                        ) {
-                            $defaultValue = substr($defaultValue, 1, -1);
-                        } else {
-                            $defaultValue = trim($defaultValue);
-                        }
-                    }
-                    $c->defaultValue = $c->phpTypecast($defaultValue);
-                }
-            }
-        }
-
-        if ($c->autoIncrement) {
-            preg_match('/\".*?\"\.\"(.*?)\"/', $column['DATA_DEFAULT'], $matches);
+        if ($column->autoIncrement) {
+            preg_match('/\".*?\"\.\"(.*?)\"/', $info['DATA_DEFAULT'], $matches);
 
             if (isset($matches[1])) {
-                $c->sequenceName = $matches[1];
+                $column->sequenceName = $matches[1];
             }
         }
 
-        return $c;
+        return $column;
     }
 
     /**

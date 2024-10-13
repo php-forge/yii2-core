@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace yii\db\mssql;
 
 use Yii;
-use yii\db\CheckConstraint;
-use yii\db\Constraint;
-use yii\db\ConstraintFinderInterface;
-use yii\db\ConstraintFinderTrait;
-use yii\db\DefaultValueConstraint;
-use yii\db\ForeignKeyConstraint;
-use yii\db\IndexConstraint;
-use yii\db\SqlHelper;
-use yii\db\ViewFinderTrait;
+use yii\db\{
+    CheckConstraint,
+    Constraint,
+    ConstraintFinderInterface,
+    ConstraintFinderTrait,
+    DefaultValueConstraint,
+    ForeignKeyConstraint,
+    IndexConstraint,
+    SqlHelper,
+    ViewFinderTrait
+};
 use yii\helpers\ArrayHelper;
 
 use function array_reverse;
@@ -46,7 +48,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         // exact numbers
         'bigint' => self::TYPE_BIGINT,
         'numeric' => self::TYPE_DECIMAL,
-        'bit' => self::TYPE_SMALLINT,
         'smallint' => self::TYPE_SMALLINT,
         'decimal' => self::TYPE_DECIMAL,
         'smallmoney' => self::TYPE_MONEY,
@@ -76,6 +77,8 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         'binary' => self::TYPE_BINARY,
         'varbinary' => self::TYPE_BINARY,
         'image' => self::TYPE_BINARY,
+        // boolean (logical)
+        'bit' => self::TYPE_BOOLEAN,
         // other data types
         // 'cursor' type cannot be used with tables
         'timestamp' => self::TYPE_TIMESTAMP,
@@ -308,7 +311,7 @@ SQL;
      *
      * @param array $info column information.
      *
-     * @return ColumnSchema the column schema object
+     * @return ColumnSchema the column schema object.
      */
     protected function loadColumnSchema(array $info): ColumnSchema
     {
@@ -318,21 +321,19 @@ SQL;
         $column->allowNull = $info['is_nullable'] === 'YES';
         $column->dbType = $info['data_type'];
         $column->enumValues = []; // mssql has only vague equivalents to enum
-        $column->isPrimaryKey = null; // primary key will be determined in findColumns() method
+        $column->isPrimaryKey = false; // primary key will be determined in findColumns() method
         $column->autoIncrement = $info['is_identity'] == 1;
         $column->isComputed = (bool) $info['is_computed'];
-        $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
         $column->comment = $info['comment'] === null ? '' : $info['comment'];
-
         $column->type = self::TYPE_STRING;
+        $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
+        $column->defaultValue = $column->normalizeDefaultValue($info['column_default']);
+
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = $matches[1];
+
             if (isset($this->typeMap[$type])) {
                 $column->type = $this->typeMap[$type];
-            }
-
-            if ($type === 'bit') {
-                $column->type = 'boolean';
             }
 
             if (!empty($matches[2])) {
@@ -342,22 +343,10 @@ SQL;
                 if (isset($values[1])) {
                     $column->scale = (int) $values[1];
                 }
-
-                if ($column->size === 1 && $type === 'tinyint') {
-                    $column->type = 'boolean';
-                }
             }
         }
 
         $column->phpType = $this->getColumnPhpType($column);
-
-        if ($info['column_default'] === '(NULL)') {
-            $info['column_default'] = null;
-        }
-
-        if (!$column->isPrimaryKey && ($column->type !== 'timestamp' || $info['column_default'] !== 'CURRENT_TIMESTAMP')) {
-            $column->defaultValue = $column->defaultPhpTypecast($info['column_default']);
-        }
 
         return $column;
     }
