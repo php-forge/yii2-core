@@ -9,7 +9,7 @@ use yii\db\PdoValue;
 
 use function bin2hex;
 use function is_string;
-use function substr;
+use function preg_match;
 
 /**
  * Class ColumnSchema for MSSQL database
@@ -22,20 +22,34 @@ class ColumnSchema extends \yii\db\ColumnSchema
     public bool $isComputed = false;
 
     /**
-     * Prepares default value and converts it according to [[phpType]].
+     * Parses the default value from the provided input.
      *
-     * @param mixed $value default value.
+     * This method processes the input to extract a default value. If the value is wrapped in quotes or parentheses,
      *
-     * @return mixed converted value.
+     * it recursively processes the value to return the underlying default value. If the value is `null`, it will return
+     * `null`. Otherwise, the value is converted to a string.
+     *
+     * @param mixed $value the value to parse, which could be `null`, a string, or any other type.
+     *
+     * @return string|null the parsed default value.
      */
-    public function defaultPhpTypecast(mixed $value): mixed
+    public function parseDefaultValue(mixed $value): string|null
     {
-        if ($value !== null) {
-            // convert from MSSQL column_default format, e.g. ('1') -> 1, ('string') -> string
-            $value = substr(substr($value, 2), 0, -2);
+        if ($value === null) {
+            return null;
         }
 
-        return parent::phpTypecast($value);
+        $value = (string) $value;
+
+        if (preg_match('/^\'(.*)\'$/', $value, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/^\((.*)\)$/', $value, $matches)) {
+            return $this->parseDefaultValue($matches[1]);
+        }
+
+        return $value;
     }
 
     /**
