@@ -74,7 +74,7 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $result = parent::constraintsProvider();
 
         $result['1: check'][2][0]->columnNames = null;
-        $result['1: check'][2][0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
+        $result['1: check'][2][0]->expression = "`C_check` <> ''";
         $result['2: primary key'][2]->name = null;
 
         // Work aroung bug in MySQL 5.1 - it creates only this table in lowercase. O_o
@@ -95,6 +95,17 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
             $this->expectException('yii\base\NotSupportedException');
         }
 
+        $version = $this->getConnection(false)->getServerVersion();
+
+        if (
+            \stripos($version, 'MariaDb') === false &&
+            version_compare($version, '8.0.16', '>=') &&
+            $tableName === 'T_constraints_1' &&
+            $type === 'checks'
+        ) {
+            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
+        }
+
         $constraints = $this->getConnection(false)->getSchema()->{'getTable' . ucfirst($type)}($tableName);
         $this->assertMetadataEquals($expected, $constraints);
     }
@@ -109,6 +120,17 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
     {
         if ($expected === false) {
             $this->expectException('yii\base\NotSupportedException');
+        }
+
+        $version = $this->getConnection(false)->getServerVersion();
+
+        if (
+            \stripos($version, 'MariaDb') === false &&
+            version_compare($version, '8.0.16', '>=') &&
+            $tableName === 'T_constraints_1' &&
+            $type === 'checks'
+        ) {
+            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         }
 
         $connection = $this->getConnection(false);
@@ -127,6 +149,17 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
     {
         if ($expected === false) {
             $this->expectException('yii\base\NotSupportedException');
+        }
+
+        $version = $this->getConnection(false)->getServerVersion();
+
+        if (
+            \stripos($version, 'MariaDb') === false &&
+            version_compare($version, '8.0.16', '>=') &&
+            $tableName === 'T_constraints_1' &&
+            $type === 'checks'
+        ) {
+            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         }
 
         $connection = $this->getConnection(false);
