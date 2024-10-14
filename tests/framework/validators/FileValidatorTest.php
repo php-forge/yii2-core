@@ -698,13 +698,9 @@ class FileValidatorTest extends TestCase
         ];
     }
 
-    public function testValidateTypedAttributeNoErrors()
+    public function testValidateTypedAttributeNoErrors(): void
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Requires typed properties');
-        }
-
-        $validator = new FileValidator(['minFiles' => 0, 'maxFiles' => 2]);
+         $validator = new FileValidator(['minFiles' => 0, 'maxFiles' => 2]);
         $file = $this->createTestFiles(
             [
                 [
@@ -723,12 +719,8 @@ class FileValidatorTest extends TestCase
         $this->assertFalse($model->hasErrors('multiple'));
     }
 
-    public function testValidateTypedAttributeExactMinNoErrors()
+    public function testValidateTypedAttributeExactMinNoErrors(): void
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Requires typed properties');
-        }
-
         $validator = new FileValidator(['minFiles' => 1]);
         $file = $this->createTestFiles(
             [
@@ -748,12 +740,8 @@ class FileValidatorTest extends TestCase
         $this->assertFalse($model->hasErrors('multiple'));
     }
 
-    public function testValidateTypedAttributeExactMaxNoErrors()
+    public function testValidateTypedAttributeExactMaxNoErrors(): void
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Requires typed properties');
-        }
-
         $validator = new FileValidator(['maxFiles' => 1]);
         $file = $this->createTestFiles(
             [
@@ -773,12 +761,8 @@ class FileValidatorTest extends TestCase
         $this->assertFalse($model->hasErrors('multiple'));
     }
 
-    public function testValidateTypedAttributeMinError()
+    public function testValidateTypedAttributeMinError(): void
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Requires typed properties');
-        }
-
         $validator = new FileValidator(['minFiles' => 2]);
         $file = $this->createTestFiles(
             [
@@ -798,12 +782,8 @@ class FileValidatorTest extends TestCase
         $this->assertTrue($model->hasErrors('multiple'));
     }
 
-    public function testValidateTypedAttributeMaxError()
+    public function testValidateTypedAttributeMaxError(): void
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Requires typed properties');
-        }
-
         $validator = new FileValidator(['maxFiles' => 1]);
         $files = $this->createTestFiles(
             [

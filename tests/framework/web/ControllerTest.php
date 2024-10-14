@@ -102,13 +102,8 @@ class ControllerTest extends TestCase
         $this->assertEquals($this->controller->redirect(['//controller/index', 'slug' => 'äöüß!"§$%&/()'])->headers->get('location'), '/index.php?r=controller%2Findex&slug=%C3%A4%C3%B6%C3%BC%C3%9F%21%22%C2%A7%24%25%26%2F%28%29');
     }
 
-    public function testUnionBindingActionParams()
+    public function testUnionBindingActionParams(): void
     {
-        if (PHP_VERSION_ID < 80000) {
-            $this->markTestSkipped('Can not be tested on PHP < 8.0');
-            return;
-        }
-
         // Use the PHP80 controller for this test
         $this->controller = new FakePhp80Controller('fake', new \yii\web\Application([
             'id' => 'app',

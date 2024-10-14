@@ -76,9 +76,6 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $columns['bool_col2']['precision'] = null;
         $columns['bool_col2']['scale'] = null;
         $columns['bool_col2']['defaultValue'] = true;
-        if (version_compare($this->getConnection(false)->getServerVersion(), '10', '<')) {
-            $columns['ts_default']['defaultValue'] = new Expression('now()');
-        }
         $columns['bit_col']['dbType'] = 'bit';
         $columns['bit_col']['size'] = 8;
         $columns['bit_col']['precision'] = null;
@@ -207,12 +204,8 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $this->assertFalse($table->getColumn('default_false')->defaultValue);
     }
 
-    public function testGeneratedValues()
+    public function testGeneratedValues(): void
     {
-        if (version_compare($this->getConnection(false)->getServerVersion(), '12.0', '<')) {
-            $this->markTestSkipped('PostgreSQL < 12.0 does not support GENERATED AS IDENTITY columns.');
-        }
-
         $config = $this->database;
         unset($config['fixture']);
         $this->prepareDatabase($config, realpath(__DIR__.'/../../../data') . '/postgres12.sql');
@@ -224,12 +217,8 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
         $this->assertTrue($table->getColumn('id_default')->autoIncrement);
     }
 
-    public function testPartitionedTable()
+    public function testPartitionedTable(): void
     {
-        if (version_compare($this->getConnection(false)->getServerVersion(), '10.0', '<')) {
-            $this->markTestSkipped('PostgreSQL < 10.0 does not support PARTITION BY clause.');
-        }
-
         $config = $this->database;
         unset($config['fixture']);
         $this->prepareDatabase($config, realpath(__DIR__.'/../../../data') . '/postgres10.sql');
