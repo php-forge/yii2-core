@@ -6,8 +6,6 @@ namespace yiiunit\framework\db\pgsql\command;
 
 use yiiunit\support\PgsqlConnection;
 
-use function version_compare;
-
 /**
  * @group db
  * @group pgsql
@@ -33,12 +31,6 @@ final class CreateSequenceTest extends \yiiunit\framework\db\command\AbstractCre
         array $options,
         array $expectedSequenceInfo
     ): void {
-        // `PostgreSQL` v. 9.6 and below does not support `CREATE SEQUENCE` with type option.
-        if (version_compare($this->db->serverVersion, '10.0', '<') && isset($options['type'])) {
-            $expectedSequenceInfo['type'] = 'bigint';
-            $expectedSequenceInfo['maxValue'] = '9223372036854775807';
-        }
-
         parent::testCreateSequence($sequence, $start, $increment, $options, $expectedSequenceInfo);
     }
 }

@@ -70,19 +70,7 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
             ],
         ];
 
-        /*
-         * TODO Remove in Yii 2.1
-         *
-         * Disabled due bug in MySQL extension
-         * @link https://bugs.php.net/bug.php?id=70384
-         */
-        if (version_compare(PHP_VERSION, '5.6', '>=')) {
-            $columns[] = [
-                Schema::TYPE_JSON,
-                $this->json(),
-                "json",
-            ];
-        }
+        $columns[] = [Schema::TYPE_JSON, $this->json(), "json"];
 
         return array_merge(parent::columnTypes(), $this->columnTimeTypes(), $columns);
     }
@@ -125,21 +113,17 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
         /**
          * @link https://github.com/yiisoft/yii2/issues/14367
          */
-        $mysqlVersion = $this->getDb()->getSlavePdo(true)->getAttribute(\PDO::ATTR_SERVER_VERSION);
-        $supportsFractionalSeconds = version_compare($mysqlVersion,'5.6.4', '>=');
-        if ($supportsFractionalSeconds) {
-            $expectedValues = [
-                'datetime(0) NOT NULL',
-                'datetime(0)',
-                'time(0) NOT NULL',
-                'time(0)',
-                'timestamp(0) NOT NULL',
-                'timestamp(0) NULL DEFAULT NULL',
-            ];
+        $expectedValues = [
+            'datetime(0) NOT NULL',
+            'datetime(0)',
+            'time(0) NOT NULL',
+            'time(0)',
+            'timestamp(0) NOT NULL',
+            'timestamp(0) NULL DEFAULT NULL',
+        ];
 
-            foreach ($expectedValues as $index => $expected) {
-                $columns[$index][2] = $expected;
-            }
+        foreach ($expectedValues as $index => $expected) {
+            $columns[$index][2] = $expected;
         }
 
         /**
@@ -147,6 +131,7 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
          */
         $sqlModes = $this->getConnection(false)->createCommand('SELECT @@sql_mode')->queryScalar();
         $sqlModes = explode(',', $sqlModes);
+
         if (in_array('NO_ZERO_DATE', $sqlModes, true)) {
             $this->markTestIncomplete(
                 "MySQL doesn't allow the 'TIMESTAMP' column definition when the NO_ZERO_DATE mode enabled. " .
@@ -156,7 +141,7 @@ class QueryBuilderTest extends \yiiunit\framework\db\QueryBuilderTest
             $columns[] = [
                 Schema::TYPE_TIMESTAMP,
                 $this->timestamp(),
-                $supportsFractionalSeconds ? 'timestamp(0)' : 'timestamp',
+                'timestamp(0)',
             ];
         }
 

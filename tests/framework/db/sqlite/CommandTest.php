@@ -41,7 +41,7 @@ class CommandTest extends \yiiunit\framework\db\CommandTest
         $this->markTestSkipped('SQLite does not support adding/dropping unique constraints.');
     }
 
-    public function testAddDropCheck()
+    public function testAddDropCheck(): void
     {
         $this->markTestSkipped('SQLite does not support adding/dropping check constraints.');
     }

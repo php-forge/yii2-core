@@ -20,19 +20,17 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
 {
     public $driverName = 'mysql';
 
-    public function testLoadDefaultDatetimeColumn()
+    public function testLoadDefaultDatetimeColumn(): void
     {
-        if (!version_compare($this->getConnection()->pdo->getAttribute(\PDO::ATTR_SERVER_VERSION), '5.6', '>=')) {
-            $this->markTestSkipped('Default datetime columns are supported since MySQL 5.6.');
-        }
+
         $sql = <<<SQL
-CREATE TABLE  IF NOT EXISTS `datetime_test`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-SQL;
+        CREATE TABLE  IF NOT EXISTS `datetime_test`  (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+        SQL;
 
         $this->getConnection()->createCommand($sql)->execute();
 
@@ -44,17 +42,14 @@ SQL;
         $this->assertEquals('CURRENT_TIMESTAMP', (string)$dt->defaultValue);
     }
 
-    public function testDefaultDatetimeColumnWithMicrosecs()
+    public function testDefaultDatetimeColumnWithMicrosecs(): void
     {
-        if (!version_compare($this->getConnection()->pdo->getAttribute(\PDO::ATTR_SERVER_VERSION), '5.6.4', '>=')) {
-            $this->markTestSkipped('CURRENT_TIMESTAMP with microseconds as default column value is supported since MySQL 5.6.4.');
-        }
         $sql = <<<SQL
-CREATE TABLE  IF NOT EXISTS `current_timestamp_test`  (
-  `dt` datetime(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2),
-  `ts` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-SQL;
+        CREATE TABLE  IF NOT EXISTS `current_timestamp_test`  (
+        `dt` datetime(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2),
+        `ts` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+        SQL;
 
         $this->getConnection()->createCommand($sql)->execute();
 
@@ -79,7 +74,7 @@ SQL;
         $result = parent::constraintsProvider();
 
         $result['1: check'][2][0]->columnNames = null;
-        $result['1: check'][2][0]->expression = "`C_check` <> ''";
+        $result['1: check'][2][0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         $result['2: primary key'][2]->name = null;
 
         // Work aroung bug in MySQL 5.1 - it creates only this table in lowercase. O_o
@@ -94,29 +89,10 @@ SQL;
      * @param string $type
      * @param mixed $expected
      */
-    public function testTableSchemaConstraints($tableName, $type, $expected)
+    public function testTableSchemaConstraints($tableName, $type, $expected): void
     {
-        $version = $this->getConnection(false)->getServerVersion();
-
         if ($expected === false) {
             $this->expectException('yii\base\NotSupportedException');
-        }
-
-        if (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '<') &&
-            $type === 'checks'
-        ) {
-            $this->expectException('yii\base\NotSupportedException');
-        } elseif (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '>=') &&
-            $tableName === 'T_constraints_1' &&
-            $type === 'checks'
-        ) {
-            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         }
 
         $constraints = $this->getConnection(false)->getSchema()->{'getTable' . ucfirst($type)}($tableName);
@@ -129,29 +105,10 @@ SQL;
      * @param string $type
      * @param mixed $expected
      */
-    public function testTableSchemaConstraintsWithPdoUppercase($tableName, $type, $expected)
+    public function testTableSchemaConstraintsWithPdoUppercase($tableName, $type, $expected): void
     {
-        $version = $this->getConnection(false)->getServerVersion();
-
         if ($expected === false) {
             $this->expectException('yii\base\NotSupportedException');
-        }
-
-        if (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '<') &&
-            $type === 'checks'
-        ) {
-            $this->expectException('yii\base\NotSupportedException');
-        } elseif (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '>=') &&
-            $tableName === 'T_constraints_1' &&
-            $type === 'checks'
-        ) {
-            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         }
 
         $connection = $this->getConnection(false);
@@ -166,29 +123,10 @@ SQL;
      * @param string $type
      * @param mixed $expected
      */
-    public function testTableSchemaConstraintsWithPdoLowercase($tableName, $type, $expected)
+    public function testTableSchemaConstraintsWithPdoLowercase($tableName, $type, $expected): void
     {
-        $version = $this->getConnection(false)->getServerVersion();
-
         if ($expected === false) {
             $this->expectException('yii\base\NotSupportedException');
-        }
-
-        if (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '<') &&
-            $type === 'checks'
-        ) {
-            $this->expectException('yii\base\NotSupportedException');
-        } elseif (
-            $this->driverName === 'mysql' &&
-            \stripos($version, 'MariaDb') === false &&
-            version_compare($version, '8.0.16', '>=') &&
-            $tableName === 'T_constraints_1' &&
-            $type === 'checks'
-        ) {
-            $expected[0]->expression = "(`C_check` <> _utf8mb4\\'\\')";
         }
 
         $connection = $this->getConnection(false);
@@ -335,33 +273,24 @@ SQL;
             ]
         );
 
-        if (\version_compare($version, '8.0.17', '>') && \stripos($version, 'MariaDb') === false) {
-            $columns['int_col']['dbType'] = 'int';
-            $columns['int_col']['size'] = null;
-            $columns['int_col']['precision'] = null;
-            $columns['int_col2']['dbType'] = 'int';
-            $columns['int_col2']['size'] = null;
-            $columns['int_col2']['precision'] = null;
-            $columns['int_col3']['dbType'] = 'int unsigned';
-            $columns['int_col3']['size'] = null;
-            $columns['int_col3']['precision'] = null;
-            $columns['tinyint_col']['dbType'] = 'tinyint';
-            $columns['tinyint_col']['size'] = null;
-            $columns['tinyint_col']['precision'] = null;
-            $columns['smallint_col']['dbType'] = 'smallint';
-            $columns['smallint_col']['size'] = null;
-            $columns['smallint_col']['precision'] = null;
-            $columns['bigint_col']['dbType'] = 'bigint unsigned';
-            $columns['bigint_col']['size'] = null;
-            $columns['bigint_col']['precision'] = null;
-        }
-
-        if (version_compare($version, '5.7', '<') && \stripos($version, 'MariaDb') === false) {
-            $columns['int_col3']['phpType'] = 'string';
-            $columns['json_col']['type'] = 'text';
-            $columns['json_col']['dbType'] = 'longtext';
-            $columns['json_col']['phpType'] = 'string';
-        }
+        $columns['int_col']['dbType'] = 'int';
+        $columns['int_col']['size'] = null;
+        $columns['int_col']['precision'] = null;
+        $columns['int_col2']['dbType'] = 'int';
+        $columns['int_col2']['size'] = null;
+        $columns['int_col2']['precision'] = null;
+        $columns['int_col3']['dbType'] = 'int unsigned';
+        $columns['int_col3']['size'] = null;
+        $columns['int_col3']['precision'] = null;
+        $columns['tinyint_col']['dbType'] = 'tinyint';
+        $columns['tinyint_col']['size'] = null;
+        $columns['tinyint_col']['precision'] = null;
+        $columns['smallint_col']['dbType'] = 'smallint';
+        $columns['smallint_col']['size'] = null;
+        $columns['smallint_col']['precision'] = null;
+        $columns['bigint_col']['dbType'] = 'bigint unsigned';
+        $columns['bigint_col']['size'] = null;
+        $columns['bigint_col']['precision'] = null;
 
         return $columns;
     }
