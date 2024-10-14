@@ -306,24 +306,26 @@ class SchemaTest extends \yiiunit\framework\db\SchemaTest
             ]
         );
 
-        $columns['int_col']['dbType'] = 'int';
-        $columns['int_col']['size'] = null;
-        $columns['int_col']['precision'] = null;
-        $columns['int_col2']['dbType'] = 'int';
-        $columns['int_col2']['size'] = null;
-        $columns['int_col2']['precision'] = null;
-        $columns['int_col3']['dbType'] = 'int unsigned';
-        $columns['int_col3']['size'] = null;
-        $columns['int_col3']['precision'] = null;
-        $columns['tinyint_col']['dbType'] = 'tinyint';
-        $columns['tinyint_col']['size'] = null;
-        $columns['tinyint_col']['precision'] = null;
-        $columns['smallint_col']['dbType'] = 'smallint';
-        $columns['smallint_col']['size'] = null;
-        $columns['smallint_col']['precision'] = null;
-        $columns['bigint_col']['dbType'] = 'bigint unsigned';
-        $columns['bigint_col']['size'] = null;
-        $columns['bigint_col']['precision'] = null;
+        if (\version_compare($version, '8.0.17', '>') && \stripos($version, 'MariaDb') === false) {
+            $columns['int_col']['dbType'] = 'int';
+            $columns['int_col']['size'] = null;
+            $columns['int_col']['precision'] = null;
+            $columns['int_col2']['dbType'] = 'int';
+            $columns['int_col2']['size'] = null;
+            $columns['int_col2']['precision'] = null;
+            $columns['int_col3']['dbType'] = 'int unsigned';
+            $columns['int_col3']['size'] = null;
+            $columns['int_col3']['precision'] = null;
+            $columns['tinyint_col']['dbType'] = 'tinyint';
+            $columns['tinyint_col']['size'] = null;
+            $columns['tinyint_col']['precision'] = null;
+            $columns['smallint_col']['dbType'] = 'smallint';
+            $columns['smallint_col']['size'] = null;
+            $columns['smallint_col']['precision'] = null;
+            $columns['bigint_col']['dbType'] = 'bigint unsigned';
+            $columns['bigint_col']['size'] = null;
+            $columns['bigint_col']['precision'] = null;
+        }
 
         return $columns;
     }
